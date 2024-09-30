@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Боковая панель -->
+    <aside class="sidebar">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">Employees</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
+        </nav>
+        <div class="logout">
+            <a href="/logout">Logout</a>
+        </div>
+    </aside>
+
+    <!-- Основной контент -->
+    <main class="content">
+        <!-- Информация о компании -->
+        <section class="company-info">
+            <div class="company-details">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Company Logo" class="company-logo">
+                <div>
+                    <h1>Corgi Cafe Gotico</h1>
+                    <p>Plaza de la Vila de Madrid 4</p>
+                    <p>Email: info@corgicafe.es</p>
+                    <p>Phone: +34 695 279 140</p>
+                </div>
+            </div>
+            <div class="social-media">
+                <p>@corgicafe</p>
+                <p>@corgicafe_bcn</p>
+                <p>WhatsApp: +34 695 279 140</p>
+            </div>
+            <button class="edit-profile-btn">Edit profile</button>
+        </section>
+
+        <!-- Список сотрудников -->
+        <section class="employees">
+            <h2>Employees</h2>
+            <div class="filters">
+                <button class="filter-btn" id="show-all">All</button>
+                <button class="filter-btn" id="show-hall">Sala</button>
+                <button class="filter-btn" id="show-kitchen">Cocina</button>
+            </div>
+
+            <!-- Блок Кухня -->
+            <h2>Кухня</h2>
+            <table class="employee-table kitchen-section">
+                <thead>
+                    <tr>
+                        <th>Имя</th>
+                        <th>Телефон</th>
+                        <th>Должность</th>
+                        <th>Начало контракта</th>
+                        <th>Конец контракта</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in kitchen_employees %}
+                    <tr>
+                        <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                        <td>{{ employee.phone }}</td>
+                        <td>{{ employee.position }}</td>
+                        <td>{{ employee.start_date.strftime('%d.%m.%Y') }}</td>
+                        <td>
+                            {% if employee.end_date %}
+                                {{ employee.end_date.strftime('%d.%m.%Y') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button
+                                class="edit-btn"
+                                data-id="{{ employee.id }}"
+                                data-first-name="{{ employee.first_name }}"
+                                data-last-name="{{ employee.last_name }}"
+                                data-phone="{{ employee.phone }}"
+                                data-position="{{ employee.position }}"
+                                data-start-date="{{ employee.start_date }}"
+                                data-end-date="{{ employee.end_date }}"
+                                data-section="{{ employee.section }}">Edit</button>
+                            <button
+                                class="delete-btn"
+                                data-id="{{ employee.id }}"
+                                data-name="{{ employee.first_name }} {{ employee.last_name }}">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Блок Зал -->
+            <h2>Зал</h2>
+            <table class="employee-table hall-section">
+                <thead>
+                    <tr>
+                        <th>Имя</th>
+                        <th>Телефон</th>
+                        <th>Должность</th>
+                        <th>Начало контракта</th>
+                        <th>Конец контракта</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in hall_employees %}
+                    <tr>
+                        <td>{{ employee.first_name }} {{ employee.last_name }}</td>
+                        <td>{{ employee.phone }}</td>
+                        <td>{{ employee.position }}</td>
+                        <td>{{ employee.start_date.strftime('%d.%m.%Y') }}</td>
+                        <td>
+                            {% if employee.end_date %}
+                                {{ employee.end_date.strftime('%d.%м.%Y') }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button
+                                class="edit-btn"
+                                data-id="{{ employee.id }}"
+                                data-first-name="{{ employee.first_name }}"
+                                data-last-name="{{ employee.last_name }}"
+                                data-phone="{{ employee.phone }}"
+                                data-position="{{ employee.position }}"
+                                data-start-date="{{ employee.start_date }}"
+                                data-end-date="{{ employee.end_date }}"
+                                data-section="{{ employee.section }}">Edit</button>
+                            <button
+                                class="delete-btn"
+                                data-id="{{ employee.id }}"
+                                data-name="{{ employee.first_name }} {{ employee.last_name }}">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Кнопка для открытия модального окна -->
+            <button class="new-employee-btn" id="open-modal-btn">+ New Employee</button>
+        </section>
+    </main>
+
+    <!-- Модальное окно -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">Добавить сотрудника</h2>
+            <form id="employee-form" action="{{ url_for('add_employee') }}" method="POST">
+                <input type="text" id="first_name" name="first_name" placeholder="Имя" required>
+                <input type="text" id="last_name" name="last_name" placeholder="Фамилия" required>
+                <input type="text" id="phone" name="phone" placeholder="Телефон" required>
+                <input type="text" id="position" name="position" placeholder="Должность" required>
+                <input type="date" id="start_date" name="start_date" required>
+                <input type="date" id="end_date" name="end_date">
+                <select id="section" name="section" required>
+                    <option value="Кухня">Кухня</option>
+                    <option value="Зал">Зал</option>
+                </select>
+                <button type="submit" id="modal-submit-btn">Добавить сотрудника</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модальное окно для подтверждения удаления -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Удалить сотрудника</h2>
+            <p id="delete-message"></p>
+            <button id="confirm-delete-btn">Подтвердить удаление</button>
+            <button class="close">Отменить</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
