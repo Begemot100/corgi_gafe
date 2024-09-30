@@ -1,3 +1,34 @@
+// Логика для открытия модального окна при нажатии на "Edit"
+document.querySelectorAll('.edit-btn').forEach(button => {
+    button.addEventListener('click', (event) => {
+        const employeeId = event.target.dataset.id; // Получаем ID сотрудника из data-атрибута
+        const firstName = event.target.dataset.firstName;
+        const lastName = event.target.dataset.lastName;
+        const phone = event.target.dataset.phone;
+        const position = event.target.dataset.position;
+        const startDate = event.target.dataset.startDate;
+        const endDate = event.target.dataset.endDate;
+        const section = event.target.dataset.section;
+
+        // Открываем модальное окно с текущими данными
+        modal.style.display = 'flex';
+        modalTitle.textContent = 'Редактировать сотрудника';
+        modalSubmitBtn.textContent = 'Сохранить изменения';
+
+        // Заполняем поля формы текущими данными
+        document.getElementById('first_name').value = firstName || ''; // Проверяем, чтобы не было undefined
+        document.getElementById('last_name').value = lastName || '';
+        document.getElementById('phone').value = phone || '';
+        document.getElementById('position').value = position || '';
+        document.getElementById('start_date').value = startDate || '';
+        document.getElementById('end_date').value = endDate || '';
+        document.getElementById('section').value = section || 'Кухня'; // Default значение
+
+        // Изменяем действие формы для отправки данных на обновление
+        employeeForm.action = `/edit/${employeeId}`;
+    });
+});
+
 // Получаем элементы для работы с модальным окном подтверждения удаления
 const deleteModal = document.getElementById('delete-modal');
 const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
@@ -111,35 +142,4 @@ window.addEventListener('click', (event) => {
     if (event.target === modal) {
         modal.style.display = 'none';
     }
-});
-
-// Логика для открытия модального окна при нажатии на "Edit"
-document.querySelectorAll('.edit-btn').forEach(button => {
-    button.addEventListener('click', (event) => {
-        const employeeId = event.target.dataset.id; // Получаем ID сотрудника из data-атрибута
-        const firstName = event.target.dataset.firstName;
-        const lastName = event.target.dataset.lastName;
-        const phone = event.target.dataset.phone;
-        const position = event.target.dataset.position;
-        const startDate = event.target.dataset.startDate;
-        const endDate = event.target.dataset.endDate;
-        const section = event.target.dataset.section;
-
-        // Открываем модальное окно с текущими данными
-        modal.style.display = 'flex';
-        modalTitle.textContent = 'Редактировать сотрудника';
-        modalSubmitBtn.textContent = 'Сохранить изменения';
-
-        // Заполняем поля формы текущими данными
-        document.getElementById('first_name').value = firstName;
-        document.getElementById('last_name').value = lastName;
-        document.getElementById('phone').value = phone;
-        document.getElementById('position').value = position;
-        document.getElementById('start_date').value = startDate;
-        document.getElementById('end_date').value = endDate || '';
-        document.getElementById('section').value = section;
-
-        // Изменяем действие формы для отправки данных на обновление
-        employeeForm.action = `/edit/${employeeId}`;
-    });
 });

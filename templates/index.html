@@ -74,13 +74,7 @@
                         <td>{{ employee.phone }}</td>
                         <td>{{ employee.position }}</td>
                         <td>{{ employee.start_date.strftime('%d.%m.%Y') }}</td>
-                        <td>
-                            {% if employee.end_date %}
-                                {{ employee.end_date.strftime('%d.%m.%Y') }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
+                        <td>{% if employee.end_date %}{{ employee.end_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
                         <td>
                             <button
                                 class="edit-btn"
@@ -122,13 +116,7 @@
                         <td>{{ employee.phone }}</td>
                         <td>{{ employee.position }}</td>
                         <td>{{ employee.start_date.strftime('%d.%m.%Y') }}</td>
-                        <td>
-                            {% if employee.end_date %}
-                                {{ employee.end_date.strftime('%d.%м.%Y') }}
-                            {% else %}
-                                —
-                            {% endif %}
-                        </td>
+                        <td>{% if employee.end_date %}{{ employee.end_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
                         <td>
                             <button
                                 class="edit-btn"
@@ -155,7 +143,7 @@
         </section>
     </main>
 
-    <!-- Модальное окно -->
+    <!-- Модальное окно для добавления/редактирования сотрудника -->
     <div id="modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
