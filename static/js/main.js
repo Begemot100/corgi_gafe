@@ -1,99 +1,55 @@
-// Логика для открытия модального окна при нажатии на "Edit"
+// Select all the edit buttons and attach an event listener
 document.querySelectorAll('.edit-btn').forEach(button => {
     button.addEventListener('click', (event) => {
-        const employeeId = event.target.dataset.id; // Получаем ID сотрудника из data-атрибута
-        const firstName = event.target.dataset.firstName;
-        const lastName = event.target.dataset.lastName;
+        // Get employee data from the data attributes
+        const employeeId = event.target.dataset.id;
+        const fullName = event.target.dataset.fullName;
+        const nie = event.target.dataset.nie;
         const phone = event.target.dataset.phone;
         const position = event.target.dataset.position;
         const startDate = event.target.dataset.startDate;
         const endDate = event.target.dataset.endDate;
+        const hoursPerWeek = event.target.dataset.hoursPerWeek;
+        const daysPerWeek = event.target.dataset.daysPerWeek;
+        const email = event.target.dataset.email;
         const section = event.target.dataset.section;
 
-        // Открываем модальное окно с текущими данными
+        // Open the modal
+        const modal = document.getElementById('modal');
         modal.style.display = 'flex';
-        modalTitle.textContent = 'Редактировать сотрудника';
-        modalSubmitBtn.textContent = 'Сохранить изменения';
 
-        // Заполняем поля формы текущими данными
-        document.getElementById('first_name').value = firstName || ''; // Проверяем, чтобы не было undefined
-        document.getElementById('last_name').value = lastName || '';
+        // Populate the form with the employee data
+        document.getElementById('full_name').value = fullName || '';
+        document.getElementById('nie').value = nie || '';
         document.getElementById('phone').value = phone || '';
         document.getElementById('position').value = position || '';
         document.getElementById('start_date').value = startDate || '';
         document.getElementById('end_date').value = endDate || '';
-        document.getElementById('section').value = section || 'Кухня'; // Default значение
+        document.getElementById('hours_per_week').value = hoursPerWeek || '';
+        document.getElementById('days_per_week').value = daysPerWeek || '';
+        document.getElementById('email').value = email || '';
+        document.getElementById('section').value = section || 'Cocina'; // Default to Cocina
 
-        // Изменяем действие формы для отправки данных на обновление
-        employeeForm.action = `/edit/${employeeId}`;
+        // Set the form action to the employee edit route
+        document.getElementById('employee-form').action = `/edit/${employeeId}`;
     });
 });
 
-// Получаем элементы для работы с модальным окном подтверждения удаления
-const deleteModal = document.getElementById('delete-modal');
-const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-const deleteMessage = document.getElementById('delete-message');
-let employeeIdToDelete = null;
-
-// Логика для открытия модального окна при нажатии на "Delete"
-document.querySelectorAll('.delete-btn').forEach(button => {
-    button.addEventListener('click', (event) => {
-        employeeIdToDelete = event.target.dataset.id; // Получаем ID сотрудника
-        const employeeName = event.target.dataset.name; // Имя сотрудника
-
-        // Открываем модальное окно с сообщением
-        deleteModal.style.display = 'flex';
-        deleteMessage.textContent = `Вы уверены, что хотите удалить сотрудника ${employeeName}?`;
-    });
-});
-
-// Логика для подтверждения удаления сотрудника
-confirmDeleteBtn.addEventListener('click', () => {
-    // Отправляем запрос на сервер для удаления сотрудника
-    fetch(`/delete/${employeeIdToDelete}`, {
-        method: 'POST', // POST-запрос для удаления
-        headers: {
-            'Content-Type': 'application/json'
-        },
-    }).then(response => {
-        if (response.ok) {
-            // Если сотрудник успешно удален, перезагружаем страницу
-            window.location.reload();
-        } else {
-            console.error('Ошибка при удалении сотрудника');
-        }
-    });
-});
-
-// Закрытие модального окна при нажатии на "x" или кнопку "Отменить"
-document.querySelectorAll('.close').forEach(closeBtn => {
-    closeBtn.addEventListener('click', () => {
-        deleteModal.style.display = 'none';
-    });
-});
-
-// Закрытие модального окна при клике вне его области
-window.addEventListener('click', (event) => {
-    if (event.target === deleteModal) {
-        deleteModal.style.display = 'none';
-    }
-});
-
-// Получаем элементы для кнопок фильтрации
+// Get filter buttons
 const filterButtons = document.querySelectorAll('.filter-btn');
 const kitchenSection = document.querySelector('.kitchen-section');
 const hallSection = document.querySelector('.hall-section');
 
-// Логика переключения видимости секций
+// Filter employees based on button clicks
 filterButtons.forEach(button => {
     button.addEventListener('click', () => {
-        // Удаляем активный класс у всех кнопок
+        // Remove active class from all buttons
         filterButtons.forEach(btn => btn.classList.remove('active'));
 
-        // Добавляем активный класс к нажатой кнопке
+        // Add active class to the clicked button
         button.classList.add('active');
 
-        // Проверяем, какая кнопка была нажата, и показываем/скрываем секции
+        // Show/hide sections based on the button clicked
         if (button.id === 'show-all') {
             kitchenSection.style.display = 'table';
             hallSection.style.display = 'table';
@@ -107,7 +63,87 @@ filterButtons.forEach(button => {
     });
 });
 
-// Получаем элементы для работы с модальным окном
+// Logic for opening the modal on "Edit"
+document.querySelectorAll('.edit-btn').forEach(button => {
+    button.addEventListener('click', (event) => {
+        const employeeId = event.target.dataset.id;
+        const fullName = event.target.dataset.fullName;
+        const nie = event.target.dataset.nie;
+        const phone = event.target.dataset.phone;
+        const position = event.target.dataset.position;
+        const startDate = event.target.dataset.startDate;
+        const endDate = event.target.dataset.endDate;
+        const hoursPerWeek = event.target.dataset.hoursPerWeek;
+        const daysPerWeek = event.target.dataset.daysPerWeek;
+        const email = event.target.dataset.email;
+        const section = event.target.dataset.section;
+
+        // Open modal and populate it with employee data
+        const modal = document.getElementById('modal');
+        modal.style.display = 'flex';
+        document.getElementById('full_name').value = fullName || '';
+        document.getElementById('nie').value = nie || '';
+        document.getElementById('phone').value = phone || '';
+        document.getElementById('position').value = position || '';
+        document.getElementById('start_date').value = startDate || '';
+        document.getElementById('end_date').value = endDate || '';
+        document.getElementById('hours_per_week').value = hoursPerWeek || '';
+        document.getElementById('days_per_week').value = daysPerWeek || '';
+        document.getElementById('email').value = email || '';
+        document.getElementById('section').value = section || 'Cocina';
+
+        // Update form action to edit the employee
+        document.getElementById('employee-form').action = `/edit/${employeeId}`;
+    });
+});
+
+// Logic for handling employee deletion
+const deleteModal = document.getElementById('delete-modal');
+const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+const deleteMessage = document.getElementById('delete-message');
+let employeeIdToDelete = null;
+
+document.querySelectorAll('.delete-btn').forEach(button => {
+    button.addEventListener('click', (event) => {
+        employeeIdToDelete = event.target.dataset.id;
+        const employeeName = event.target.dataset.name;
+
+        // Open delete modal
+        deleteModal.style.display = 'flex';
+        deleteMessage.textContent = `Are you sure you want to delete ${employeeName}?`;
+    });
+});
+
+confirmDeleteBtn.addEventListener('click', () => {
+    fetch(`/delete/${employeeIdToDelete}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(response => {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            console.error('Error deleting employee');
+        }
+    });
+});
+
+// Close the delete modal
+document.querySelectorAll('.close').forEach(closeBtn => {
+    closeBtn.addEventListener('click', () => {
+        deleteModal.style.display = 'none';
+    });
+});
+
+// Close modal when clicking outside
+window.addEventListener('click', (event) => {
+    if (event.target === deleteModal) {
+        deleteModal.style.display = 'none';
+    }
+});
+
+// Modal functionality for adding a new employee
 const modal = document.getElementById('modal');
 const openModalBtn = document.getElementById('open-modal-btn');
 const closeModalBtn = document.querySelector('.close');
@@ -115,29 +151,32 @@ const modalTitle = document.getElementById('modal-title');
 const modalSubmitBtn = document.getElementById('modal-submit-btn');
 const employeeForm = document.getElementById('employee-form');
 
-// Открытие модального окна для добавления нового сотрудника
+// Open the modal for adding a new employee
 openModalBtn.addEventListener('click', () => {
     modal.style.display = 'flex';
-    modalTitle.textContent = 'Добавить сотрудника';
-    modalSubmitBtn.textContent = 'Добавить сотрудника';
-    employeeForm.action = "/add"; // Убедитесь, что обработчик маршрута правильный
+    modalTitle.textContent = 'Add New Employee';
+    modalSubmitBtn.textContent = 'Save Employee';
+    employeeForm.action = "/add";
 
-    // Очищаем поля формы
-    document.getElementById('first_name').value = '';
-    document.getElementById('last_name').value = '';
+    // Clear form fields
+    document.getElementById('full_name').value = '';
+    document.getElementById('nie').value = '';
     document.getElementById('phone').value = '';
     document.getElementById('position').value = '';
     document.getElementById('start_date').value = '';
     document.getElementById('end_date').value = '';
-    document.getElementById('section').value = 'Кухня'; // Default value
+    document.getElementById('hours_per_week').value = '';
+    document.getElementById('days_per_week').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('section').value = 'Cocina';
 });
 
-// Закрытие модального окна при нажатии на "x"
+// Close modal
 closeModalBtn.addEventListener('click', () => {
     modal.style.display = 'none';
 });
 
-// Закрытие модального окна при клике вне его области
+// Close modal when clicking outside
 window.addEventListener('click', (event) => {
     if (event.target === modal) {
         modal.style.display = 'none';
