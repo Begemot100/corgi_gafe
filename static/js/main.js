@@ -1,4 +1,43 @@
-// Populate the form with the employee data
+// Get the modal and button elements
+const modal = document.getElementById('modal');
+const openModalBtn = document.getElementById('open-modal-btn');
+const closeModalBtn = document.querySelector('.close');
+const employeeForm = document.getElementById('employee-form');
+
+// Open the modal for adding a new employee
+openModalBtn.addEventListener('click', () => {
+    // Очищаем поля формы перед открытием
+    document.getElementById('full_name').value = '';
+    document.getElementById('nie').value = '';
+    document.getElementById('phone').value = '';
+    document.getElementById('position').value = '';
+    document.getElementById('start_date').value = '';
+    document.getElementById('end_date').value = '';
+    document.getElementById('hours_per_week').value = '';
+    document.getElementById('days_per_week').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('section').value = 'Cocina'; // Default section value
+
+    // Set the form action to the add route
+    employeeForm.action = "/add";
+
+    // Display the modal
+    modal.style.display = 'flex';
+});
+
+// Close the modal when the close button is clicked
+closeModalBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+});
+
+// Close the modal when clicking outside of it
+window.addEventListener('click', (event) => {
+    if (event.target === modal) {
+        modal.style.display = 'none';
+    }
+});
+
+// Populate the form with the employee data for editing
 document.querySelectorAll('.edit-btn').forEach(button => {
     button.addEventListener('click', (event) => {
         // Get employee data from the data attributes
@@ -106,45 +145,5 @@ document.querySelectorAll('.close').forEach(closeBtn => {
 window.addEventListener('click', (event) => {
     if (event.target === deleteModal) {
         deleteModal.style.display = 'none';
-    }
-});
-
-// Modal functionality for adding a new employee
-const modal = document.getElementById('modal');
-const openModalBtn = document.getElementById('open-modal-btn');
-const closeModalBtn = document.querySelector('.close');
-const modalTitle = document.getElementById('modal-title');
-const modalSubmitBtn = document.getElementById('modal-submit-btn');
-const employeeForm = document.getElementById('employee-form');
-
-// Open the modal for adding a new employee
-openModalBtn.addEventListener('click', () => {
-    modal.style.display = 'flex';
-    modalTitle.textContent = 'Add New Employee';
-    modalSubmitBtn.textContent = 'Save Employee';
-    employeeForm.action = "/add";
-
-    // Clear form fields
-    document.getElementById('full_name').value = '';
-    document.getElementById('nie').value = '';
-    document.getElementById('phone').value = '';
-    document.getElementById('position').value = '';
-    document.getElementById('start_date').value = '';
-    document.getElementById('end_date').value = '';
-    document.getElementById('hours_per_week').value = '';
-    document.getElementById('days_per_week').value = '';
-    document.getElementById('email').value = '';
-    document.getElementById('section').value = 'Cocina';
-});
-
-// Close modal
-closeModalBtn.addEventListener('click', () => {
-    modal.style.display = 'none';
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', (event) => {
-    if (event.target === modal) {
-        modal.style.display = 'none';
     }
 });
