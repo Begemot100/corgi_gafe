@@ -120,7 +120,7 @@ openModalBtn.addEventListener('click', () => {
     modal.style.display = 'flex';
     modalTitle.textContent = 'Добавить сотрудника';
     modalSubmitBtn.textContent = 'Добавить сотрудника';
-    employeeForm.action = "{{ url_for('add_employee') }}";
+    employeeForm.action = "/add"; // Убедитесь, что обработчик маршрута правильный
 
     // Очищаем поля формы
     document.getElementById('first_name').value = '';
