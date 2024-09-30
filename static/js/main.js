@@ -1,4 +1,4 @@
-// Select all the edit buttons and attach an event listener
+// Populate the form with the employee data
 document.querySelectorAll('.edit-btn').forEach(button => {
     button.addEventListener('click', (event) => {
         // Get employee data from the data attributes
@@ -60,40 +60,6 @@ filterButtons.forEach(button => {
             kitchenSection.style.display = 'table';
             hallSection.style.display = 'none';
         }
-    });
-});
-
-// Logic for opening the modal on "Edit"
-document.querySelectorAll('.edit-btn').forEach(button => {
-    button.addEventListener('click', (event) => {
-        const employeeId = event.target.dataset.id;
-        const fullName = event.target.dataset.fullName;
-        const nie = event.target.dataset.nie;
-        const phone = event.target.dataset.phone;
-        const position = event.target.dataset.position;
-        const startDate = event.target.dataset.startDate;
-        const endDate = event.target.dataset.endDate;
-        const hoursPerWeek = event.target.dataset.hoursPerWeek;
-        const daysPerWeek = event.target.dataset.daysPerWeek;
-        const email = event.target.dataset.email;
-        const section = event.target.dataset.section;
-
-        // Open modal and populate it with employee data
-        const modal = document.getElementById('modal');
-        modal.style.display = 'flex';
-        document.getElementById('full_name').value = fullName || '';
-        document.getElementById('nie').value = nie || '';
-        document.getElementById('phone').value = phone || '';
-        document.getElementById('position').value = position || '';
-        document.getElementById('start_date').value = startDate || '';
-        document.getElementById('end_date').value = endDate || '';
-        document.getElementById('hours_per_week').value = hoursPerWeek || '';
-        document.getElementById('days_per_week').value = daysPerWeek || '';
-        document.getElementById('email').value = email || '';
-        document.getElementById('section').value = section || 'Cocina';
-
-        // Update form action to edit the employee
-        document.getElementById('employee-form').action = `/edit/${employeeId}`;
     });
 });
 

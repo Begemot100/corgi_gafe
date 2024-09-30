@@ -87,19 +87,34 @@ def delete_employee(id):
 # Редактирование сотрудника
 @app.route('/edit/<int:id>', methods=['POST'])
 def edit_employee(id):
-    employee = Employee.query.get_or_404(id)
-    employee.full_name = request.form['full_name']
-    employee.nie = request.form['nie']
-    employee.phone = request.form['phone']
-    employee.position = request.form['position']
-    employee.start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%d')
-    end_date = request.form.get('end_date')
-    if end_date:
-        employee.end_date = datetime.strptime(end_date, '%Y-%m-%d')
-    else:
-        employee.end_date = None
-    db.session.commit()
+    employee = Employee.query.get(id)
+    if employee:
+        employee.full_name = request.form['full_name']
+        employee.nie = request.form['nie']
+        employee.phone = request.form['phone']
+        employee.position = request.form['position']
+
+        # Convert the date strings to Python date objects
+        start_date_str = request.form['start_date']
+        end_date_str = request.form['end_date']
+
+        # Convert the date strings to date objects (format must match your input format)
+        employee.start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        if end_date_str:
+            employee.end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        else:
+            employee.end_date = None
+
+        employee.hours_per_week = request.form['hours_per_week']
+        employee.days_per_week = request.form['days_per_week']
+        employee.email = request.form['email']
+        employee.section = request.form['section']
+
+        db.session.commit()
+
     return redirect(url_for('index'))
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
