@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo">
+    </div>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+<!--            <li><a href="{{ url_for('employees') }}">Employees</a></li>-->
+            <!-- Update this line to link to the dashboard route -->
+
+            <li><a href="#">Settings</a></li>
+        </ul>
+    </nav>
+    <div class="logout">
+        <a href="{{ url_for('export_to_excel') }}" class="export-btn">Export to Excel</a>
+
+        <a href="/logout">Logout</a>
+    </div>
+</aside>
+
+
+    <!-- Main content -->
+    <main class="content">
+        <!-- Company info -->
+        <section class="company-info">
+            <div class="company-details">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Company Logo" class="company-logo">
+                <div>
+                    <h1>Corgi Cafe Gotico</h1>
+                    <p>Plaza de la Vila de Madrid 4</p>
+                    <p>Email: info@corgicafe.es</p>
+                    <p>Phone: +34 695 279 140</p>
+                </div>
+            </div>
+            <div class="social-media">
+                <p>@corgicafe</p>
+                <p>@corgicafe_bcn</p>
+                <p>WhatsApp: +34 695 279 140</p>
+            </div>
+            <button class="edit-profile-btn">Edit profile</button>
+        </section>
+
+        <!-- Employee list -->
+        <section class="employees">
+            <h2>Employees</h2>
+            <div class="filters">
+                <button class="filter-btn" id="show-all">All</button>
+                <button class="filter-btn" id="show-hall">Sala</button>
+                <button class="filter-btn" id="show-kitchen">Cocina</button>
+            </div>
+
+            <!-- Kitchen employees -->
+            <h2>Cocina</h2>
+            <table class="employee-table kitchen-section">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>NIE</th>
+                        <th>Phone</th>
+                        <th>Position</th>
+                        <th>Contract Start Date</th>
+                        <th>Contract End Date</th>
+                        <th>Hours per Week</th>
+                        <th>Days per Week</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in kitchen_employees %}
+                    <tr>
+                        <td>{{ employee.full_name }}</td>
+                        <td>{{ employee.nie }}</td>
+                        <td>{{ employee.phone }}</td>
+                        <td>{{ employee.position }}</td>
+                        <td>{{ employee.start_date.strftime('%d.%m.%Y') }}</td>
+                        <td>{% if employee.end_date %}{{ employee.end_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
+                        <td>{{ employee.hours_per_week }}</td>
+                        <td>{{ employee.days_per_week }}</td>
+                        <td>{{ employee.email }}</td>
+                        <td>
+                            <button
+                                class="edit-btn"
+                                data-id="{{ employee.id }}"
+                                data-full-name="{{ employee.full_name }}"
+                                data-nie="{{ employee.nie }}"
+                                data-phone="{{ employee.phone }}"
+                                data-position="{{ employee.position }}"
+                                data-start-date="{{ employee.start_date }}"
+                                data-end-date="{{ employee.end_date }}"
+                                data-hours-per-week="{{ employee.hours_per_week }}"
+                                data-days-per-week="{{ employee.days_per_week }}"
+                                data-email="{{ employee.email }}">Edit</button>
+                            <button
+                                class="delete-btn"
+                                data-id="{{ employee.id }}"
+                                data-name="{{ employee.full_name }}">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Hall employees -->
+            <h2>Sala</h2>
+            <table class="employee-table hall-section">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>NIE</th>
+                        <th>Phone</th>
+                        <th>Position</th>
+                        <th>Contract Start Date</th>
+                        <th>Contract End Date</th>
+                        <th>Hours per Week</th>
+                        <th>Days per Week</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in hall_employees %}
+                    <tr>
+                        <td>{{ employee.full_name }}</td>
+                        <td>{{ employee.nie }}</td>
+                        <td>{{ employee.phone }}</td>
+                        <td>{{ employee.position }}</td>
+                        <td>{{ employee.start_date.strftime('%d.%m.%Y') }}</td>
+                        <td>{% if employee.end_date %}{{ employee.end_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
+                        <td>{{ employee.hours_per_week }}</td>
+                        <td>{{ employee.days_per_week }}</td>
+                        <td>{{ employee.email }}</td>
+                        <td>
+                            <button
+                                class="edit-btn"
+                                data-id="{{ employee.id }}"
+                                data-full-name="{{ employee.full_name }}"
+                                data-nie="{{ employee.nie }}"
+                                data-phone="{{ employee.phone }}"
+                                data-position="{{ employee.position }}"
+                                data-start-date="{{ employee.start_date }}"
+                                data-end-date="{{ employee.end_date }}"
+                                data-hours-per-week="{{ employee.hours_per_week }}"
+                                data-days-per-week="{{ employee.days_per_week }}"
+                                data-email="{{ employee.email }}">Edit</button>
+                            <button
+                                class="delete-btn"
+                                data-id="{{ employee.id }}"
+                                data-name="{{ employee.full_name }}">Delete</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- New Employee Button -->
+            <button class="new-employee-btn" id="open-modal-btn">+ New Employee</button>
+        </section>
+    </main>
+
+    <!-- Modal for adding/editing employees -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-title">New Employee</h2>
+            <form id="employee-form" action="{{ url_for('add_employee') }}" method="POST">
+                <label for="full_name">Full Name</label>
+                <input type="text" id="full_name" name="full_name" placeholder="Full Name" required>
+
+                <label for="nie">NIE</label>
+                <input type="text" id="nie" name="nie" placeholder="NIE" required>
+
+                <label for="start_date">Contract Start Date</label>
+                <input type="date" id="start_date" name="start_date" required>
+
+                <label for="end_date">Contract End Date</label>
+                <input type="date" id="end_date" name="end_date">
+
+                <label for="hours_per_week">Hours per Week</label>
+                <input type="number" id="hours_per_week" name="hours_per_week" placeholder="Type here" required>
+
+                <label for="days_per_week">Days per Week</label>
+                <input type="number" id="days_per_week" name="days_per_week" placeholder="Type here" required>
+
+                <label for="position">Position</label>
+                <select id="position" name="position" required>
+                    <option value="Waiter">Waiter</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Cleaning lady">Cleaning lady</option>
+                    <option value="Bartender">Bartender</option>
+                </select>
+
+                <!-- New Section Field for Cocina/Sala -->
+                <label for="section">Section</label>
+                <select id="section" name="section" required>
+                    <option value="Cocina">Cocina</option>
+                    <option value="Sala">Sala</option>
+                </select>
+
+                <label for="phone">Phone Number</label>
+                <input type="text" id="phone" name="phone" placeholder="Phone number" required>
+
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Email" required>
+
+                <div class="form-buttons">
+                    <button type="button" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="save-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for deleting employees -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Delete Employee</h2>
+            <p id="delete-message"></p>
+            <button id="confirm-delete-btn">Confirm Delete</button>
+            <button class="close">Cancel</button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

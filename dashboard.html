@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Check-in/Check-out Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+    <!-- Header with logo and logout -->
+    <header class="dashboard-header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
+        </div>
+        <div class="logout">
+            <a href="{{ url_for('export_to_excel') }}" class="export-btn">Export to Excel</a>
+
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <!-- Employee List Table -->
+    <main class="dashboard-content">
+        <table class="employee-table">
+            <thead>
+                <tr>
+                    <th>Full Name</th>
+                    <th>Position</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Daily Work Time</th>
+                    <th>Monthly Work Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in employees %}
+                <tr>
+                    <td>{{ employee.full_name }}</td>
+                    <td>{{ employee.position }}</td>
+                    <td>{{ employee.check_in.strftime('%d-%m-%Y %H:%M') if employee.check_in else '--:--' }}</td>
+                    <td>{{ employee.check_out.strftime('%d-%m-%Y %H:%M') if employee.check_out else '--:--' }}</td>
+                    <td>
+                        {% if employee.daily_work_time %}
+                            {{ "%02d:%02d:%02d" % (employee.daily_work_time.seconds // 3600, (employee.daily_work_time.seconds % 3600) // 60, employee.daily_work_time.seconds % 60) }}
+                        {% else %}
+                            --:--
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if employee.monthly_work_time %}
+                            {{ "%02d:%02d:%02d" % (employee.monthly_work_time // 3600, (employee.monthly_work_time % 3600) // 60, employee.monthly_work_time % 60) }}
+                        {% else %}
+                            --:--
+                        {% endif %}
+                    </td>
+                    <!-- Check-in and Check-out buttons -->
+                    <td>
+    <!-- Check-in button -->
+    <form action="{{ url_for('check_in', employee_id=employee.id) }}" method="POST" style="display:inline;">
+        <button class="check-in-btn" {% if employee.check_in %}disabled{% endif %}>Check-in</button>
+    </form>
+
+    <!-- Check-out button -->
+    <form action="{{ url_for('check_out', employee_id=employee.id) }}" method="POST" style="display:inline;">
+        <button class="check-out-btn" {% if not employee.check_in or employee.check_out %}disabled{% endif %}>Check-out</button>
+    </form>
+
+    <!-- Reset button -->
+    <form action="{{ url_for('reset_employee', employee_id=employee.id) }}" method="POST" style="display:inline;">
+        <button class="reset-btn">Reset</button>
+    </form>
+</td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

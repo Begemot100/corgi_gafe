@@ -1,0 +1,189 @@
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.logo img {
+    height: 60px;
+}
+
+.logout .logout-btn {
+    font-size: 14px;
+    text-decoration: none;
+    color: #ff4c4c;
+    padding: 10px 20px;
+    border: 1px solid #ff4c4c;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.logout .logout-btn:hover {
+    background-color: #ff4c4c;
+    color: white;
+}
+
+/* Main Content Area */
+.dashboard-content {
+    padding: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+.employee-table {
+    width: 100%;
+    max-width: 1200px;
+    background-color: white;
+    border-collapse: collapse;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.employee-table thead th {
+    background-color: #f9f9f9;
+    font-weight: bold;
+    font-size: 16px;
+    color: #4f4f4f;
+    text-align: left;
+    padding: 15px;
+}
+
+.employee-table tbody td {
+    padding: 15px;
+    text-align: left;
+    color: #4f4f4f;
+}
+
+.employee-table tr {
+    border-bottom: 1px solid #eee;
+}
+
+.employee-table tr:last-child {
+    border-bottom: none;
+}
+
+.employee-table th, .employee-table td {
+    padding: 10px;
+    text-align: left;
+}
+
+.employee-table th {
+    text-align: center;
+}
+
+.employee-table td:nth-child(1) { /* Full Name */
+    width: 15%;
+}
+
+.employee-table td:nth-child(2) { /* Position */
+    width: 15%;
+}
+
+.employee-table td:nth-child(3) { /* NIE */
+    width: 10%;
+}
+
+.employee-table td:nth-child(4), /* Check-in */
+.employee-table td:nth-child(5), /* Check-out */
+.employee-table td:nth-child(6), /* Daily Work Time */
+.employee-table td:nth-child(7), /* Monthly Work Time */
+.employee-table th:nth-child(4),
+.employee-table th:nth-child(5),
+.employee-table th:nth-child(6),
+.employee-table th:nth-child(7) {
+    width: 10%;
+    text-align: center;
+}
+
+.employee-table td:nth-child(8), /* Actions */
+.employee-table th:nth-child(8) {
+    width: 25%;
+    text-align: center;
+}
+
+/* Button Styling */
+button.action-btn, .check-in-btn, .check-out-btn, .reset-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 30px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 5px;
+}
+
+/* Check-in Button */
+.check-in-btn {
+    background-color: #ff6767;
+    color: white;
+}
+
+.check-in-btn:disabled {
+    background-color: #f1f1f1;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* Check-out Button */
+.check-out-btn {
+    background-color: #4c4c4c;
+    color: white;
+}
+
+.check-out-btn:disabled {
+    background-color: #f1f1f1;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* Reset Button */
+.reset-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* Hover effects */
+button:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+/* Disabled state for all buttons */
+button:disabled {
+    background-color: #e0e0e0;
+    color: #888;
+    cursor: not-allowed;
+}
+.export-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    margin: 20px 0;
+    transition: background-color 0.3s ease;
+}
+
+.export-btn:hover {
+    background-color: #45a049;
+}
