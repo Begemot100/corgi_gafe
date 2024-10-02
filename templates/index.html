@@ -14,9 +14,9 @@
         </div>
         <nav>
             <ul>
-                <li><a href="#">Dashboard</a></li>
-                <li><a href="#">Employees</a></li>
-                <li><a href="#">Settings</a></li>
+                <li><a href="#"></a></li>
+                <li><a href="#"></a></li>
+                <li><a href="#"></a></li>
             </ul>
         </nav>
         <div class="logout">
@@ -47,12 +47,18 @@
 
         <!-- Employee list -->
         <section class="employees">
-            <h2>Employees</h2>
-            <div class="filters">
-                <button class="filter-btn" id="show-all">All</button>
-                <button class="filter-btn" id="show-hall">Sala</button>
-                <button class="filter-btn" id="show-kitchen">Cocina</button>
-            </div>
+    <div class="employees-header">
+        <h2>Employees</h2>
+    </div>
+    <div class="filters-container">
+        <div class="filters">
+            <button class="filter-btn" id="show-all">All</button>
+            <button class="filter-btn" id="show-hall">Sala</button>
+            <button class="filter-btn" id="show-kitchen">Cocina</button>
+        </div>
+        <button class="new-employee-btn" id="open-modal-btn">+ New Employee</button>
+    </div>
+
 
             <!-- Kitchen employees -->
             <h2>Cocina</h2>
@@ -159,7 +165,6 @@
             </table>
 
             <!-- New Employee Button -->
-            <button class="new-employee-btn" id="open-modal-btn">+ New Employee</button>
         </section>
     </main>
 
@@ -230,3 +235,4 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
+

@@ -1,0 +1,15 @@
+# Ignore Python virtual environments
+.venv/
+venv/
+
+# Ignore Python bytecode files
+__pycache__/
+*.py[cod]
+
+# Ignore migration cache files
+migrations/__pycache__/
+migrations/versions/__pycache__/
+
+# Ignore .idea folder (for PyCharm or IntelliJ)
+.idea/
+

@@ -23,11 +23,11 @@ body {
 
 /* Sidebar styling */
 .sidebar {
-    width: 250px;
+    width: 84px; /* Уменьшенная ширина */
     background-color: #fff;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     padding: 20px;
-    position: fixed; /* Keep it fixed on the left */
+    position: fixed;
     top: 0;
     left: 0;
     height: 100%;
@@ -38,7 +38,7 @@ body {
 
 /* Logo inside the sidebar */
 .logo img {
-    width: 100px;
+    width: 50px;
     display: block;
     margin: 0 auto 20px;
 }
@@ -61,7 +61,7 @@ nav ul li a {
 }
 
 .logout {
-    margin-top: auto; /* Pushes logout button to the bottom of the sidebar */
+    margin-top: auto;
 }
 
 .logout a {
@@ -72,7 +72,7 @@ nav ul li a {
 
 /* Main content styling */
 .content {
-    margin-left: 250px; /* Push the content to the right of the sidebar */
+    margin-left: 84px; /* Adjust to sidebar width */
     padding: 20px;
     background-color: #f4f4f9;
     flex-grow: 1;
@@ -111,19 +111,45 @@ nav ul li a {
 }
 
 /* Employees section */
-.employees h2 {
-    font-size: 24px;
+.employees-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
 }
 
-.filter-btn {
-    background-color: #ff5a5f;
-    color: white;
-    border: none;
+.filters-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.filters {
+    display: flex;
+    gap: 10px;
+}
+
+/* Общий стиль для всех кнопок */
+button {
+    font-family: inherit;
     padding: 10px 20px;
-    margin-right: 10px;
     border-radius: 5px;
+    border: none;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Основной цвет для кнопок */
+.filter-btn, .new-employee-btn {
+    background-color: #FC8C86; /* Основной цвет */
+    color: white;
+    border-radius: 5px;
+}
+
+/* Hover эффект для кнопок */
+.filter-btn:hover, .new-employee-btn:hover {
+    background-color: #FF4E42; /* Цвет при наведении */
 }
 
 /* Table styling */
@@ -139,22 +165,18 @@ nav ul li a {
     border-bottom: 1px solid #ddd;
 }
 
-.action-btn {
-    background-color: #007bff;
+/* Action buttons */
+.action-btn, .edit-btn, .delete-btn {
+    background-color: #FC8C86;
     color: white;
     border: none;
     padding: 5px 10px;
-    margin-right: 5px;
     border-radius: 5px;
     cursor: pointer;
 }
 
-.new-employee-btn {
-    background-color: #ffcc00;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
+.edit-btn:hover, .delete-btn:hover {
+    background-color: #FF4E42;
 }
 
 /* Modal styles for "New Employee" */
@@ -183,7 +205,7 @@ nav ul li a {
 .modal-content h2 {
     font-size: 28px;
     margin-bottom: 20px;
-    text-align: center; /* Center align the title */
+    text-align: center;
     font-weight: bold;
 }
 
@@ -211,7 +233,7 @@ nav ul li a {
 .modal-content input[type="date"],
 .modal-content input[type="number"],
 .modal-content select {
-    width: calc(50% - 10px); /* Set half-width */
+    width: calc(50% - 10px);
     padding: 12px;
     margin-bottom: 15px;
     font-size: 14px;
@@ -221,7 +243,7 @@ nav ul li a {
 }
 
 .modal-content select {
-    width: 100%; /* Full width for the select element */
+    width: 100%;
 }
 
 /* Flex container for date inputs */
@@ -230,14 +252,14 @@ nav ul li a {
     justify-content: space-between;
 }
 
-/* Button styles */
+/* Button styles inside modal */
 .modal-content .form-buttons {
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
 }
 
-.modal-content button.cancel-btn {
+.modal-content .cancel-btn {
     background-color: #f0f0f0;
     color: #333;
     border: none;
@@ -246,7 +268,7 @@ nav ul li a {
     cursor: pointer;
 }
 
-.modal-content button.save-btn {
+.modal-content .save-btn {
     background-color: #ff5a5f;
     color: white;
     border: none;
@@ -264,14 +286,14 @@ nav ul li a {
     width: 100%;
 }
 
-/* Half-width for horas/semana and dias/semana */
+/* Half-width for hours and days per week */
 .modal-content input#hours_per_week,
 .modal-content input#days_per_week {
-    width: calc(50% - 10px); /* Set half-width with some spacing */
+    width: calc(50% - 10px);
 }
 
 /* Active button filter */
 .filter-btn.active {
-    background-color: #007bff;
+    background-color: #FF4E42;
     color: white;
 }
