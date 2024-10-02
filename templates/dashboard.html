@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <title>Employee Dashboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    <!-- Header with Corgi Cafe logo -->
+    <div class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
+        </div>
+    </div>
+
+    <!-- Dashboard content -->
+    <div class="dashboard-container">
+        {% for employee in employees %}
+        <div class="employee-card">
+            <div class="employee-info">
+                <div class="employee-name">{{ employee.full_name }}</div>
+                <div class="employee-position">{{ employee.position }}</div>
+                <div class="employee-phone">{{ employee.phone }}</div>
+            </div>
+            <div class="check-in-out">
+                <button class="check-in-btn" data-id="{{ employee.id }}">Check-in</button>
+                <span class="check-in-time" id="check-in-time-{{ employee.id }}">
+                    {{ employee.check_in_time.strftime('%H:%M:%S') if employee.check_in_time else '--:--' }}
+                </span>
+                <button class="check-out-btn" data-id="{{ employee.id }}">Check-out</button>
+                <span class="check-out-time" id="check-out-time-{{ employee.id }}">
+                    {{ employee.check_out_time.strftime('%H:%M:%S') if employee.check_out_time else '--:--' }}
+                </span>
+                <span class="daily-hours" id="daily-hours-{{ employee.id }}">Daily: {{ "%.2f" | format(employee.daily_hours) }}h</span>
+                <span class="monthly-hours" id="monthly-hours-{{ employee.id }}">Monthly: {{ "%.2f" | format(employee.monthly_hours) }}h</span>
+                <button class="reset-btn" data-id="{{ employee.id }}">Reset</button> <!-- Reset button -->
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Logout button -->
+    <div class="logout">
+        <a href="#">Logout</a>
+    </div>
+
+    <script>
+        // Check-in event
+        $('.check-in-btn').on('click', function() {
+            const id = $(this).data('id');
+            $.post('/check_in/' + id, function(response) {
+                if (response.check_in_time) {
+                    $('#check-in-time-' + id).text(response.check_in_time);
+                }
+            });
+        });
+
+        // Check-out event
+        $('.check-out-btn').on('click', function() {
+            const id = $(this).data('id');
+            $.post('/check_out/' + id, function(response) {
+                if (response.check_out_time) {
+                    $('#check-out-time-' + id).text(response.check_out_time);
+                    $('#daily-hours-' + id).text('Daily: ' + response.daily_hours.toFixed(2) + 'h');
+                    $('#monthly-hours-' + id).text('Monthly: ' + response.monthly_hours.toFixed(2) + 'h');
+                }
+            });
+        });
+
+        // Reset event
+        $('.reset-btn').on('click', function() {
+            const id = $(this).data('id');
+            $.post('/reset/' + id, function(response) {
+                if (response.success) {
+                    $('#check-in-time-' + id).text('--:--');
+                    $('#check-out-time-' + id).text('--:--');
+                    $('#daily-hours-' + id).text('Daily: 0h');
+                    // Monthly hours remain unchanged
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

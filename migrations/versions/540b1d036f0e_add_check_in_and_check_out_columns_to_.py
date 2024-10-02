@@ -1,8 +1,8 @@
-"""Initial migration
+"""Add check_in and check_out columns to Employee
 
-Revision ID: d00886b51478
+Revision ID: 540b1d036f0e
 Revises: 
-Create Date: 2024-09-30 22:14:44.079243
+Create Date: 2024-10-02 23:18:27.728774
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'd00886b51478'
+revision = '540b1d036f0e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,6 +29,9 @@ def upgrade():
     sa.Column('position', sa.String(length=50), nullable=False),
     sa.Column('phone', sa.String(length=20), nullable=False),
     sa.Column('email', sa.String(length=100), nullable=False),
+    sa.Column('section', sa.String(length=50), nullable=False),
+    sa.Column('check_in_time', sa.DateTime(), nullable=True),
+    sa.Column('check_out_time', sa.DateTime(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###
