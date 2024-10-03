@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/work.css') }}">
+    <title>Work Logs</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
+        </div>
+        <div class="logout">
+            <a href="#">Logout</a>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <h1>Employees</h1>
+        <div class="filter-bar">
+            <button class="filter-btn">Hoy</button>
+            <button class="filter-btn">Grupo</button>
+            <!-- Dropdown for selecting employee -->
+            <select id="employee-select">
+                {% for employee in employees %}
+                    <option value="{{ employee.id }}">{{ employee.full_name }} - {{ employee.position }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="work-logs">
+            <div id="work-log-container"></div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#employee-select').change(function() {
+                const employeeId = $(this).val();
+                fetch(`/work_logs/${employeeId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        let html = `<h2>${data.employee_name} - ${data.position}</h2>`;
+                        html += `<table>
+                            <thead>
+                                <tr>
+                                    <th>FECHA</th>
+                                    <th>ENTRA</th>
+                                    <th>ENTRA COMIDA</th>
+                                    <th>SALIDA COMIDA</th>
+                                    <th>SALIDA</th>
+                                    <th>TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                        data.work_logs.forEach(log => {
+                            html += `<tr>
+                                <td>${log.date}</td>
+                                <td>${log.check_in || '--:--'}</td>
+                                <td>${log.lunch_start || '--:--'}</td>
+                                <td>${log.lunch_end || '--:--'}</td>
+                                <td>${log.check_out || '--:--'}</td>
+                                <td>${log.total_hours}</td>
+                            </tr>`;
+                        });
+                        html += `</tbody></table>`;
+                        html += `<div class="summary">
+                            <p>Total hours: ${data.total_hours} hours</p>
+                            <p>Total days: ${data.total_days}</p>
+                            <p>Overtime: ${data.overtime} hours</p>
+                        </div>`;
+                        $('#work-log-container').html(html);
+                    });
+            });
+
+            // Trigger initial fetch for the first employee in the list
+            $('#employee-select').trigger('change');
+        });
+    </script>
+</body>
+</html>

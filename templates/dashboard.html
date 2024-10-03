@@ -10,43 +10,54 @@
 </head>
 <body>
 
-    <!-- Header with Corgi Cafe logo -->
+    <!-- Header with Corgi Cafe logo and current date -->
     <div class="header">
         <div class="logo">
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
+        </div>
+        <div class="current-date">
+            {{ current_date }}  <!-- Отображение текущей даты -->
         </div>
     </div>
 
     <!-- Dashboard content -->
     <div class="dashboard-container">
-        {% for employee in employees %}
-        <div class="employee-card">
-            <div class="employee-info">
-                <div class="employee-name">{{ employee.full_name }}</div>
-                <div class="employee-position">{{ employee.position }}</div>
-                <div class="employee-phone">{{ employee.phone }}</div>
-            </div>
-            <div class="check-in-out">
-                <button class="check-in-btn" data-id="{{ employee.id }}">Check-in</button>
-                <span class="check-in-time" id="check-in-time-{{ employee.id }}">
-                    {{ employee.check_in_time.strftime('%H:%M:%S') if employee.check_in_time else '--:--' }}
-                </span>
-                <button class="check-out-btn" data-id="{{ employee.id }}">Check-out</button>
-                <span class="check-out-time" id="check-out-time-{{ employee.id }}">
-                    {{ employee.check_out_time.strftime('%H:%M:%S') if employee.check_out_time else '--:--' }}
-                </span>
-                <span class="daily-hours" id="daily-hours-{{ employee.id }}">Daily: {{ "%.2f" | format(employee.daily_hours) }}h</span>
-                <span class="monthly-hours" id="monthly-hours-{{ employee.id }}">Monthly: {{ "%.2f" | format(employee.monthly_hours) }}h</span>
-                <button class="reset-btn" data-id="{{ employee.id }}">Reset</button> <!-- Reset button -->
-            </div>
+    {% for employee in employees %}
+    <div class="employee-card">
+        <div class="employee-info">
+            <div class="employee-name">{{ employee.full_name }}</div>
+            <div class="employee-position">{{ employee.position }}</div>
+            <div class="employee-phone">{{ employee.phone }}</div>
         </div>
-        {% endfor %}
-    </div>
+        <div class="check-in-out">
+            <button class="check-in-btn" data-id="{{ employee.id }}">Check-in</button>
+            <span class="check-in-time" id="check-in-time-{{ employee.id }}">
+                {{ employee.check_in_time.strftime('%H:%M:%S') if employee.check_in_time else '--:--' }}
+            </span>
 
-    <!-- Logout button -->
-    <div class="logout">
-        <a href="#">Logout</a>
+            <button class="lunch-start-btn" data-id="{{ employee.id }}">Lunch Start</button>
+            <span class="lunch-start-time" id="lunch-start-time-{{ employee.id }}">
+                {{ employee.lunch_start_time.strftime('%H:%M:%S') if employee.lunch_start_time else '--:--' }}
+            </span>
+
+            <button class="lunch-end-btn" data-id="{{ employee.id }}">Lunch End</button>
+            <span class="lunch-end-time" id="lunch-end-time-{{ employee.id }}">
+                {{ employee.lunch_end_time.strftime('%H:%M:%S') if employee.lunch_end_time else '--:--' }}
+            </span>
+
+            <button class="check-out-btn" data-id="{{ employee.id }}">Check-out</button>
+            <span class="check-out-time" id="check-out-time-{{ employee.id }}">
+                {{ employee.check_out_time.strftime('%H:%M:%S') if employee.check_out_time else '--:--' }}
+            </span>
+
+            <span class="daily-hours" id="daily-hours-{{ employee.id }}">Daily: {{ "%.2f" | format(employee.daily_hours) }}h</span>
+            <span class="monthly-hours" id="monthly-hours-{{ employee.id }}">Monthly: {{ "%.2f" | format(employee.monthly_hours) }}h</span>
+            <button class="reset-btn" data-id="{{ employee.id }}">Reset</button>
+        </div>
     </div>
+    {% endfor %}
+</div>
+
 
     <script>
         // Check-in event
@@ -71,6 +82,26 @@
             });
         });
 
+        // Lunch start event
+        $('.lunch-start-btn').on('click', function() {
+            const id = $(this).data('id');
+            $.post('/lunch_start/' + id, function(response) {
+                if (response.lunch_start_time) {
+                    $('#lunch-start-time-' + id).text(response.lunch_start_time);
+                }
+            });
+        });
+
+        // Lunch end event
+        $('.lunch-end-btn').on('click', function() {
+            const id = $(this).data('id');
+            $.post('/lunch_end/' + id, function(response) {
+                if (response.lunch_end_time) {
+                    $('#lunch-end-time-' + id).text(response.lunch_end_time);
+                }
+            });
+        });
+
         // Reset event
         $('.reset-btn').on('click', function() {
             const id = $(this).data('id');
@@ -78,8 +109,9 @@
                 if (response.success) {
                     $('#check-in-time-' + id).text('--:--');
                     $('#check-out-time-' + id).text('--:--');
+                    $('#lunch-start-time-' + id).text('--:--');
+                    $('#lunch-end-time-' + id).text('--:--');
                     $('#daily-hours-' + id).text('Daily: 0h');
-                    // Monthly hours remain unchanged
                 }
             });
         });

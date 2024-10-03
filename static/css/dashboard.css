@@ -40,7 +40,7 @@ body {
 /* Dashboard layout */
 .dashboard-container {
     padding: 20px;
-    max-width: 1200px;
+    max-width: 1500px;
     margin: 0 auto;
 }
 
@@ -55,11 +55,13 @@ body {
     margin-bottom: 15px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     min-height: 100px; /* Ensures all cards have the same height */
+    width: 100%; /* Make the card take the full width */
 }
 
 /* Ensuring all elements have fixed sizes to avoid movement */
 .employee-info {
     flex: 1;
+    min-width: 150px; /* Prevents shrinkage */
 }
 
 .employee-name {
@@ -82,51 +84,45 @@ body {
 
 .check-in-btn,
 .check-out-btn,
-.reset-btn {
+.reset-btn,
+.lunch-start-btn,
+.lunch-end-btn {
     padding: 10px 15px;
     border: none;
     border-radius: 5px;
     font-size: 14px;
     cursor: pointer;
-    min-width: 100px; /* Ensures buttons are the same size */
+    width: 100px; /* Ensures buttons are the same size */
     text-align: center;
-}
-
-.check-in-btn {
-    background-color: #FF6F61;
+    background-color: #FF6F61; /* Красный цвет для кнопок */
     color: white;
 }
 
-.check-in-btn:hover {
-    background-color: #FF4E42;
-}
-
-.check-out-btn {
-    background-color: #B0B0B0;
-    color: white;
-}
-
-.check-out-btn:hover {
-    background-color: #808080;
-}
-
-.reset-btn {
-    background-color: #FF4E42;
-    color: white;
-}
-
-.reset-btn:hover {
-    background-color: #FF2E20;
+.check-in-btn:hover,
+.check-out-btn:hover,
+.reset-btn:hover,
+.lunch-start-btn:hover,
+.lunch-end-btn:hover {
+    background-color: #FF4E42; /* Более темный красный для ховера */
 }
 
 /* Time and hours */
 .check-in-time,
 .check-out-time,
 .daily-hours,
-.monthly-hours {
+.monthly-hours,
+.lunch-start-time,
+.lunch-end-time {
     font-size: 16px;
     margin-left: 10px;
     color: #333;
     min-width: 80px; /* Ensures times have the same space */
     text-align: center;
+}
+
+/* Summary styles */
+.summary {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #333;
 }

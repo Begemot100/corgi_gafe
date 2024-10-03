@@ -29,6 +29,10 @@ class Employee(db.Model):
     check_out_time = db.Column(db.DateTime, nullable=True)
     daily_hours = db.Column(db.Float, default=0)
     monthly_hours = db.Column(db.Float, default=0)
+    lunch_start_time = db.Column(db.DateTime, nullable=True)
+    lunch_end_time = db.Column(db.DateTime, nullable=True)
+
+    work_logs = db.relationship('WorkLog', backref='employee', cascade="all, delete-orphan", lazy=True)
 
     def __repr__(self):
         return f'<Employee {self.full_name}>'
@@ -39,11 +43,11 @@ class WorkLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     check_in_time = db.Column(db.DateTime, nullable=False)
+    lunch_start_time = db.Column(db.DateTime, nullable=True)
+    lunch_end_time = db.Column(db.DateTime, nullable=True)
     check_out_time = db.Column(db.DateTime, nullable=True)
     worked_hours = db.Column(db.Float, default=0)
     log_date = db.Column(db.Date, nullable=False)
-
-    employee = db.relationship('Employee', backref=db.backref('work_logs', lazy=True))
 
 
 # Main route
@@ -60,6 +64,13 @@ def dashboard():
     employees = Employee.query.all()
     current_date = datetime.now().strftime('%Y-%m-%d')  # Получаем текущую дату
     return render_template('dashboard.html', employees=employees, current_date=current_date)
+
+@app.route('/work')
+def work():
+    # Получаем список всех сотрудников для выбора в выпадающем меню
+    employees = Employee.query.all()
+    return render_template('work.html', employees=employees)
+
 @app.route('/add', methods=['POST'])
 def add_employee():
     full_name = request.form['full_name']
@@ -101,9 +112,20 @@ def add_employee():
 # Удаление сотрудника
 @app.route('/delete/<int:id>', methods=['POST'])
 def delete_employee(id):
-    employee_to_delete = Employee.query.get_or_404(id)
-    db.session.delete(employee_to_delete)
-    db.session.commit()
+    employee = Employee.query.get_or_404(id)
+
+    # Удаляем все связанные WorkLog перед удалением сотрудника
+    WorkLog.query.filter_by(employee_id=employee.id).delete()
+
+    # Теперь удаляем самого сотрудника
+    db.session.delete(employee)
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting employee: {e}")
+        return jsonify({'error': 'Error deleting employee'}), 500
+
     return '', 200
 
 
@@ -137,11 +159,10 @@ def edit_employee(id):
 
 
 # Route for check-in
-# Route for check-in
 @app.route('/check_in/<int:id>', methods=['POST'])
 def check_in(id):
-    employee = db.session.get(Employee, id)  # Используем db.session.get() для получения сотрудника
-    if employee:  # Проверяем, что сотрудник существует
+    employee = db.session.get(Employee, id)
+    if employee:
         check_in_time = datetime.now()
         employee.check_in_time = check_in_time
 
@@ -157,18 +178,18 @@ def check_in(id):
         return jsonify({'error': 'Employee not found'}), 404
 
 # Route for check-out
-# Route for check-out
 @app.route('/check_out/<int:id>', methods=['POST'])
 def check_out(id):
-    employee = db.session.get(Employee, id)  # Получаем сотрудника
+    employee = db.session.get(Employee, id)
     if employee:
-        if employee.check_in_time is not None and employee.check_out_time is None:  # Проверяем, что есть check-in и еще не было check-out
+        if employee.check_in_time is not None and employee.check_out_time is None:
             check_out_time = datetime.now()
             employee.check_out_time = check_out_time
 
-            # Вычисляем отработанные часы за день
+            # Вычисляем отработанные часы за день, учитывая обед, если он был
             time_difference = check_out_time - employee.check_in_time
-            hours = time_difference.total_seconds() / 3600  # Конвертируем в часы
+            lunch_time = (employee.lunch_end_time - employee.lunch_start_time).total_seconds() / 3600 if employee.lunch_start_time and employee.lunch_end_time else 0
+            hours = (time_difference.total_seconds() / 3600) - lunch_time
 
             # Обновляем дневные и месячные часы
             employee.daily_hours = hours
@@ -178,7 +199,7 @@ def check_out(id):
             work_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=date.today()).first()
             if work_log:
                 work_log.check_out_time = check_out_time
-                work_log.worked_hours = hours
+                work_log.worked_hours = hours  # Сохраняем общее время за день в лог
 
             db.session.commit()
 
@@ -197,12 +218,93 @@ def check_out(id):
 def reset_employee(id):
     employee = Employee.query.get(id)
     if employee:
-        # Сбрасываем время чек-ина и чек-аута
         employee.check_in_time = None
         employee.check_out_time = None
-        employee.daily_hours = 0  # Обнуляем время за день
+        employee.daily_hours = 0
         db.session.commit()
         return jsonify({'success': True})
+    else:
+        return jsonify({'error': 'Employee not found'}), 404
+
+
+@app.route('/work_logs/<int:employee_id>', methods=['GET'])
+def get_work_logs(employee_id):
+    employee = Employee.query.get(employee_id)
+    if not employee:
+        return jsonify({'error': 'Employee not found'}), 404
+
+    work_logs = WorkLog.query.filter_by(employee_id=employee_id).all()
+
+    total_hours = sum(log.worked_hours for log in work_logs)
+    total_days = len(work_logs)
+    overtime = max(0, total_hours - (8 * total_days))
+
+    logs_data = [
+        {
+            'date': log.log_date.strftime('%a %d/%m/%Y'),
+            'check_in': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
+            'lunch_start': log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--',
+            'lunch_end': log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--',
+            'check_out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
+            'total_hours': f'{round(log.worked_hours, 2)} hours' if log.worked_hours else '0 hours'
+        }
+        for log in work_logs
+    ]
+
+    return jsonify({
+        'employee_name': employee.full_name,
+        'position': employee.position,  # Добавьте должность в ответ
+        'total_hours': round(total_hours, 2),
+        'total_days': total_days,
+        'overtime': round(overtime, 2),
+        'work_logs': logs_data
+    })
+
+# Route for lunch start
+@app.route('/lunch_start/<int:id>', methods=['POST'])
+def lunch_start(id):
+    employee = db.session.get(Employee, id)
+    if employee:
+        print(f"Employee {employee.full_name} Check-in Time: {employee.check_in_time}")
+        print(f"Lunch Start Time: {employee.lunch_start_time}")
+
+        # Проверяем, что был Check-in и обед еще не начался
+        if employee.check_in_time is not None and employee.lunch_start_time is None:
+            lunch_start_time = datetime.now()
+            employee.lunch_start_time = lunch_start_time
+
+            # Обновляем WorkLog для текущего дня
+            work_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=date.today()).first()
+            if work_log:
+                work_log.lunch_start_time = lunch_start_time
+
+            db.session.commit()
+            return jsonify({'lunch_start_time': lunch_start_time.strftime('%H:%M:%S')})
+        else:
+            print("Check-in not found or lunch already started")
+            return jsonify({'error': 'Check-in not found or lunch already started'}), 400
+    else:
+        print("Employee not found")
+        return jsonify({'error': 'Employee not found'}), 404
+
+# Route for lunch end
+@app.route('/lunch_end/<int:id>', methods=['POST'])
+def lunch_end(id):
+    employee = db.session.get(Employee, id)
+    if employee:
+        if employee.lunch_start_time is not None and employee.lunch_end_time is None:
+            lunch_end_time = datetime.now()
+            employee.lunch_end_time = lunch_end_time
+
+            # Обновляем WorkLog
+            work_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=date.today()).first()
+            if work_log:
+                work_log.lunch_end_time = lunch_end_time
+
+            db.session.commit()
+            return jsonify({'lunch_end_time': lunch_end_time.strftime('%H:%M:%S')})
+        else:
+            return jsonify({'error': 'Lunch already ended or not started yet'}), 400
     else:
         return jsonify({'error': 'Employee not found'}), 404
 
