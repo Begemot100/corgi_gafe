@@ -47,18 +47,17 @@
 
         <!-- Employee list -->
         <section class="employees">
-    <div class="employees-header">
-        <h2>Employees</h2>
-    </div>
-    <div class="filters-container">
-        <div class="filters">
-            <button class="filter-btn" id="show-all">All</button>
-            <button class="filter-btn" id="show-hall">Sala</button>
-            <button class="filter-btn" id="show-kitchen">Cocina</button>
-        </div>
-        <button class="new-employee-btn" id="open-modal-btn">+ New Employee</button>
-    </div>
-
+            <div class="employees-header">
+                <h2>Employees</h2>
+            </div>
+            <div class="filters-container">
+                <div class="filters">
+                    <button class="filter-btn" id="show-all">All</button>
+                    <button class="filter-btn" id="show-hall">Sala</button>
+                    <button class="filter-btn" id="show-kitchen">Cocina</button>
+                </div>
+                <button class="new-employee-btn" id="open-modal-btn">+ New Employee</button>
+            </div>
 
             <!-- Kitchen employees -->
             <h2>Cocina</h2>
@@ -163,8 +162,6 @@
                     {% endfor %}
                 </tbody>
             </table>
-
-            <!-- New Employee Button -->
         </section>
     </main>
 
@@ -201,10 +198,8 @@
                     <option value="Chef">Chef</option>
                     <option value="Su-Chef">Su-Chef</option>
                     <option value="Cook">Cook</option>
-
                 </select>
 
-                <!-- New Section Field for Cocina/Sala -->
                 <label for="section">Section</label>
                 <select id="section" name="section" required>
                     <option value="Cocina">Cocina</option>
@@ -239,4 +234,3 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
-

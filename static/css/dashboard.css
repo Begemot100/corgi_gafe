@@ -1,128 +1,97 @@
-/* General resets */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: Arial, sans-serif;
     background-color: #f9f9f9;
 }
 
-/* Header styles */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px;
     background-color: #fff;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
 }
 
-.logo img {
-    width: 100px;
+.header .logo img {
+    height: 50px;
+}
+
+.current-date {
+    font-size: 18px;
+    font-weight: bold;
 }
 
 .logout a {
-    font-size: 16px;
-    color: #FF4E42;
+    color: #ff6347;
     text-decoration: none;
+    font-weight: bold;
 }
 
-/* Current date styles */
-.current-date {
-    margin-right: 20px;
-    font-size: 16px;
-    color: #333;
-}
-
-/* Dashboard layout */
 .dashboard-container {
     padding: 20px;
-    max-width: 1500px;
-    margin: 0 auto;
 }
 
-/* Employee card layout */
 .employee-card {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: white;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    min-height: 100px; /* Ensures all cards have the same height */
-    width: 100%; /* Make the card take the full width */
 }
 
-/* Ensuring all elements have fixed sizes to avoid movement */
 .employee-info {
-    flex: 1;
-    min-width: 150px; /* Prevents shrinkage */
+    flex-grow: 1;
 }
 
 .employee-name {
     font-size: 18px;
     font-weight: bold;
-    margin-bottom: 5px;
 }
 
-.employee-position,
-.employee-phone {
-    color: #999;
+.employee-position {
+    color: #888;
 }
 
-/* Buttons and time */
 .check-in-out {
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 10px; /* Расстояние между кнопками */
 }
 
-.check-in-btn,
-.check-out-btn,
-.reset-btn,
-.lunch-start-btn,
-.lunch-end-btn {
-    padding: 10px 15px;
+.check-in-out button {
+    background-color: #ff6347; /* Цвет для Check-in */
+    color: #fff;
     border: none;
-    border-radius: 5px;
-    font-size: 14px;
+    border-radius: 4px;
+    padding: 10px 15px;
     cursor: pointer;
-    width: 100px; /* Ensures buttons are the same size */
-    text-align: center;
-    background-color: #FF6F61; /* Красный цвет для кнопок */
-    color: white;
+    min-width: 100px; /* Минимальная ширина кнопок */
+    text-align: center; /* Центрируем текст */
+    white-space: nowrap; /* Запрет на перенос текста */
 }
 
-.check-in-btn:hover,
-.check-out-btn:hover,
-.reset-btn:hover,
-.lunch-start-btn:hover,
-.lunch-end-btn:hover {
-    background-color: #FF4E42; /* Более темный красный для ховера */
+.check-in-out button.check-out-btn,
+.check-in-out button.lunch-end-btn {
+    background-color: #919191; /* Цвет для Check-out и Lunch End */
 }
 
-/* Time and hours */
-.check-in-time,
-.check-out-time,
-.daily-hours,
-.monthly-hours,
-.lunch-start-time,
-.lunch-end-time {
-    font-size: 16px;
+.check-in-out button:hover {
+    background-color: #919191; /* Цвет при наведении для Check-in */
+}
+
+.check-in-out button.check-out-btn:hover,
+.check-in-out button.lunch-end-btn:hover {
+    background-color: #ff6347; /* Цвет при наведении для Check-out и Lunch End */
+}
+
+.check-in-out span {
+    margin-right: 15px;
+}
+
+.daily-hours, .monthly-hours {
     margin-left: 10px;
-    color: #333;
-    min-width: 80px; /* Ensures times have the same space */
-    text-align: center;
-}
-
-/* Summary styles */
-.summary {
-    margin-top: 10px;
-    font-weight: bold;
-    color: #333;
+    font-size: 14px;
 }

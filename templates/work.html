@@ -2,84 +2,111 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/work.css') }}">
     <title>Work Logs</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-
-    <div class="header">
+    <header>
         <div class="logo">
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
         </div>
         <div class="logout">
-            <a href="#">Logout</a>
+            <a href="/logout">Logout</a>
         </div>
-    </div>
+    </header>
 
-    <div class="dashboard-container">
+    <main class="work-container">
         <h1>Employees</h1>
         <div class="filter-bar">
-            <button class="filter-btn">Hoy</button>
-            <button class="filter-btn">Grupo</button>
-            <!-- Dropdown for selecting employee -->
-            <select id="employee-select">
-                {% for employee in employees %}
-                    <option value="{{ employee.id }}">{{ employee.full_name }} - {{ employee.position }}</option>
-                {% endfor %}
-            </select>
+            <div class="dropdown">
+                <button class="filter-btn" onclick="toggleDropdown()">Hoy</button>
+                <div id="dropdown-menu" class="dropdown-menu">
+                    <a href="#" onclick="applyFilter('today')">Hoy</a>
+                    <a href="#" onclick="applyFilter('yesterday')">Ayer</a>
+                    <a href="#" onclick="applyFilter('last_7_days')">Últimos 7 días</a>
+                    <a href="#" onclick="applyFilter('last_30_days')">Últimos 30 días</a>
+                    <a href="#" onclick="applyFilter('previous_month')">Mes Anterior</a>
+                    <a href="#" onclick="applyFilter('current_month')">Este mes</a>
+                    <a href="#" onclick="applyFilter('custom')">Rango Personalizado</a>
+                </div>
+            </div>
+
+            <div class="dropdown">
+                <button class="filter-btn" onclick="toggleGroupDropdown()">Grupo</button>
+                <div id="group-dropdown-menu" class="dropdown-menu">
+                    <a href="#" onclick="applyGroupFilter('cocina')">Cocina</a>
+                    <a href="#" onclick="applyGroupFilter('sala')">Sala</a>
+                </div>
+            </div>
         </div>
 
         <div class="work-logs">
-            <div id="work-log-container"></div>
+            {% for employee in employees %}
+                <div class="employee-log">
+                    <h2>{{ employee.full_name }} - {{ employee.position }}</h2>
+                    <table class="logs-table">
+                        <thead>
+                            <tr>
+                                <th>FECHA</th>
+                                <th>ENTRA</th>
+                                <th>ENTRA COMIDA</th>
+                                <th>SALIDA COMIDA</th>
+                                <th>SALIDA</th>
+                                <th>TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in employee.work_logs %}
+                                <tr>
+                                    <td>{{ log.log_date.strftime('%a %d/%m/%Y') }}</td>
+                                    <td>{{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}</td>
+                                    <td>{{ log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--' }}</td>
+                                    <td>{{ log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--' }}</td>
+                                    <td>{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
+                                    <td>{{ log.worked_hours|format_hours }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="summary">
+                        <p>Total hours: {{ employee.total_hours|format_hours }}</p>
+                        <p>Total days: {{ employee.total_days }}</p>
+                        <p>Overtime: {{ employee.overtime|format_hours }}</p>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
-    </div>
+    </main>
 
     <script>
-        $(document).ready(function() {
-            $('#employee-select').change(function() {
-                const employeeId = $(this).val();
-                fetch(`/work_logs/${employeeId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        let html = `<h2>${data.employee_name} - ${data.position}</h2>`;
-                        html += `<table>
-                            <thead>
-                                <tr>
-                                    <th>FECHA</th>
-                                    <th>ENTRA</th>
-                                    <th>ENTRA COMIDA</th>
-                                    <th>SALIDA COMIDA</th>
-                                    <th>SALIDA</th>
-                                    <th>TOTAL</th>
-                                </tr>
-                            </thead>
-                            <tbody>`;
-                        data.work_logs.forEach(log => {
-                            html += `<tr>
-                                <td>${log.date}</td>
-                                <td>${log.check_in || '--:--'}</td>
-                                <td>${log.lunch_start || '--:--'}</td>
-                                <td>${log.lunch_end || '--:--'}</td>
-                                <td>${log.check_out || '--:--'}</td>
-                                <td>${log.total_hours}</td>
-                            </tr>`;
-                        });
-                        html += `</tbody></table>`;
-                        html += `<div class="summary">
-                            <p>Total hours: ${data.total_hours} hours</p>
-                            <p>Total days: ${data.total_days}</p>
-                            <p>Overtime: ${data.overtime} hours</p>
-                        </div>`;
-                        $('#work-log-container').html(html);
-                    });
-            });
+        function applyFilter(filterType) {
+            window.location.href = `/work?filter=${filterType}`;
+        }
 
-            // Trigger initial fetch for the first employee in the list
-            $('#employee-select').trigger('change');
-        });
+        function applyGroupFilter(groupType) {
+            window.location.href = `/work?group=${groupType}`;
+        }
+
+        function toggleDropdown() {
+            document.getElementById("dropdown-menu").classList.toggle("show");
+        }
+
+        function toggleGroupDropdown() {
+            document.getElementById("group-dropdown-menu").classList.toggle("show");
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.filter-btn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-menu");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
     </script>
 </body>
 </html>
