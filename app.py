@@ -87,14 +87,19 @@ def dashboard():
 
 
 
-@app.route('/work')
+@app.route('/work', methods=['GET'])
 def work():
+    # Получаем фильтры из URL
+    selected_date_str = request.args.get('date', None)
     filter_type = request.args.get('filter', 'today')
     group_type = request.args.get('group', None)
     current_date = datetime.now()
 
-    # Инициализация logs в зависимости от фильтра
-    if filter_type == 'today':
+    # Фильтрация по дате
+    if selected_date_str:
+        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
+        logs = WorkLog.query.filter(WorkLog.log_date == selected_date).all()
+    elif filter_type == 'today':
         logs = WorkLog.query.filter(WorkLog.log_date == current_date.date()).all()
     elif filter_type == 'yesterday':
         yesterday = current_date - timedelta(days=1)
@@ -131,7 +136,6 @@ def work():
         employee.overtime = max(0, total_hours - (8 * len(employee_logs)))
 
     return render_template('work.html', employees=employees)
-
 # Custom filter to format total hours
 @app.template_filter('format_hours')
 def format_hours_filter(value):

@@ -19,6 +19,7 @@
     <main class="work-container">
         <h1>Employees</h1>
         <div class="filter-bar">
+            <!-- Dropdown for predefined date ranges -->
             <div class="dropdown">
                 <button class="filter-btn" onclick="toggleDropdown()">Hoy</button>
                 <div id="dropdown-menu" class="dropdown-menu">
@@ -32,6 +33,10 @@
                 </div>
             </div>
 
+            <!-- Date picker for specific date selection -->
+            <input type="date" id="datePicker" class="filter-btn" onchange="applyDateFilter()">
+
+            <!-- Dropdown for group selection -->
             <div class="dropdown">
                 <button class="filter-btn" onclick="toggleGroupDropdown()">Grupo</button>
                 <div id="group-dropdown-menu" class="dropdown-menu">
@@ -44,7 +49,6 @@
         <div class="work-logs">
             {% for employee in employees %}
                 <div class="employee-log">
-                    <h2>{{ employee.full_name }} - {{ employee.position }}</h2>
                     <table class="logs-table">
                         <thead>
                             <tr>
@@ -69,10 +73,12 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <div class="summary">
-                        <p>Total hours: {{ employee.total_hours|format_hours }}</p>
-                        <p>Total days: {{ employee.total_days }}</p>
-                        <p>Overtime: {{ employee.overtime|format_hours }}</p>
+                    <div class="summary-container">
+                        <div class="summary-box">
+                            <p>Total hours: {{ employee.total_hours|format_hours }}</p>
+                            <p>Total days: {{ employee.total_days }}</p>
+                            <p>Overtime: {{ employee.overtime|format_hours }}</p>
+                        </div>
                     </div>
                 </div>
             {% endfor %}
@@ -80,14 +86,6 @@
     </main>
 
     <script>
-        function applyFilter(filterType) {
-            window.location.href = `/work?filter=${filterType}`;
-        }
-
-        function applyGroupFilter(groupType) {
-            window.location.href = `/work?group=${groupType}`;
-        }
-
         function toggleDropdown() {
             document.getElementById("dropdown-menu").classList.toggle("show");
         }
@@ -105,6 +103,22 @@
                         openDropdown.classList.remove('show');
                     }
                 }
+            }
+        }
+
+        function applyFilter(filterType) {
+            window.location.href = `/work?filter=${filterType}`;
+        }
+
+        function applyGroupFilter(groupType) {
+            window.location.href = `/work?group=${groupType}`;
+        }
+
+        // Функция для применения фильтра по выбранной дате
+        function applyDateFilter() {
+            const selectedDate = document.getElementById("datePicker").value;
+            if (selectedDate) {
+                window.location.href = `/work?date=${selectedDate}`;
             }
         }
     </script>
