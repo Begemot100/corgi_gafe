@@ -49,36 +49,35 @@
         <div class="work-logs">
             {% for employee in employees %}
                 <div class="employee-log">
+                    <h2>{{ employee.full_name }} ({{ employee.position }})</h2>  <!-- Добавление должности здесь -->
                     <table class="logs-table">
                         <thead>
                             <tr>
-                                <th>FECHA</th>
-                                <th>ENTRA</th>
-                                <th>ENTRA COMIDA</th>
-                                <th>SALIDA COMIDA</th>
-                                <th>SALIDA</th>
-                                <th>TOTAL</th>
+                                <th>Дата</th>
+                                <th>Чек-ин</th>
+                                <th>Начало обеда</th>
+                                <th>Конец обеда</th>
+                                <th>Чек-аут</th>
+                                <th>Итого</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for log in employee.work_logs %}
                                 <tr>
-                                    <td>{{ log.log_date.strftime('%a %d/%m/%Y') }}</td>
+                                    <td>{{ log.log_date.strftime('%Y-%m-%d') }}</td>
                                     <td>{{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}</td>
                                     <td>{{ log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--' }}</td>
                                     <td>{{ log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--' }}</td>
                                     <td>{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
-                                    <td>{{ log.worked_hours|format_hours }}</td>
+                                    <td>{{ log.worked_hours | format_hours }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                     <div class="summary-container">
-                        <div class="summary-box">
-                            <p>Total hours: {{ employee.total_hours|format_hours }}</p>
-                            <p>Total days: {{ employee.total_days }}</p>
-                            <p>Overtime: {{ employee.overtime|format_hours }}</p>
-                        </div>
+                        <p>Total hours: {{ employee.total_hours | format_hours }}</p>
+                        <p>Total days: {{ employee.total_days }}</p>
+                        <p>Overtime: {{ employee.overtime | format_hours }}</p>
                     </div>
                 </div>
             {% endfor %}

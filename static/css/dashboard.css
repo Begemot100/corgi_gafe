@@ -1,3 +1,4 @@
+/* Общие стили */
 body {
     font-family: Arial, sans-serif;
     background-color: #f9f9f9;
@@ -27,6 +28,7 @@ body {
     font-weight: bold;
 }
 
+/* Контейнер дашборда */
 .dashboard-container {
     padding: 20px;
 }
@@ -55,10 +57,32 @@ body {
     color: #888;
 }
 
+/* Общие стили для кнопок */
 .check-in-out {
     display: flex;
     align-items: center;
-    gap: 10px; /* Расстояние между кнопками */
+    justify-content: space-between; /* Обеспечивает равномерное распределение элементов */
+}
+
+/* Фиксированная ширина для кнопок и времени */
+.check-in-btn,
+.check-out-btn,
+.lunch-start-btn,
+.lunch-end-btn {
+    width: 100px; /* Задайте фиксированную ширину кнопкам */
+    margin-right: 10px; /* Промежуток между кнопками */
+    cursor: pointer;
+}
+
+.check-in-time,
+.lunch-start-time,
+.lunch-end-time,
+.check-out-time,
+.daily-hours,
+.monthly-hours {
+    width: 80px; /* Фиксированная ширина для текстовых данных */
+    text-align: center; /* Центрирование текста */
+    margin-left: 10px; /* Промежуток между текстом и кнопками */
 }
 
 .check-in-out button {

@@ -95,14 +95,12 @@ h1 {
     background-color: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    display: flex;
-    justify-content: space-between;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Таблица */
 .logs-table {
-    width: 70%;
+    width: 100%;
     border-collapse: collapse;
     margin-right: 20px;
 }
@@ -116,10 +114,7 @@ h1 {
 
 /* Стили для блока Total */
 .summary-container {
-    width: 25%;
-    display: flex;
-    justify-content: flex-end;
-    align-items: flex-start;
+    margin-top: 10px;
 }
 
 .summary-box {

@@ -22,36 +22,36 @@
 
     <!-- Dashboard content -->
     <div class="dashboard-container">
-        {% for employee in employees %}
+        {% for employee in dashboard_data %}
         <div class="employee-card">
             <div class="employee-info">
-                <div class="employee-name">{{ employee.full_name }}</div>
-                <div class="employee-position">{{ employee.position }}</div>
-                <div class="employee-phone">{{ employee.phone }}</div>
+                <div class="employee-name">{{ employee.employee.full_name }}</div>
+                <div class="employee-position">{{ employee.employee.position }}</div>
+                <div class="employee-phone">{{ employee.employee.phone }}</div>
             </div>
             <div class="check-in-out">
-                <button class="check-in-btn" data-id="{{ employee.id }}">Check-in</button>
-                <span class="check-in-time" id="check-in-time-{{ employee.id }}">
-                    {{ employee.check_in_time.strftime('%H:%M:%S') if employee.check_in_time else '--:--' }}
+                <button class="check-in-btn" data-id="{{ employee.employee.id }}">Check-in</button>
+                <span class="check-in-time" id="check-in-time-{{ employee.employee.id }}">
+                    {{ employee.check_in_time }}
                 </span>
 
-                <button class="lunch-start-btn" data-id="{{ employee.id }}">Lunch Start</button>
-                <span class="lunch-start-time" id="lunch-start-time-{{ employee.id }}">
-                    {{ employee.lunch_start_time.strftime('%H:%M:%S') if employee.lunch_start_time else '--:--' }}
+                <button class="lunch-start-btn" data-id="{{ employee.employee.id }}">Lunch Start</button>
+                <span class="lunch-start-time" id="lunch-start-time-{{ employee.employee.id }}">
+                    {{ employee.lunch_start_time }}
                 </span>
 
-                <button class="lunch-end-btn" data-id="{{ employee.id }}">Lunch End</button>
-                <span class="lunch-end-time" id="lunch-end-time-{{ employee.id }}">
-                    {{ employee.lunch_end_time.strftime('%H:%M:%S') if employee.lunch_end_time else '--:--' }}
+                <button class="lunch-end-btn" data-id="{{ employee.employee.id }}">Lunch End</button>
+                <span class="lunch-end-time" id="lunch-end-time-{{ employee.employee.id }}">
+                    {{ employee.lunch_end_time }}
                 </span>
 
-                <span class="check-out-time" id="check-out-time-{{ employee.id }}">
-                    {{ employee.check_out_time.strftime('%H:%M:%S') if employee.check_out_time else '--:--' }}
+                <span class="check-out-time" id="check-out-time-{{ employee.employee.id }}">
+                    {{ employee.check_out_time }}
                 </span>
-                <button class="check-out-btn" data-id="{{ employee.id }}">Check-out</button>
+                <button class="check-out-btn" data-id="{{ employee.employee.id }}">Check-out</button>
 
-                <span class="daily-hours" id="daily-hours-{{ employee.id }}">Daily: {{ "%.2f" | format(employee.daily_hours) }}h</span>
-                <span class="monthly-hours" id="monthly-hours-{{ employee.id }}">Monthly: {{ "%.2f" | format(employee.monthly_hours) }}h</span>
+                <span class="daily-hours" id="daily-hours-{{ employee.employee.id }}">Daily: {{ "%.2f" | format(employee.daily_hours) }}h</span>
+                <span class="monthly-hours" id="monthly-hours-{{ employee.employee.id }}">Monthly: {{ "%.2f" | format(employee.monthly_hours) }}h</span>
             </div>
         </div>
         {% endfor %}
