@@ -1,9 +1,38 @@
-/* Основные стили */
+/* Контейнер для логов работы и итогов */
+.logs-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Выравнивание всех дочерних элементов по центру вертикально */
+}
+
+.logs-table {
+    width: 70%; /* Таблица занимает 70% ширины контейнера */
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    height: auto; /* Высота таблицы автоматически */
+}
+
+.summary-container {
+    flex-grow: 1; /* Блок итогов растягивается, занимая всё оставшееся пространство */
+    margin-left: 20px; /* Добавляем отступ слева */
+    text-align: left; /* Текст выравнивается по левому краю */
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    height: auto;
+    align-self: center; /* Центрируем блок с итогами по вертикали */
+}
+
+/* Основные стили страницы */
 body {
     font-family: Arial, sans-serif;
     background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
 }
 
+/* Шапка страницы */
 header {
     display: flex;
     justify-content: space-between;
@@ -23,7 +52,7 @@ header {
     font-weight: bold;
 }
 
-/* Стили для контейнера и заголовка */
+/* Контейнер основной рабочей области */
 .work-container {
     padding: 20px;
 }
@@ -32,7 +61,7 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Стили для панели фильтров */
+/* Панель фильтров */
 .filter-bar {
     display: flex;
     justify-content: flex-start;
@@ -43,18 +72,19 @@ h1 {
 .filter-btn {
     background-color: #ff6347;
     color: #fff;
-    border: none;
-    border-radius: 4px;
+    border-radius: 20px;
     padding: 10px 15px;
+    border: none;
     cursor: pointer;
-    white-space: nowrap; /* Кнопки не будут переноситься */
+    white-space: nowrap;
+    font-weight: bold;
 }
 
 .filter-btn:hover {
     background-color: #919191;
 }
 
-/* Dropdown menu */
+/* Выпадающее меню */
 .dropdown-menu {
     display: none;
     position: absolute;
@@ -82,47 +112,103 @@ h1 {
     display: block;
 }
 
-/* Стили для логов работы */
-.work-logs {
-    display: flex;
-    flex-direction: column;
-}
-
+/* Блок с информацией о сотруднике */
 .employee-log {
-    position: relative;
-    margin-bottom: 20px;
-    padding: 20px;
     background-color: #fff;
-    border: 1px solid #e0e0e0;
     border-radius: 8px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    padding: 20px;
 }
 
-/* Таблица */
+/* Таблица логов работы */
 .logs-table {
     width: 100%;
     border-collapse: collapse;
-    margin-right: 20px;
+    margin-bottom: 20px;
 }
 
 .logs-table th, .logs-table td {
     border: 1px solid #e0e0e0;
-    padding: 8px;
+    padding: 12px;
     text-align: center;
-    font-size: 14px;
 }
 
-/* Стили для блока Total */
+.logs-table th {
+    background-color: #f5f5f5;
+    color: #666;
+    font-weight: bold;
+}
+
+.logs-table td {
+    color: #333;
+}
+
+/* Стили для выпадающих списков отпусков */
+select {
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+select option[value="paid"] {
+    background-color: #ffcc00;
+    color: #333;
+}
+
+select option[value="unpaid"] {
+    background-color: #ff6347;
+    color: #fff;
+}
+
+select option[value="weekend"] {
+    background-color: #919191;
+    color: #fff;
+}
+
+/* Стили для кнопок с отпуском */
+.paid-holiday {
+    background-color: #ffcc00;
+    padding: 5px 10px;
+    border-radius: 4px;
+    color: #333;
+    font-weight: bold;
+}
+
+.unpaid-holiday {
+    background-color: #ff6347;
+    padding: 5px 10px;
+    border-radius: 4px;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Блок для отображения итогов по часам и переработкам */
 .summary-container {
     margin-top: 10px;
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
 }
 
-.summary-box {
-    padding: 10px;
-    background-color: #f5f5f5;
-    border-radius: 8px;
-    text-align: right;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    font-size: 14px;
-    line-height: 1.4;
+/* Адаптивный дизайн для мобильных устройств */
+@media screen and (max-width: 768px) {
+    .filter-bar {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .filter-btn {
+        width: 100%;
+    }
+
+    .logs-table th, .logs-table td {
+        padding: 8px;
+    }
+
+    .employee-log {
+        padding: 15px;
+    }
 }

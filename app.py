@@ -5,6 +5,7 @@ from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import Employee, WorkLog
 from sqlalchemy import extract
+import time
 
 
 app = Flask(__name__)
@@ -61,6 +62,10 @@ class WorkLog(db.Model):
     check_out_time = db.Column(db.DateTime, nullable=True)
     worked_hours = db.Column(db.Float, default=0)
     log_date = db.Column(db.Date, nullable=False)
+    holidays = db.Column(db.String(50), default='-')
+
+
+
 
 # Главная страница - Страница входа
 @app.route('/')
@@ -124,6 +129,7 @@ def work():
     filter_type = request.args.get('filter', 'today')
     group_type = request.args.get('group', None)
     current_date = datetime.now()
+    current_time = time.time()
 
     # Устанавливаем выбранную дату или текущую дату
     if selected_date_str:
@@ -171,7 +177,7 @@ def work():
         employee.overtime = max(0, total_hours - (
                     8 * employee.total_days))  # Предполагается, что стандартное рабочее время 8 часов в день
 
-    return render_template('work.html', employees=employees)
+    return render_template('work.html', employees=employees, current_time=current_time)
 
 
 @app.template_filter('format_hours')
@@ -340,33 +346,43 @@ def check_out(id):
     # Выполнение чек-аута
     check_out_time = datetime.now()
     work_log.check_out_time = check_out_time
+
+    # Рассчитываем время за смену (разница между чек-ином и чек-аутом)
+    time_diff = work_log.check_out_time - work_log.check_in_time
+    worked_hours = time_diff.total_seconds() / 3600  # Конвертация секунд в часы
+
+    work_log.worked_hours = worked_hours  # Сохраняем отработанные часы в лог
+
     db.session.commit()
 
-    return jsonify({'check_out_time': check_out_time.strftime('%H:%M:%S')})
+    return jsonify({'check_out_time': check_out_time.strftime('%H:%M:%S'), 'worked_hours': worked_hours})
 
  # Старт обеда для сотрудника
 @app.route('/lunch_start/<int:id>', methods=['POST'])
 def lunch_start(id):
+    # Получаем сотрудника по ID
     employee = db.session.get(Employee, id)
     if not employee:
         return jsonify({'error': 'Сотрудник не найден'}), 404
 
     today = date.today()
+    # Получаем рабочий лог за сегодня
     work_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
 
-    # Сброс значений на начало нового дня
-    if work_log and work_log.lunch_start_time is not None and work_log.lunch_end_time is None:
-        return jsonify({'error': 'Lunch already started'}), 400
-
+    # Проверка наличия рабочего лога
     if work_log is None:
         return jsonify({'error': 'Чек-ин не найден за сегодня'}), 400
 
+    # Проверка, начался ли обед
+    if work_log.lunch_start_time is not None:
+        return jsonify({'error': 'Обед уже начат и не может быть изменен'}), 400
+
+    # Начинаем обед
     lunch_start_time = datetime.now()
     work_log.lunch_start_time = lunch_start_time
     db.session.commit()
 
     return jsonify({'lunch_start_time': lunch_start_time.strftime('%H:%M:%S')})
-
 
 @app.route('/lunch_end/<int:id>', methods=['POST'])
 def lunch_end(id):
@@ -429,6 +445,19 @@ def get_work_logs(employee_id):
         'overtime': format_hours(overtime),  # Используем функцию здесь
         'work_logs': logs_data
     })
+
+@app.route('/update_holiday_status/<int:id>', methods=['POST'])
+def update_holiday_status(id):
+    work_log = WorkLog.query.get(id)
+    if not work_log:
+        return jsonify({'error': 'Запись не найдена'}), 404
+
+    new_status = request.form.get('holiday_status')
+    if new_status in ['Paid', 'Unpaid', 'Weekend']:
+        work_log.holidays = new_status
+        db.session.commit()
+        return jsonify({'message': 'Статус выходного дня обновлен'}), 200
+    return jsonify({'error': 'Неверный статус выходного дня'}), 400
 
 
 if __name__ == '__main__':

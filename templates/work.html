@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/work.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/work.css') }}?v={{ current_time }}">
     <title>Work Logs</title>
 </head>
 <body>
@@ -49,35 +49,45 @@
         <div class="work-logs">
             {% for employee in employees %}
                 <div class="employee-log">
-                    <h2>{{ employee.full_name }} ({{ employee.position }})</h2>  <!-- Добавление должности здесь -->
-                    <table class="logs-table">
-                        <thead>
-                            <tr>
-                                <th>Дата</th>
-                                <th>Чек-ин</th>
-                                <th>Начало обеда</th>
-                                <th>Конец обеда</th>
-                                <th>Чек-аут</th>
-                                <th>Итого</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for log in employee.work_logs %}
+                    <h2>{{ employee.full_name }} - {{ employee.position }}</h2>
+                    <div class="logs-container">
+                        <table class="logs-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ log.log_date.strftime('%Y-%m-%d') }}</td>
-                                    <td>{{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}</td>
-                                    <td>{{ log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--' }}</td>
-                                    <td>{{ log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--' }}</td>
-                                    <td>{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
-                                    <td>{{ log.worked_hours | format_hours }}</td>
+                                    <th>Fecha</th>
+                                    <th>Entra</th>
+                                    <th>Entra Comida</th>
+                                    <th>Salida Comida</th>
+                                    <th>Salida</th>
+                                    <th>Total</th>
+                                    <th>Holidays</th>
                                 </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    <div class="summary-container">
-                        <p>Total hours: {{ employee.total_hours | format_hours }}</p>
-                        <p>Total days: {{ employee.total_days }}</p>
-                        <p>Overtime: {{ employee.overtime | format_hours }}</p>
+                            </thead>
+                            <tbody>
+                                {% for log in employee.work_logs %}
+                                    <tr>
+                                        <td>{{ log.log_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}</td>
+                                        <td>{{ log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--' }}</td>
+                                        <td>{{ log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--' }}</td>
+                                        <td>{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
+                                        <td>{{ log.worked_hours | format_hours }}</td>
+                                        <td>
+                                            <select>
+                                                <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Paid</option>
+                                                <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>Unpaid</option>
+                                                <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div class="summary-container">
+                            <p>Total hours: {{ employee.total_hours | format_hours }}</p>
+                            <p>Total days: {{ employee.total_days }}</p>
+                            <p>Overtime: {{ employee.overtime | format_hours }}</p>
+                        </div>
                     </div>
                 </div>
             {% endfor %}
@@ -113,7 +123,6 @@
             window.location.href = `/work?group=${groupType}`;
         }
 
-        // Функция для применения фильтра по выбранной дате
         function applyDateFilter() {
             const selectedDate = document.getElementById("datePicker").value;
             if (selectedDate) {

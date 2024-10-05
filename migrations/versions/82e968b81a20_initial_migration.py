@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 40bc7f2ac601
+Revision ID: 82e968b81a20
 Revises: 
-Create Date: 2024-10-05 00:35:06.955171
+Create Date: 2024-10-05 21:49:21.039548
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '40bc7f2ac601'
+revision = '82e968b81a20'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -28,23 +28,21 @@ def upgrade():
     op.create_table('employee',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('full_name', sa.String(length=100), nullable=False),
-    sa.Column('nie', sa.String(length=20), nullable=True),
-    sa.Column('start_date', sa.Date(), nullable=True),
+    sa.Column('nie', sa.String(length=20), nullable=False),
+    sa.Column('start_date', sa.Date(), nullable=False),
     sa.Column('end_date', sa.Date(), nullable=True),
-    sa.Column('hours_per_week', sa.Integer(), nullable=True),
-    sa.Column('days_per_week', sa.Integer(), nullable=True),
-    sa.Column('position', sa.String(length=50), nullable=True),
-    sa.Column('phone', sa.String(length=20), nullable=True),
-    sa.Column('email', sa.String(length=100), nullable=True),
-    sa.Column('section', sa.String(length=50), nullable=True),
+    sa.Column('hours_per_week', sa.Integer(), nullable=False),
+    sa.Column('days_per_week', sa.Integer(), nullable=False),
+    sa.Column('position', sa.String(length=50), nullable=False),
+    sa.Column('phone', sa.String(length=20), nullable=False),
+    sa.Column('email', sa.String(length=100), nullable=False),
+    sa.Column('section', sa.String(length=50), nullable=False),
     sa.Column('check_in_time', sa.DateTime(), nullable=True),
     sa.Column('check_out_time', sa.DateTime(), nullable=True),
     sa.Column('daily_hours', sa.Float(), nullable=True),
     sa.Column('monthly_hours', sa.Float(), nullable=True),
     sa.Column('lunch_start_time', sa.DateTime(), nullable=True),
     sa.Column('lunch_end_time', sa.DateTime(), nullable=True),
-    sa.Column('role', sa.String(length=50), nullable=True),
-    sa.Column('password_hash', sa.String(length=128), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('work_log',
@@ -56,6 +54,7 @@ def upgrade():
     sa.Column('check_out_time', sa.DateTime(), nullable=True),
     sa.Column('worked_hours', sa.Float(), nullable=True),
     sa.Column('log_date', sa.Date(), nullable=False),
+    sa.Column('holidays', sa.String(length=50), nullable=True),
     sa.ForeignKeyConstraint(['employee_id'], ['employee.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
