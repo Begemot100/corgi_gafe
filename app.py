@@ -429,35 +429,4 @@ def get_work_logs(employee_id):
             'check_in': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
             'lunch_start': log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--',
             'lunch_end': log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--',
-            'check_out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
-            'total_hours': format_hours(log.worked_hours)  # Используем функцию здесь
-        }
-        for log in work_logs
-    ]
-
-    return jsonify({
-        'employee_name': employee.full_name,
-        'position': employee.position,
-        'total_hours': format_hours(total_hours),  # Используем функцию здесь
-        'total_days': total_days,
-        'overtime': format_hours(overtime),  # Используем функцию здесь
-        'work_logs': logs_data
-    })
-
-# Обновление статуса отпуска для сотрудника
-@app.route('/update_holiday_status/<int:id>', methods=['POST'])
-def update_holiday_status(id):
-    work_log = WorkLog.query.get(id)
-    if not work_log:
-        return jsonify({'error': 'Запись не найдена'}), 404
-
-    new_status = request.form.get('holiday_status')
-    if new_status in ['Paid', 'Unpaid', 'Weekend']:
-        work_log.holidays = new_status
-        db.session.commit()
-        return jsonify({'message': 'Статус выходного дня обновлен'}), 200
-    return jsonify({'error': 'Неверный статус выходного дня'}), 400
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
+            'check_out': log.check_out_time.strftime('%H:%M') if log.check

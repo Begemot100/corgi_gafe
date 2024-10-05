@@ -1,27 +1,161 @@
-/* Контейнер для логов работы и итогов */
+.employee-log {
+    position: relative;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    padding: 20px;
+}
+
+/* Стиль для блока чекбокса */
+.employee-checkbox {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.checkbox-input {
+    display: none; /* Скрываем стандартный чекбокс */
+}
+
+.checkbox-label {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #969696;
+    cursor: pointer;
+    position: relative;
+}
+
+/* Состояние выбранного чекбокса */
+.checkbox-input:checked + .checkbox-label {
+    background-color: #969696;
+}
+
+/* Маленький круг внутри выбранного чекбокса */
+.checkbox-label::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #fff;
+    display: none;
+}
+
+.checkbox-input:checked + .checkbox-label::after {
+    display: block;
+}
+
+/* Кнопка с троеточием */
+.dot-icon {
+    width: 20px;
+    height: 20px;
+    background-color: #d9d9d9;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    position: relative;
+}
+
+/* Контейнер для правого блока с Select и троеточием */
+.right-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative; /* Для позиционирования модального окна */
+}
+/* Убираем точки перед элементами списка в модальном окне */
+.modal-options {
+    list-style-type: none; /* Убираем маркеры (точки) у списка */
+    padding-left: 0; /* Убираем отступы слева у списка */
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Центрируем кнопки по вертикали */
+    align-items: center; /* Центрируем кнопки по горизонтали */
+    height: 100%; /* Растягиваем контейнер на всю высоту модального окна */
+}
+
+.modal-options li {
+    margin: 0; /* Убираем отступы для элементов списка */
+}
+
+/* Стили для модального окна */
+.modal {
+    display: none; /* По умолчанию скрыто */
+    position: absolute; /* Абсолютное позиционирование относительно кнопки */
+    top: 240px; /* Сразу под кнопкой */
+    right: 0;
+    width: 150px;
+    padding: 14px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    z-index: 1000;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-options button {
+    background-color: transparent;
+    border: none;
+    font-size: 14px;
+    padding: 10px;
+    cursor: pointer;
+    text-align: center; /* Центрируем текст */
+    transition: background-color 0.3s ease; /* Плавный переход для фона */
+    justify-content: center; /* Центрируем текст по горизонтали */
+    align-items: center; /* Центрируем текст по вертикали */
+    width: 100%;
+}
+
+.modal-options button:hover {
+    background-color: #f0f0f0;
+    border-radius: 12px;
+}
+
+/* Кнопка закрытия модального окна */
+.close {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* Логика для кнопок с логами работы */
 .logs-container {
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Выравнивание всех дочерних элементов по центру вертикально */
+    align-items: center;
 }
 
+/* Таблица с логами */
 .logs-table {
-    width: 70%; /* Таблица занимает 70% ширины контейнера */
+    width: 90%; /* Таблица занимает 90% ширины контейнера */
     border-collapse: collapse;
     margin-bottom: 20px;
-    height: auto; /* Высота таблицы автоматически */
 }
 
+/* Оформление для блока итогов */
 .summary-container {
-    flex-grow: 1; /* Блок итогов растягивается, занимая всё оставшееся пространство */
-    margin-left: 20px; /* Добавляем отступ слева */
-    text-align: left; /* Текст выравнивается по левому краю */
+    flex-grow: 1;
+    margin-left: 20px;
+    text-align: left;
     padding: 10px;
     background-color: #f9f9f9;
     border-radius: 8px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     height: auto;
-    align-self: center; /* Центрируем блок с итогами по вертикали */
+    align-self: center;
 }
 
 /* Основные стили страницы */
@@ -52,7 +186,7 @@ header {
     font-weight: bold;
 }
 
-/* Контейнер основной рабочей области */
+/* Основная рабочая область */
 .work-container {
     padding: 20px;
 }
@@ -61,14 +195,53 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Панель фильтров */
+/* Панель с фильтрами */
 .filter-bar {
     display: flex;
-    justify-content: flex-start;
-    gap: 10px; /* Промежуток между кнопками */
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
 }
 
+/* Левая часть с кнопками Hoy и Grupo */
+.left-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Правая часть с кнопками Select и троеточием */
+.right-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.right-section span {
+    font-size: 16px;
+    color: #333;
+}
+
+/* Кнопка для правой части */
+.dot-button {
+    background-color: #D9D9D9;
+    border: none;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.dot-button:hover {
+    background-color: #b3b3b3;
+}
+
+.dot-icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* Стиль кнопок для фильтров */
 .filter-btn {
     background-color: #ff6347;
     color: #fff;
@@ -97,7 +270,6 @@ h1 {
 
 .dropdown-menu a {
     width: 100%;
-    background: none;
     padding: 12px 16px;
     text-align: left;
     text-decoration: none;
@@ -112,20 +284,13 @@ h1 {
     display: block;
 }
 
-/* Блок с информацией о сотруднике */
+/* Оформление таблицы логов работы */
 .employee-log {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
     padding: 20px;
-}
-
-/* Таблица логов работы */
-.logs-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
 }
 
 .logs-table th, .logs-table td {
@@ -144,7 +309,7 @@ h1 {
     color: #333;
 }
 
-/* Стили для выпадающих списков отпусков */
+/* Выпадающие списки */
 select {
     padding: 5px 10px;
     border-radius: 4px;
@@ -168,24 +333,7 @@ select option[value="weekend"] {
     color: #fff;
 }
 
-/* Стили для кнопок с отпуском */
-.paid-holiday {
-    background-color: #ffcc00;
-    padding: 5px 10px;
-    border-radius: 4px;
-    color: #333;
-    font-weight: bold;
-}
-
-.unpaid-holiday {
-    background-color: #ff6347;
-    padding: 5px 10px;
-    border-radius: 4px;
-    color: #fff;
-    font-weight: bold;
-}
-
-/* Блок для отображения итогов по часам и переработкам */
+/* Блок для итогов */
 .summary-container {
     margin-top: 10px;
     font-weight: bold;

@@ -20,30 +20,50 @@
     <main class="work-container">
         <h1>Employees</h1>
         <div class="filter-bar">
-            <!-- Dropdown for predefined date ranges -->
-            <div class="dropdown">
-                <button class="filter-btn" onclick="toggleDropdown()">Hoy</button>
-                <div id="dropdown-menu" class="dropdown-menu">
-                    <a href="#" onclick="applyFilter('today')">Hoy</a>
-                    <a href="#" onclick="applyFilter('yesterday')">Ayer</a>
-                    <a href="#" onclick="applyFilter('last_7_days')">Últimos 7 días</a>
-                    <a href="#" onclick="applyFilter('last_30_days')">Últimos 30 días</a>
-                    <a href="#" onclick="applyFilter('previous_month')">Mes Anterior</a>
-                    <a href="#" onclick="applyFilter('current_month')">Este mes</a>
-                    <a href="#" onclick="applyFilter('custom')">Rango Personalizado</a>
+            <!-- Левая часть с кнопками Hoy и Grupo -->
+            <div class="left-section">
+                <div class="dropdown">
+                    <button class="filter-btn" onclick="toggleDropdown()">Hoy</button>
+                    <div id="dropdown-menu" class="dropdown-menu">
+                        <a href="#" onclick="applyFilter('today')">Hoy</a>
+                        <a href="#" onclick="applyFilter('yesterday')">Ayer</a>
+                        <a href="#" onclick="applyFilter('last_7_days')">Últimos 7 días</a>
+                        <a href="#" onclick="applyFilter('last_30_days')">Últimos 30 días</a>
+                        <a href="#" onclick="applyFilter('previous_month')">Mes Anterior</a>
+                        <a href="#" onclick="applyFilter('current_month')">Este mes</a>
+                        <a href="#" onclick="applyFilter('custom')">Rango Personalizado</a>
+                    </div>
+                </div>
+
+                <input type="date" id="datePicker" class="filter-btn" onchange="applyDateFilter()">
+                <div class="dropdown">
+                    <button class="filter-btn" onclick="toggleGroupDropdown()">Grupo</button>
+                    <div id="group-dropdown-menu" class="dropdown-menu">
+                        <a href="#" onclick="applyGroupFilter('cocina')">Cocina</a>
+                        <a href="#" onclick="applyGroupFilter('sala')">Sala</a>
+                    </div>
                 </div>
             </div>
 
-            <!-- Date picker for specific date selection -->
-            <input type="date" id="datePicker" class="filter-btn" onchange="applyDateFilter()">
+            <!-- Правая часть с Select и кнопкой с троеточием -->
+            <div class="right-section">
+                <span>Select</span>
+                <button class="filter-btn" onclick="toggleModal()">
+                    <img class="dot-icon" src="{{ url_for('static', filename='images/dot.png') }}" alt="Options" />
+                </button>
+            </div>
+        </div>
 
-            <!-- Dropdown for group selection -->
-            <div class="dropdown">
-                <button class="filter-btn" onclick="toggleGroupDropdown()">Grupo</button>
-                <div id="group-dropdown-menu" class="dropdown-menu">
-                    <a href="#" onclick="applyGroupFilter('cocina')">Cocina</a>
-                    <a href="#" onclick="applyGroupFilter('sala')">Sala</a>
-                </div>
+        <!-- Модальное окно -->
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="toggleModal()">&times;</span>
+                <ul class="modal-options">
+                    <li><button onclick="editEmployee()">Edit</button></li>
+                    <li><button onclick="exportExcel()">Export Excel</button></li>
+                    <li><button onclick="exportPdf()">Export PDF</button></li>
+                    <li><button onclick="deleteEmployee()">Delete</button></li>
+                </ul>
             </div>
         </div>
 
@@ -51,8 +71,14 @@
             {% for employee in employees %}
                 <div class="employee-log">
                     <h2>{{ employee.full_name }} - {{ employee.position }}</h2>
+
+                    <!-- Добавляем чекбокс в правый верхний угол -->
+                    <div class="employee-checkbox">
+                        <input type="checkbox" id="employee_{{ employee.id }}" class="checkbox-input">
+                        <label for="employee_{{ employee.id }}" class="checkbox-label"></label>
+                    </div>
+
                     <div class="logs-container">
-                        <!-- Вставляем таблицу с логами -->
                         <table class="logs-table">
                             <thead>
                                 <tr>
@@ -96,41 +122,6 @@
         </div>
     </main>
 
-    <script>
-        function toggleDropdown() {
-            document.getElementById("dropdown-menu").classList.toggle("show");
-        }
-
-        function toggleGroupDropdown() {
-            document.getElementById("group-dropdown-menu").classList.toggle("show");
-        }
-
-        window.onclick = function(event) {
-            if (!event.target.matches('.filter-btn')) {
-                var dropdowns = document.getElementsByClassName("dropdown-menu");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-            }
-        }
-
-        function applyFilter(filterType) {
-            window.location.href = `/work?filter=${filterType}`;
-        }
-
-        function applyGroupFilter(groupType) {
-            window.location.href = `/work?group=${groupType}`;
-        }
-
-        function applyDateFilter() {
-            const selectedDate = document.getElementById("datePicker").value;
-            if (selectedDate) {
-                window.location.href = `/work?date=${selectedDate}`;
-            }
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/work.js') }}"></script>
 </body>
 </html>
