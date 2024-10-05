@@ -65,8 +65,6 @@ class WorkLog(db.Model):
     holidays = db.Column(db.String(50), default='-')
 
 
-
-
 # Главная страница - Страница входа
 @app.route('/')
 def index():
@@ -83,7 +81,6 @@ def admin():
     hall_employees = Employee.query.filter_by(section="Sala").all()
     return render_template('index.html', kitchen_employees=kitchen_employees, hall_employees=hall_employees)
 
-# Панель управления
 # Панель управления
 @app.route('/dashboard')
 def dashboard():
@@ -413,6 +410,7 @@ def lunch_end(id):
 
     return jsonify({'lunch_end_time': lunch_end_time.strftime('%H:%M:%S')})
 
+# Получение логов для конкретного сотрудника
 @app.route('/work_logs/<int:employee_id>', methods=['GET'])
 def get_work_logs(employee_id):
     employee = Employee.query.get(employee_id)
@@ -446,6 +444,7 @@ def get_work_logs(employee_id):
         'work_logs': logs_data
     })
 
+# Обновление статуса отпуска для сотрудника
 @app.route('/update_holiday_status/<int:id>', methods=['POST'])
 def update_holiday_status(id):
     work_log = WorkLog.query.get(id)
