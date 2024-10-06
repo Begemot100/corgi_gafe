@@ -1,18 +1,17 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date, timedelta
-from flask_migrate import Migrate
-from openpyxl.styles.builtins import output
-from werkzeug.security import generate_password_hash, check_password_hash
-from models import Employee, WorkLog
-from sqlalchemy import extract
 import time
-import pandas as pd
+import math
 from io import BytesIO
-from flask import send_file
+
+import pandas as pd
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, send_file, make_response
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import extract
 from openpyxl.utils import get_column_letter
 
-
+from models import Employee, WorkLog
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///employees.db'
@@ -86,6 +85,12 @@ def admin():
     kitchen_employees = Employee.query.filter_by(section="Cocina").all()
     hall_employees = Employee.query.filter_by(section="Sala").all()
     return render_template('index.html', kitchen_employees=kitchen_employees, hall_employees=hall_employees)
+
+# Функция для преобразования десятичных часов в формат HH:MM
+def decimal_hours_to_time(decimal_hours):
+    hours = int(decimal_hours)
+    minutes = int((decimal_hours - hours) * 60)
+    return f'{hours:02d}:{minutes:02d}'
 
 # Панель управления
 @app.route('/dashboard')
@@ -468,6 +473,8 @@ def update_holiday_status(id):
     return jsonify({'error': 'Неверный статус выходного дня'}), 400
 
 
+from flask import make_response
+
 @app.route('/export_excel', methods=['POST'])
 def export_excel():
     # Получаем IDs выбранных сотрудников
@@ -479,10 +486,26 @@ def export_excel():
     # Получаем сотрудников по переданным ID
     employees = Employee.query.filter(Employee.id.in_(employee_ids)).all()
 
+    # Собираем имена сотрудников для названия файла
+    employee_names = [employee.full_name for employee in employees]
+    employee_names_str = ', '.join(employee_names[:3])  # Ограничим до 3 сотрудников для краткости
+    if len(employee_names) > 3:
+        employee_names_str += ' и др.'
+
+    # Получаем текущую дату в формате DD-MM-YYYY
+    current_date = datetime.now().strftime('%d-%m-%Y')
+
+    # Формируем название файла
+    filename = f"work_logs_{employee_names_str}_{current_date}.xlsx".replace(" ", "_").replace(",", "_").replace("__", "_")
+
     # Создаем DataFrame с данными сотрудников
     data = []
     for employee in employees:
+        total_days_worked = len(employee.work_logs)
+
         for log in employee.work_logs:
+            formatted_hours = decimal_hours_to_time(log.worked_hours)
+
             data.append({
                 'Full Name': employee.full_name,
                 'Position': employee.position,
@@ -491,8 +514,9 @@ def export_excel():
                 'Lunch Start': log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--',
                 'Lunch End': log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--',
                 'Check Out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
-                'Total Hours': log.worked_hours,
-                'Holiday Type': log.holidays
+                'Total Hours': formatted_hours,
+                'Holiday Type': log.holidays,
+                'Days Worked': total_days_worked
             })
 
     # Генерация Excel файла
@@ -513,8 +537,12 @@ def export_excel():
 
     output.seek(0)
 
-    # Отправка файла пользователю
-    return send_file(output, download_name='work_logs.xlsx', as_attachment=True)
+    # Создание ответа с явной установкой заголовков
+    response = make_response(output.read())
+    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{filename}'
+    response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+    return response
 
 
 if __name__ == '__main__':

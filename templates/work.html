@@ -103,6 +103,7 @@
                                     <td>{{ log.worked_hours | format_hours if log.worked_hours else '0 hours' }}</td>
                                     <td>
                                         <select name="holiday_type">
+                                            <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Working day</option>
                                             <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Paid</option>
                                             <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>Unpaid</option>
                                             <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
