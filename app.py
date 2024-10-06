@@ -2,10 +2,16 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, s
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date, timedelta
 from flask_migrate import Migrate
+from openpyxl.styles.builtins import output
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import Employee, WorkLog
 from sqlalchemy import extract
 import time
+import pandas as pd
+from io import BytesIO
+from flask import send_file
+from openpyxl.utils import get_column_letter
+
 
 
 app = Flask(__name__)
@@ -171,8 +177,11 @@ def work():
         total_hours = sum(log.worked_hours for log in employee_logs)
         employee.total_hours = total_hours
         employee.total_days = len(employee_logs)  # Количество рабочих дней
-        employee.overtime = max(0, total_hours - (
-                    8 * employee.total_days))  # Предполагается, что стандартное рабочее время 8 часов в день
+        employee.overtime = max(0, total_hours - (8 * employee.total_days))  # Предполагается, что стандартное рабочее время 8 часов в день
+
+        # Добавляем подсчет отпусков
+        employee.paid_holidays = sum(1 for log in employee_logs if log.holidays == 'Paid')
+        employee.unpaid_holidays = sum(1 for log in employee_logs if log.holidays == 'Unpaid')
 
     return render_template('work.html', employees=employees, current_time=current_time)
 
@@ -429,4 +438,84 @@ def get_work_logs(employee_id):
             'check_in': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
             'lunch_start': log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--',
             'lunch_end': log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--',
-            'check_out': log.check_out_time.strftime('%H:%M') if log.check
+            'check_out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
+            'total_hours': format_hours(log.worked_hours)  # Используем функцию здесь
+        }
+        for log in work_logs
+    ]
+
+    return jsonify({
+        'employee_name': employee.full_name,
+        'position': employee.position,
+        'total_hours': format_hours(total_hours),  # Используем функцию здесь
+        'total_days': total_days,
+        'overtime': format_hours(overtime),  # Используем функцию здесь
+        'work_logs': logs_data
+    })
+
+# Обновление статуса отпуска для сотрудника
+@app.route('/update_holiday_status/<int:id>', methods=['POST'])
+def update_holiday_status(id):
+    work_log = WorkLog.query.get(id)
+    if not work_log:
+        return jsonify({'error': 'Запись не найдена'}), 404
+
+    new_status = request.form.get('holiday_status')
+    if new_status in ['Paid', 'Unpaid', 'Weekend']:
+        work_log.holidays = new_status
+        db.session.commit()
+        return jsonify({'message': 'Статус выходного дня обновлен'}), 200
+    return jsonify({'error': 'Неверный статус выходного дня'}), 400
+
+
+@app.route('/export_excel', methods=['POST'])
+def export_excel():
+    # Получаем IDs выбранных сотрудников
+    employee_ids = request.json.get('employee_ids', [])
+
+    if not employee_ids:
+        return jsonify({'error': 'Нет выбранных сотрудников'}), 400
+
+    # Получаем сотрудников по переданным ID
+    employees = Employee.query.filter(Employee.id.in_(employee_ids)).all()
+
+    # Создаем DataFrame с данными сотрудников
+    data = []
+    for employee in employees:
+        for log in employee.work_logs:
+            data.append({
+                'Full Name': employee.full_name,
+                'Position': employee.position,
+                'Date': log.log_date.strftime('%Y-%m-%d'),
+                'Check In': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
+                'Lunch Start': log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--',
+                'Lunch End': log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--',
+                'Check Out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
+                'Total Hours': log.worked_hours,
+                'Holiday Type': log.holidays
+            })
+
+    # Генерация Excel файла
+    df = pd.DataFrame(data)
+    output = BytesIO()
+
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Work Logs')
+
+        # Получаем рабочий лист
+        worksheet = writer.sheets['Work Logs']
+
+        # Подстраиваем ширину колонок
+        for idx, col in enumerate(df.columns, 1):  # Считаем колонки с 1
+            max_length = max(df[col].astype(str).map(len).max(), len(col))
+            col_letter = get_column_letter(idx)
+            worksheet.column_dimensions[col_letter].width = (max_length + 2) * 1.2  # Коррекция ширины
+
+    output.seek(0)
+
+    # Отправка файла пользователю
+    return send_file(output, download_name='work_logs.xlsx', as_attachment=True)
+
+
+if __name__ == '__main__':
+    app.run(debug=False)

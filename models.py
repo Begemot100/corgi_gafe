@@ -38,3 +38,4 @@ class WorkLog(db.Model):
     check_out_time = db.Column(db.DateTime, nullable=True)
     worked_hours = db.Column(db.Float, default=0)
     log_date = db.Column(db.Date, nullable=False)
+    holidays = db.Column(db.String(50), default='-')

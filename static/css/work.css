@@ -140,7 +140,7 @@
 
 /* Таблица с логами */
 .logs-table {
-    width: 90%; /* Таблица занимает 90% ширины контейнера */
+    width: 87%; /* Таблица занимает 90% ширины контейнера */
     border-collapse: collapse;
     margin-bottom: 20px;
 }
@@ -157,6 +157,12 @@
     height: auto;
     align-self: center;
 }
+/* Стиль для итогов в правом блоке */
+.summary-container p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
 
 /* Основные стили страницы */
 body {

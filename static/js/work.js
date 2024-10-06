@@ -1,4 +1,63 @@
-// work.js
+// Флаг для отслеживания состояния выбора всех чекбоксов
+let allSelected = false;
+
+// Функция для выбора всех сотрудников или снятия галочек
+function selectAllEmployees() {
+    const checkboxes = document.querySelectorAll('.checkbox-input');
+
+    // Если все чекбоксы уже выбраны, снимаем выбор
+    if (allSelected) {
+        checkboxes.forEach(checkbox => checkbox.checked = false);
+        allSelected = false; // Обновляем флаг
+    } else {
+        // Если чекбоксы не выбраны, выбираем всех
+        checkboxes.forEach(checkbox => checkbox.checked = true);
+        allSelected = true; // Обновляем флаг
+    }
+}
+
+// Функция для экспорта выбранных сотрудников в Excel
+function exportExcel() {
+    // Собираем IDs выбранных сотрудников
+    const selectedEmployees = [];
+    const checkboxes = document.querySelectorAll('.checkbox-input:checked');
+
+    checkboxes.forEach(checkbox => {
+        selectedEmployees.push(checkbox.id.replace('employee_', '')); // Извлекаем ID сотрудника
+    });
+
+    if (selectedEmployees.length === 0) {
+        alert("Пожалуйста, выберите хотя бы одного сотрудника для экспорта.");
+        return;
+    }
+
+    fetch('/export_excel', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ employee_ids: selectedEmployees }) // Отправляем ID выбранных сотрудников
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        } else {
+            throw new Error('Ошибка экспорта данных');
+        }
+    })
+    .then(blob => {
+        const url = window.URL.createObjectURL(new Blob([blob]));
+        const a = document.createElement('a');
+        a.href = url;
+        a.setAttribute('download', 'work_logs.xlsx');
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    })
+    .catch(error => {
+        console.error('Ошибка при экспорте:', error);
+    });
+}
 
 // Функции для работы с выпадающими меню
 function toggleDropdown() {
@@ -57,10 +116,6 @@ window.onclick = function(event) {
 // Функции для кнопок внутри модального окна
 function editEmployee() {
     alert("Edit employee");
-}
-
-function exportExcel() {
-    alert("Export to Excel");
 }
 
 function exportPdf() {

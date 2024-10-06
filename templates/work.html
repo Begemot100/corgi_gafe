@@ -59,6 +59,7 @@
             <div class="modal-content">
                 <span class="close" onclick="toggleModal()">&times;</span>
                 <ul class="modal-options">
+                    <li><button onclick="selectAllEmployees()">Выбрать всех</button></li> <!-- Кнопка для выбора всех -->
                     <li><button onclick="editEmployee()">Edit</button></li>
                     <li><button onclick="exportExcel()">Export Excel</button></li>
                     <li><button onclick="exportPdf()">Export PDF</button></li>
@@ -115,6 +116,8 @@
                             <p>Total hours: {{ employee.total_hours | format_hours }}</p>
                             <p>Total days: {{ employee.total_days }}</p>
                             <p>Overtime: {{ employee.overtime | format_hours }}</p>
+                            <p>Paid Holidays: {{ employee.paid_holidays }}</p>
+                            <p>Unpaid Holidays: {{ employee.unpaid_holidays }}</p>
                         </div>
                     </div>
                 </div>
