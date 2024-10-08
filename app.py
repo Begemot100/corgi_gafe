@@ -1,5 +1,7 @@
 from datetime import datetime, date, timedelta
 import time
+from urllib.parse import quote
+
 import math
 from io import BytesIO
 
@@ -473,7 +475,6 @@ def update_holiday_status(id):
     return jsonify({'error': 'Неверный статус выходного дня'}), 400
 
 
-from flask import make_response
 
 @app.route('/export_excel', methods=['POST'])
 def export_excel():
@@ -496,13 +497,16 @@ def export_excel():
     current_date = datetime.now().strftime('%d-%m-%Y')
 
     # Формируем название файла
-    filename = f"work_logs_{employee_names_str}_{current_date}.xlsx".replace(" ", "_").replace(",", "_").replace("__", "_")
+    filename = f"work_logs_{employee_names_str}_{current_date}.xlsx".replace(" ", "_").replace(",", "_").replace("__",
+                                                                                                                 "_")
+    encoded_filename = quote(filename)
 
     # Создаем DataFrame с данными сотрудников
     data = []
     for employee in employees:
         total_days_worked = len(employee.work_logs)
 
+        # Добавляем записи сотрудника
         for log in employee.work_logs:
             formatted_hours = decimal_hours_to_time(log.worked_hours)
 
@@ -518,6 +522,10 @@ def export_excel():
                 'Holiday Type': log.holidays,
                 'Days Worked': total_days_worked
             })
+
+        # Добавляем две пустые строки только после последней записи каждого сотрудника
+        data.append({key: '' for key in data[0].keys()})
+        data.append({key: '' for key in data[0].keys()})
 
     # Генерация Excel файла
     df = pd.DataFrame(data)
@@ -539,7 +547,7 @@ def export_excel():
 
     # Создание ответа с явной установкой заголовков
     response = make_response(output.read())
-    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"; filename*=UTF-8\'\'{filename}'
+    response.headers['Content-Disposition'] = f'attachment; filename="{encoded_filename}"; filename*=UTF-8\'\'{encoded_filename}'
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     return response
