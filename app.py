@@ -19,6 +19,8 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///employees.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'ваш_секретный_ключ'  # Секретный ключ для сессии
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Срок действия сессии - 7 дней
+
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -286,8 +288,9 @@ def login():
         email = request.form['email']
         password = request.form['password']
         admin = Admin.query.filter_by(email=email).first()
-        if admin and check_password_hash(admin.password_hash, password):
+        if admin and admin.check_password(password):
             session['admin_id'] = admin.id  # Сохраняем ID администратора в сессии
+            session.permanent = True  # Устанавливаем сессию как постоянную
             return redirect(url_for('admin'))  # Перенаправление на админку
         else:
             return jsonify({'error': 'Неверный email или пароль'}), 401
@@ -497,19 +500,17 @@ def export_excel():
     current_date = datetime.now().strftime('%d-%m-%Y')
 
     # Формируем название файла
-    filename = f"work_logs_{employee_names_str}_{current_date}.xlsx".replace(" ", "_").replace(",", "_").replace("__",
-                                                                                                                 "_")
+    filename = f"work_logs_{employee_names_str}_{current_date}.xlsx".replace(" ", "_").replace(",", "_").replace("__", "_")
     encoded_filename = quote(filename)
 
     # Создаем DataFrame с данными сотрудников
     data = []
     for employee in employees:
         total_days_worked = len(employee.work_logs)
-
-        # Добавляем записи сотрудника
-        for log in employee.work_logs:
+        for i, log in enumerate(employee.work_logs):
             formatted_hours = decimal_hours_to_time(log.worked_hours)
-
+            # Если это последняя запись для текущего сотрудника, добавляем 'Days Worked'
+            days_worked = total_days_worked if i == len(employee.work_logs) - 1 else ""
             data.append({
                 'Full Name': employee.full_name,
                 'Position': employee.position,
@@ -520,10 +521,10 @@ def export_excel():
                 'Check Out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
                 'Total Hours': formatted_hours,
                 'Holiday Type': log.holidays,
-                'Days Worked': total_days_worked
+                'Days Worked': days_worked
             })
 
-        # Добавляем две пустые строки только после последней записи каждого сотрудника
+        # Добавляем две пустые строки после последней записи текущего сотрудника
         data.append({key: '' for key in data[0].keys()})
         data.append({key: '' for key in data[0].keys()})
 
@@ -551,6 +552,7 @@ def export_excel():
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     return response
+
 
 
 if __name__ == '__main__':
