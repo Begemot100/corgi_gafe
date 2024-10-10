@@ -70,6 +70,10 @@
         <div class="work-logs">
             {% for employee in employees %}
                 <div class="employee-log">
+                    <!-- Чекбокс для выбора сотрудника -->
+                    <input type="checkbox" class="checkbox-input" id="employee_{{ employee.id }}">
+                    <label class="checkbox-label" for="employee_{{ employee.id }}"></label>
+
                     <h2>{{ employee.full_name }} - {{ employee.position }}</h2>
                     <div class="logs-container">
                         <table class="logs-table">
@@ -90,16 +94,12 @@
                                     <td>{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
                                     <td>{{ log.worked_hours | format_hours if log.worked_hours else '0 hours' }}</td>
                                     <td>
-                                        {% if log.check_in_time and log.check_out_time %}
-                                            {{ log.holidays }}
-                                        {% else %}
-                                            <select name="holiday_type" onchange="updateHolidayStatus('{{ log.id }}', this.value)">
-                                                <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Working day</option>
-                                                <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Paid</option>
-                                                <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>Unpaid</option>
-                                                <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
-                                            </select>
-                                        {% endif %}
+                                        <select name="holiday_type" onchange="updateHolidayStatus('{{ log.id }}', this.value)">
+                                            <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Working day</option>
+                                            <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Paid</option>
+                                            <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>Unpaid</option>
+                                            <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
+                                        </select>
                                     </td>
                                 </tr>
                                 {% endfor %}

@@ -16,13 +16,20 @@ function selectAllEmployees() {
     }
 }
 function updateHolidayStatus(logId, holidayType) {
-    const formattedHolidayType = holidayType.charAt(0).toUpperCase() + holidayType.slice(1).toLowerCase();
+    // Преобразуйте значение перед отправкой, если необходимо
+    const statusMap = {
+        'workingday': 'Working day',
+        'paid': 'Paid',
+        'unpaid': 'Unpaid',
+        'weekend': 'Weekend'
+    };
+
     fetch(`/update_holiday_status/${logId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ holiday_status: formattedHolidayType })
+        body: JSON.stringify({ holiday_status: statusMap[holidayType.toLowerCase()] })
     })
     .then(response => response.json())
     .then(data => {
