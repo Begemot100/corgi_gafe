@@ -34,24 +34,12 @@
                 <span class="check-in-time" id="check-in-time-{{ employee.employee.id }}">
                     {{ employee.check_in_time }}
                 </span>
-
-                <button class="lunch-start-btn" data-id="{{ employee.employee.id }}">Lunch Start</button>
-                <span class="lunch-start-time" id="lunch-start-time-{{ employee.employee.id }}">
-                    {{ employee.lunch_start_time }}
-                </span>
-
-                <button class="lunch-end-btn" data-id="{{ employee.employee.id }}">Lunch End</button>
-                <span class="lunch-end-time" id="lunch-end-time-{{ employee.employee.id }}">
-                    {{ employee.lunch_end_time }}
-                </span>
-
                 <span class="check-out-time" id="check-out-time-{{ employee.employee.id }}">
                     {{ employee.check_out_time }}
                 </span>
                 <button class="check-out-btn" data-id="{{ employee.employee.id }}">Check-out</button>
 
                 <span class="daily-hours" id="daily-hours-{{ employee.employee.id }}">Daily: {{ "%.2f" | format(employee.daily_hours) }}h</span>
-                <span class="monthly-hours" id="monthly-hours-{{ employee.employee.id }}">Monthly: {{ "%.2f" | format(employee.monthly_hours) }}h</span>
             </div>
         </div>
         {% endfor %}
@@ -75,27 +63,6 @@
                 if (response.check_out_time) {
                     $('#check-out-time-' + id).text(response.check_out_time);
                     $('#daily-hours-' + id).text('Daily: ' + response.daily_hours.toFixed(2) + 'h');
-                    $('#monthly-hours-' + id).text('Monthly: ' + response.monthly_hours.toFixed(2) + 'h');
-                }
-            });
-        });
-
-        // Lunch start event
-        $('.lunch-start-btn').on('click', function() {
-            const id = $(this).data('id');
-            $.post('/lunch_start/' + id, function(response) {
-                if (response.lunch_start_time) {
-                    $('#lunch-start-time-' + id).text(response.lunch_start_time);
-                }
-            });
-        });
-
-        // Lunch end event
-        $('.lunch-end-btn').on('click', function() {
-            const id = $(this).data('id');
-            $.post('/lunch_end/' + id, function(response) {
-                if (response.lunch_end_time) {
-                    $('#lunch-end-time-' + id).text(response.lunch_end_time);
                 }
             });
         });

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-{# noinspection PyUnresolvedReferences #}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,7 +58,7 @@
             <div class="modal-content">
                 <span class="close" onclick="toggleModal()">&times;</span>
                 <ul class="modal-options">
-                    <li><button onclick="selectAllEmployees()">Выбрать всех</button></li> <!-- Кнопка для выбора всех -->
+                    <li><button onclick="selectAllEmployees()">Выбрать всех</button></li>
                     <li><button onclick="editEmployee()">Edit</button></li>
                     <li><button onclick="exportExcel()">Export Excel</button></li>
                     <li><button onclick="exportPdf()">Export PDF</button></li>
@@ -72,21 +71,12 @@
             {% for employee in employees %}
                 <div class="employee-log">
                     <h2>{{ employee.full_name }} - {{ employee.position }}</h2>
-
-                    <!-- Добавляем чекбокс в правый верхний угол -->
-                    <div class="employee-checkbox">
-                        <input type="checkbox" id="employee_{{ employee.id }}" class="checkbox-input">
-                        <label for="employee_{{ employee.id }}" class="checkbox-label"></label>
-                    </div>
-
                     <div class="logs-container">
                         <table class="logs-table">
                             <thead>
                                 <tr>
                                     <th>Fecha</th>
                                     <th>Entra</th>
-                                    <th>Entra Comida</th>
-                                    <th>Salida Comida</th>
                                     <th>Salida</th>
                                     <th>Total</th>
                                     <th>Holidays</th>
@@ -97,25 +87,29 @@
                                 <tr>
                                     <td>{{ log.log_date.strftime('%Y-%m-%d') }}</td>
                                     <td>{{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}</td>
-                                    <td>{{ log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--' }}</td>
-                                    <td>{{ log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--' }}</td>
                                     <td>{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
                                     <td>{{ log.worked_hours | format_hours if log.worked_hours else '0 hours' }}</td>
                                     <td>
-                                        <select name="holiday_type">
-                                            <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Working day</option>
-                                            <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Paid</option>
-                                            <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>Unpaid</option>
-                                            <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
-                                        </select>
+                                        {% if log.check_in_time and log.check_out_time %}
+                                            {{ log.holidays }}
+                                        {% else %}
+                                            <select name="holiday_type" onchange="updateHolidayStatus('{{ log.id }}', this.value)">
+                                                <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Working day</option>
+                                                <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Paid</option>
+                                                <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>Unpaid</option>
+                                                <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
+                                            </select>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
+
+                        <!-- Итоговый правый блок -->
                         <div class="summary-container">
-                            <p>Total hours: {{ employee.total_hours | format_hours }}</p>
-                            <p>Total days: {{ employee.total_days }}</p>
+                            <p>Total Hours: {{ employee.total_hours | format_hours }}</p>
+                            <p>Total Days: {{ employee.total_days }}</p>
                             <p>Overtime: {{ employee.overtime | format_hours }}</p>
                             <p>Paid Holidays: {{ employee.paid_holidays }}</p>
                             <p>Unpaid Holidays: {{ employee.unpaid_holidays }}</p>

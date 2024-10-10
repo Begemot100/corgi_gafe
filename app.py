@@ -19,7 +19,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///employees.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'ваш_секретный_ключ'  # Секретный ключ для сессии
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Срок действия сессии - 7 дней
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=4)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -53,8 +53,6 @@ class Employee(db.Model):
     check_out_time = db.Column(db.DateTime, nullable=True)
     daily_hours = db.Column(db.Float, default=0)
     monthly_hours = db.Column(db.Float, default=0)
-    lunch_start_time = db.Column(db.DateTime, nullable=True)
-    lunch_end_time = db.Column(db.DateTime, nullable=True)
 
     work_logs = db.relationship('WorkLog', backref='employee', cascade="all, delete-orphan", lazy=True)
 
@@ -66,12 +64,11 @@ class WorkLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     check_in_time = db.Column(db.DateTime, nullable=False)
-    lunch_start_time = db.Column(db.DateTime, nullable=True)
-    lunch_end_time = db.Column(db.DateTime, nullable=True)
     check_out_time = db.Column(db.DateTime, nullable=True)
     worked_hours = db.Column(db.Float, default=0)
     log_date = db.Column(db.Date, nullable=False)
     holidays = db.Column(db.String(50), default='-')
+    # work_log = db.session.get(WorkLog, id)
 
 
 # Главная страница - Страница входа
@@ -110,23 +107,17 @@ def dashboard():
         if work_log:
             check_in_time = work_log.check_in_time.strftime('%H:%M') if work_log.check_in_time else '--:--'
             check_out_time = work_log.check_out_time.strftime('%H:%M') if work_log.check_out_time else '--:--'
-            lunch_start_time = work_log.lunch_start_time.strftime('%H:%M') if work_log.lunch_start_time else '--:--'
-            lunch_end_time = work_log.lunch_end_time.strftime('%H:%M') if work_log.lunch_end_time else '--:--'
             daily_hours = work_log.worked_hours if work_log.worked_hours else 0.0
         else:
             # Если логов нет, обнуляем чек-ин
             check_in_time = '--:--'  # Обнуляем время чек-ина
             check_out_time = '--:--'
-            lunch_start_time = '--:--'
-            lunch_end_time = '--:--'
             daily_hours = 0.0
 
         dashboard_data.append({
             'employee': employee,
             'check_in_time': check_in_time,
             'check_out_time': check_out_time,
-            'lunch_start_time': lunch_start_time,
-            'lunch_end_time': lunch_end_time,
             'daily_hours': daily_hours,
             'monthly_hours': employee.monthly_hours
         })
@@ -240,7 +231,7 @@ def add_employee():
         db.session.rollback()
         print(f"Error adding employee: {e}")
 
-    return redirect(url_for('index'))
+    return redirect(url_for('admin'))
 
 # Удаление сотрудника
 @app.route('/delete/<int:id>', methods=['POST'])
@@ -287,15 +278,28 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
+
+        # Добавляем логирование для отслеживания логина
+        app.logger.info(f"Попытка входа с email: {email}")
+
         admin = Admin.query.filter_by(email=email).first()
-        if admin and admin.check_password(password):
-            session['admin_id'] = admin.id  # Сохраняем ID администратора в сессии
-            session.permanent = True  # Устанавливаем сессию как постоянную
-            return redirect(url_for('admin'))  # Перенаправление на админку
+        if admin:
+            # Проверка пароля
+            if admin.check_password(password):
+                session['admin_id'] = admin.id  # Сохраняем ID администратора в сессии
+                session.permanent = True  # Устанавливаем сессию как постоянную
+                app.logger.info("Вход выполнен успешно")
+                return redirect(url_for('admin'))  # Перенаправление на админку
+            else:
+                app.logger.warning("Неверный пароль")
         else:
-            return jsonify({'error': 'Неверный email или пароль'}), 401
+            app.logger.warning("Администратор с таким email не найден")
+
+        # Если неудачная попытка входа
+        return jsonify({'error': 'Неверный email или пароль'}), 401
 
     return render_template('login.html')  # Возврат формы входа
+
 
 # Маршрут для регистрации
 @app.route('/register', methods=['GET', 'POST'])
@@ -374,60 +378,6 @@ def check_out(id):
     return jsonify({'check_out_time': check_out_time.strftime('%H:%M:%S'), 'worked_hours': worked_hours})
 
  # Старт обеда для сотрудника
-@app.route('/lunch_start/<int:id>', methods=['POST'])
-def lunch_start(id):
-    # Получаем сотрудника по ID
-    employee = db.session.get(Employee, id)
-    if not employee:
-        return jsonify({'error': 'Сотрудник не найден'}), 404
-
-    today = date.today()
-    # Получаем рабочий лог за сегодня
-    work_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
-
-    # Проверка наличия рабочего лога
-    if work_log is None:
-        return jsonify({'error': 'Чек-ин не найден за сегодня'}), 400
-
-    # Проверка, начался ли обед
-    if work_log.lunch_start_time is not None:
-        return jsonify({'error': 'Обед уже начат и не может быть изменен'}), 400
-
-    # Начинаем обед
-    lunch_start_time = datetime.now()
-    work_log.lunch_start_time = lunch_start_time
-    db.session.commit()
-
-    return jsonify({'lunch_start_time': lunch_start_time.strftime('%H:%M:%S')})
-
-@app.route('/lunch_end/<int:id>', methods=['POST'])
-def lunch_end(id):
-    # Получаем сотрудника по ID
-    employee = db.session.get(Employee, id)
-    if not employee:
-        return jsonify({'error': 'Сотрудник не найден'}), 404
-
-    today = date.today()
-    work_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
-
-    # Проверка наличия лога рабочего времени
-    if not work_log:
-        return jsonify({'error': 'Чек-ин не найден за сегодня'}), 400
-
-    # Проверка, начался ли обед
-    if work_log.lunch_start_time is None:
-        return jsonify({'error': 'Обед не был начат'}), 400
-
-    # Проверка, завершен ли обед
-    if work_log.lunch_end_time is not None:
-        return jsonify({'error': 'Обед уже завершён'}), 400
-
-    # Завершение обеда
-    lunch_end_time = datetime.now()
-    work_log.lunch_end_time = lunch_end_time
-    db.session.commit()
-
-    return jsonify({'lunch_end_time': lunch_end_time.strftime('%H:%M:%S')})
 
 # Получение логов для конкретного сотрудника
 @app.route('/work_logs/<int:employee_id>', methods=['GET'])
@@ -446,8 +396,6 @@ def get_work_logs(employee_id):
         {
             'date': log.log_date.strftime('%a %d/%m/%Y'),
             'check_in': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
-            'lunch_start': log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--',
-            'lunch_end': log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--',
             'check_out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
             'total_hours': format_hours(log.worked_hours)  # Используем функцию здесь
         }
@@ -470,13 +418,13 @@ def update_holiday_status(id):
     if not work_log:
         return jsonify({'error': 'Запись не найдена'}), 404
 
-    new_status = request.form.get('holiday_status')
-    if new_status in ['Paid', 'Unpaid', 'Weekend']:
+    # Приводим к верхнему регистру первую букву и к нижнему остальные для соответствия базе данных
+    new_status = request.json.get('holiday_status').capitalize()
+    if new_status in ['Working day', 'Paid', 'Unpaid', 'Weekend']:
         work_log.holidays = new_status
         db.session.commit()
         return jsonify({'message': 'Статус выходного дня обновлен'}), 200
     return jsonify({'error': 'Неверный статус выходного дня'}), 400
-
 
 
 @app.route('/export_excel', methods=['POST'])
@@ -516,8 +464,6 @@ def export_excel():
                 'Position': employee.position,
                 'Date': log.log_date.strftime('%Y-%m-%d'),
                 'Check In': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
-                'Lunch Start': log.lunch_start_time.strftime('%H:%M') if log.lunch_start_time else '--:--',
-                'Lunch End': log.lunch_end_time.strftime('%H:%M') if log.lunch_end_time else '--:--',
                 'Check Out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
                 'Total Hours': formatted_hours,
                 'Holiday Type': log.holidays,

@@ -131,32 +131,33 @@
     font-size: 16px;
 }
 
-/* Логика для кнопок с логами работы */
+/* Контейнер для логов и итогов */
 .logs-container {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    gap: 20px; /* Расстояние между таблицей и правым блоком */
 }
 
 /* Таблица с логами */
 .logs-table {
-    width: 87%; /* Таблица занимает 90% ширины контейнера */
+    width: 180%; /* Уменьшаем ширину таблицы до 65% */
     border-collapse: collapse;
     margin-bottom: 20px;
 }
 
-/* Оформление для блока итогов */
+/* Блок итогов */
 .summary-container {
-    flex-grow: 1;
-    margin-left: 20px;
-    text-align: left;
-    padding: 10px;
+    width: 30%; /* Устанавливаем ширину блока с итогами */
     background-color: #f9f9f9;
+    padding: 15px;
     border-radius: 8px;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    height: auto;
-    align-self: center;
+    font-weight: bold;
+    font-size: 14px;
+    color: #333;
 }
+
 /* Стиль для итогов в правом блоке */
 .summary-container p {
     margin: 5px 0;

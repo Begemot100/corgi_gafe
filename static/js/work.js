@@ -15,6 +15,27 @@ function selectAllEmployees() {
         allSelected = true; // Обновляем флаг
     }
 }
+function updateHolidayStatus(logId, holidayType) {
+    const formattedHolidayType = holidayType.charAt(0).toUpperCase() + holidayType.slice(1).toLowerCase();
+    fetch(`/update_holiday_status/${logId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ holiday_status: formattedHolidayType })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            console.error('Ошибка:', data.error);
+        } else {
+            console.log(data.message);
+        }
+    })
+    .catch(error => console.error('Ошибка при обновлении статуса:', error));
+}
+
+
 
 // Функция для экспорта выбранных сотрудников в Excel
 function exportExcel() {
@@ -112,6 +133,7 @@ window.onclick = function(event) {
         modal.style.display = "none";
     }
 }
+
 
 // Функции для кнопок внутри модального окна
 function editEmployee() {
