@@ -16,20 +16,16 @@ function selectAllEmployees() {
     }
 }
 function updateHolidayStatus(logId, holidayType) {
-    // Преобразуйте значение перед отправкой, если необходимо
-    const statusMap = {
-        'workingday': 'Working day',
-        'paid': 'Paid',
-        'unpaid': 'Unpaid',
-        'weekend': 'Weekend'
-    };
+    // Преобразование в формат Title Case, который ожидается на сервере
+    let formattedHolidayType = holidayType === "workingday" ? "Working day" :
+                               holidayType.charAt(0).toUpperCase() + holidayType.slice(1);
 
     fetch(`/update_holiday_status/${logId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ holiday_status: statusMap[holidayType.toLowerCase()] })
+        body: JSON.stringify({ holiday_status: formattedHolidayType })
     })
     .then(response => response.json())
     .then(data => {
@@ -41,7 +37,6 @@ function updateHolidayStatus(logId, holidayType) {
     })
     .catch(error => console.error('Ошибка при обновлении статуса:', error));
 }
-
 
 
 // Функция для экспорта выбранных сотрудников в Excel

@@ -414,16 +414,24 @@ def get_work_logs(employee_id):
 # Обновление статуса отпуска для сотрудника
 @app.route('/update_holiday_status/<int:id>', methods=['POST'])
 def update_holiday_status(id):
-    work_log = db.session.get(WorkLog, id)
+    work_log = WorkLog.query.get(id)
     if not work_log:
         return jsonify({'error': 'Запись не найдена'}), 404
 
-    new_status = request.json.get('holiday_status')
-    print(f"Получен новый статус: {new_status}")  # Логирование
-    if new_status in ['Working day', 'Paid', 'Unpaid', 'Weekend']:
-        work_log.holidays = new_status
+    data = request.get_json()
+    print("Получены данные:", data)
+
+    # Приведение к нижнему регистру для стандартной проверки
+    new_status = data.get('holiday_status').lower()
+    valid_statuses = ['working day', 'paid', 'unpaid', 'weekend']
+
+    if new_status in valid_statuses:
+        # Приведение обратно к нужному регистру для записи в базу данных
+        work_log.holidays = new_status.capitalize() if new_status != 'working day' else 'Working day'
         db.session.commit()
         return jsonify({'message': 'Статус выходного дня обновлен'}), 200
+
+    print("Неверный статус:", new_status)
     return jsonify({'error': 'Неверный статус выходного дня'}), 400
 
 @app.route('/export_excel', methods=['POST'])
@@ -501,4 +509,4 @@ def export_excel():
 
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)
