@@ -6,7 +6,7 @@ import math
 from io import BytesIO
 
 import pandas as pd
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, send_file, make_response
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, send_file, make_response, current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -14,6 +14,8 @@ from sqlalchemy import extract
 from openpyxl.utils import get_column_letter
 
 from models import Employee, WorkLog
+import logging
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///employees.db'
@@ -171,7 +173,7 @@ def work():
 
     # Подсчет данных для каждого сотрудника
     for employee in employees:
-        employee_logs = [log for log in logs if log.employee_id == employee.id]
+        employee_logs = WorkLog.query.filter_by(employee_id=employee.id).all()
 
         # Подсчет общего времени
         total_hours = sum(log.worked_hours for log in employee_logs)
@@ -182,6 +184,7 @@ def work():
         # Добавляем подсчет отпусков
         employee.paid_holidays = sum(1 for log in employee_logs if log.holidays == 'Paid')
         employee.unpaid_holidays = sum(1 for log in employee_logs if log.holidays == 'Unpaid')
+        logging.info(f"Загрузка страницы /work. Total Hours: {total_hours}")
 
     return render_template('work.html', employees=employees, current_time=current_time)
 
@@ -414,25 +417,29 @@ def get_work_logs(employee_id):
 # Обновление статуса отпуска для сотрудника
 @app.route('/update_holiday_status/<int:id>', methods=['POST'])
 def update_holiday_status(id):
-    work_log = WorkLog.query.get(id)
-    if not work_log:
-        return jsonify({'error': 'Запись не найдена'}), 404
-
     data = request.get_json()
-    print("Получены данные:", data)
+    app.logger.info(f"Получены данные для обновления статуса: {data}")
 
-    # Приведение к нижнему регистру для стандартной проверки
-    new_status = data.get('holiday_status').lower()
-    valid_statuses = ['working day', 'paid', 'unpaid', 'weekend']
+    new_status = data.get('holiday_status', '').capitalize()
+    valid_statuses = ['Working day', 'Paid', 'Unpaid', 'Weekend']
 
     if new_status in valid_statuses:
-        # Приведение обратно к нужному регистру для записи в базу данных
-        work_log.holidays = new_status.capitalize() if new_status != 'working day' else 'Working day'
-        db.session.commit()
-        return jsonify({'message': 'Статус выходного дня обновлен'}), 200
+        work_log = WorkLog.query.get(id)
+        if not work_log:
+            return jsonify({'error': 'Запись не найдена'}), 404
 
-    print("Неверный статус:", new_status)
-    return jsonify({'error': 'Неверный статус выходного дня'}), 400
+        work_log.holidays = new_status
+        try:
+            db.session.commit()
+            return jsonify({'message': 'Статус выходного дня обновлен'}), 200
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"Ошибка при обновлении статуса: {e}")
+            return jsonify({'error': 'Не удалось обновить статус'}), 500
+
+    app.logger.warning(f"Неверный статус: {new_status}")
+    return jsonify({'error': 'Неверный статус'}), 400
+
 
 @app.route('/export_excel', methods=['POST'])
 def export_excel():
@@ -455,8 +462,12 @@ def export_excel():
     current_date = datetime.now().strftime('%d-%m-%Y')
 
     # Формируем название файла
-    filename = f"work_logs_{employee_names_str}_{current_date}.xlsx".replace(" ", "_").replace(",", "_").replace("__", "_")
+    filename = f"work_logs_{employee_names_str}_{current_date}.xlsx".replace(" ", "_").replace(",", "_").replace("__",
+                                                                                                                 "_")
     encoded_filename = quote(filename)
+    logging.info("Получены IDs для экспорта: %s", employee_ids)
+    logging.info("Количество сотрудников для экспорта: %d", len(employees))
+    logging.info("Функция экспортирования в Excel запущена.")
 
     # Создаем DataFrame с данными сотрудников
     data = []
@@ -501,12 +512,68 @@ def export_excel():
 
     # Создание ответа с явной установкой заголовков
     response = make_response(output.read())
-    response.headers['Content-Disposition'] = f'attachment; filename="{encoded_filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response.headers[
+        'Content-Disposition'] = f'attachment; filename="{encoded_filename}"; filename*=UTF-8\'\'{encoded_filename}'
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     return response
 
 
+@app.route('/edit_check_time/<int:log_id>', methods=['POST'])
+def edit_check_time(log_id):
+    data = request.get_json()
+    check_in_time = data.get('check_in_time')
+    check_out_time = data.get('check_out_time')
+
+    log = WorkLog.query.get(log_id)
+    if log:
+        log.check_in_time = check_in_time
+        log.check_out_time = check_out_time
+        db.session.commit()
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False}), 404
+
+
+
+
+# Пример замены в функции update_check_time
+@app.route('/update_check_time/<int:log_id>', methods=['POST'])
+def update_check_time(log_id):
+    data = request.get_json()
+
+    # Преобразуем `check_in_time` и `check_out_time` в `datetime` с использованием текущей даты
+    check_in_time = datetime.combine(date.today(), datetime.strptime(data['check_in_time'], '%H:%M').time())
+    check_out_time = datetime.combine(date.today(), datetime.strptime(data['check_out_time'], '%H:%M').time())
+
+    work_log = db.session.get(WorkLog, log_id)
+    if work_log:
+        work_log.check_in_time = check_in_time
+        work_log.check_out_time = check_out_time
+
+        # Рассчитываем отработанные часы
+        delta = check_out_time - check_in_time
+        worked_hours = delta.total_seconds() / 3600
+        work_log.worked_hours = worked_hours
+
+        db.session.commit()
+        return jsonify(success=True, worked_hours=worked_hours)
+    return jsonify(success=False), 404
+
+
+@app.route('/get_employee_logs/<int:employee_id>', methods=['GET'])
+def get_employee_logs(employee_id):
+    logs = WorkLog.query.filter_by(employee_id=employee_id).all()
+    logs_data = [{
+        "log_id": log.id,
+        "date": log.log_date.strftime('%Y-%m-%d'),
+        "check_in_time": log.check_in_time.strftime('%H:%M') if log.check_in_time else None,
+        "check_out_time": log.check_out_time.strftime('%H:%M') if log.check_out_time else None,
+        "worked_hours": log.worked_hours
+    } for log in logs]
+
+    return jsonify(success=True, logs=logs_data)
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

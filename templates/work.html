@@ -19,7 +19,6 @@
     <main class="work-container">
         <h1>Employees</h1>
         <div class="filter-bar">
-            <!-- Левая часть с кнопками Hoy и Grupo -->
             <div class="left-section">
                 <div class="dropdown">
                     <button class="filter-btn" onclick="toggleDropdown()">Hoy</button>
@@ -44,7 +43,6 @@
                 </div>
             </div>
 
-            <!-- Правая часть с Select и кнопкой с троеточием -->
             <div class="right-section">
                 <span>Select</span>
                 <button class="filter-btn" onclick="toggleModal()">
@@ -53,13 +51,12 @@
             </div>
         </div>
 
-        <!-- Модальное окно -->
         <div id="modal" class="modal">
             <div class="modal-content">
                 <span class="close" onclick="toggleModal()">&times;</span>
                 <ul class="modal-options">
                     <li><button onclick="selectAllEmployees()">Select All</button></li>
-                    <li><button onclick="editEmployee()">Edit</button></li>
+                    <button onclick="getSelectedEmployeeAndOpenEditModal()">Edit</button>
                     <li><button onclick="exportExcel()">Export Excel</button></li>
                     <li><button onclick="exportPdf()">Export PDF</button></li>
                     <li><button onclick="deleteEmployee()">Delete</button></li>
@@ -67,10 +64,26 @@
             </div>
         </div>
 
+        <div id="editTimeModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeEditModal()">&times;</span>
+                <h3>Редактировать время
+                    <label for="editDate">Дата:</label>
+                    <select id="editDate" onchange="updateSelectedLogId()"></select>
+
+                    <label for="editCheckIn">Check-in:</label>
+                    <input type="time" id="editCheckIn">
+
+                    <label for="editCheckOut">Check-out:</label>
+                    <input type="time" id="editCheckOut">
+
+                    <button onclick="saveEditedTime()">Сохранить</button>
+            </div>
+        </div>
+
         <div class="work-logs">
             {% for employee in employees %}
                 <div class="employee-log">
-                    <!-- Чекбокс для выбора сотрудника -->
                     <input type="checkbox" class="checkbox-input" id="employee_{{ employee.id }}">
                     <label class="checkbox-label" for="employee_{{ employee.id }}"></label>
 
@@ -88,33 +101,32 @@
                             </thead>
                             <tbody>
                                 {% for log in employee.work_logs %}
-                                <tr>
-                                    <td>{{ log.log_date.strftime('%Y-%m-%d') }}</td>
-                                    <td>{{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}</td>
-                                    <td>{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
-                                    <td>{{ log.worked_hours | format_hours if log.worked_hours else '0 hours' }}</td>
+                                <tr class="log-row-{{ employee.id }}" data-log-id="{{ log.id }}" data-log-date="{{ log.log_date.strftime('%Y-%m-%d') }}">
+                                    <td class="log-date">{{ log.log_date.strftime('%Y-%m-%d') }}</td>
+                                    <td class="check-in-time" id="check-in-time-{{ log.id }}">{{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}</td>
+                                    <td class="check-out-time" id="check-out-time-{{ log.id }}">{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
+                                    <td id="daily-hours-{{ log.id }}">{{ log.worked_hours | format_hours if log.worked_hours else '0 hours' }}</td>
                                     <td>
-                                        <select name="holiday_type" onchange="updateHolidayStatus('{{ log.id }}', this.value)">
+                                        <select id="log-{{ log.id }}" name="holiday_type" onchange="updateHolidayStatus('{{ log.id }}', this.value)">
                                             <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Working day</option>
                                             <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Paid</option>
-                                            <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>Unpaid</option>
+                                             <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>Unpaid</option>
                                             <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
                                         </select>
+
                                     </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
                         </table>
 
-                        <!-- Итоговый правый блок -->
                         <div class="summary-container">
-                            <p>Total Hours: <span id="total-hours">{{ employee.total_hours | format_hours }}</span></p>
-                            <p>Total Days: <span id="total-days">{{ employee.total_days }}</span></p>
+                            <p>Total Hours: <span id="total-hours-{{ employee.id }}">{{ employee.total_hours | format_hours }}</span></p>
+                            <p>Total Days: <span id="total-days-{{ employee.id }}">{{ employee.total_days }}</span></p>
                             <p>Overtime: {{ employee.overtime | format_hours }}</p>
-                            <p>Paid Holidays: {{ employee.paid_holidays }}</p>
-                            <p>Unpaid Holidays: {{ employee.unpaid_holidays }}</p>
+                            <p>Paid Holidays: <span id="paid-holidays-{{ employee.id }}">{{ employee.paid_holidays }}</span></p>
+                            <p>Unpaid Holidays: <span id="unpaid-holidays-{{ employee.id }}">{{ employee.unpaid_holidays }}</span></p>
                         </div>
-
                     </div>
                 </div>
             {% endfor %}
