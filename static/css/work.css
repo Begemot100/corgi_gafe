@@ -5,6 +5,7 @@
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     margin-bottom: 20px;
     padding: 20px;
+    z-index: 1; /* Добавим, чтобы оно находилось ниже модального окна */
 }
 
 /* Стиль для блока чекбокса */
@@ -35,7 +36,6 @@
     background-color: #969696;
 }
 
-/* Маленький круг внутри выбранного чекбокса */
 .checkbox-label::after {
     content: '';
     position: absolute;
@@ -93,7 +93,7 @@
 /* Стили для модального окна */
 .modal {
     display: none;
-    position: fixed;
+    position: absolute;
     bottom: 10%;
     right: 5%;
     width: 300px;
@@ -101,7 +101,7 @@
     background-color: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     border-radius: 8px;
-    z-index: 1000;
+    z-index: 9999; /* Убедитесь, что z-index больше остальных элементов */
 }
 
 .modal-overlay {
@@ -112,7 +112,7 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     display: none;
-    z-index: 999;
+    z-index: 9999;
 }
 
 .modal-content {
@@ -230,29 +230,6 @@ body {
     flex-grow: 1;
 }
 
-.filter-btn {
-    background-color: #FC8C86;
-    color: #333;
-    border: none;
-    padding: 10px 20px;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    background-color: white;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-    padding: 10px;
-    z-index: 1;
-}
-
-.dropdown-menu.show {
-    display: block;
-}
-
 /* Адаптивный дизайн для мобильных устройств */
 @media screen and (max-width: 768px) {
     .filter-bar {
@@ -268,9 +245,10 @@ body {
         padding: 15px;
     }
 }
+
 .logo img {
-    width: 100px; /* Задайте желаемую ширину */
-    height: auto; /* Высота будет подстраиваться автоматически */
+    width: 100px;
+    height: auto;
 }
 header {
     display: flex;

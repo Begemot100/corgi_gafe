@@ -1,10 +1,18 @@
 .filter-btn {
     background-color: #FC8C86;
-    color: #333;
+    color: white; /* Цвет текста кнопки */
+    font-weight: bold; /* Жирный текст */
     border: none;
     padding: 10px 20px;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 12px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    z-index: 1; /* Убедитесь, что кнопка имеет достаточно низкий z-index */
+}
+
+.filter-btn:hover {
+    background-color: #e67a72; /* Чуть темнее оттенок */
+    transform: scale(1.05); /* Увеличение размера */
 }
 
 .dropdown-menu {
@@ -14,6 +22,7 @@
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     width: 200px;
+    z-index: 2; /* Убедитесь, что z-index меньше, чем у модального окна */
 }
 
 .dropdown-menu.show {
@@ -31,9 +40,16 @@
 .dropdown-menu a:hover {
     background-color: #f0f0f0;
 }
+
+
 h1 {
     margin-left: 20px; /* Установите нужное значение отступа */
 }
+
 .filter-bar {
     padding-left: 20px; /* Установите нужное значение отступа */
+}
+#selectedDateDisplay {
+    color: gray; /* Устанавливаем серый цвет для текста */
+    font-weight: bold; /* Делаем текст жирным, если нужно */
 }

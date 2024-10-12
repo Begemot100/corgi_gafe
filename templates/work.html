@@ -38,12 +38,17 @@
                 </div>
 
                 <input type="date" id="datePicker" class="filter-btn" onchange="applyDateFilter()">
+                <span id="selectedDateDisplay" style="margin-left: 10px; font-weight: bold; color: grey;"></span>
+
                 <div class="dropdown">
                     <button class="filter-btn" onclick="toggleDropdown('group-dropdown-menu')">Grupo</button>
                     <div id="group-dropdown-menu" class="dropdown-menu">
+                        <a href="#" onclick="applyGroupFilter('all')">All</a> <!-- Добавлено "All" -->
                         <a href="#" onclick="applyGroupFilter('cocina')">Cocina</a>
                         <a href="#" onclick="applyGroupFilter('sala')">Sala</a>
                     </div>
+                    <button class="filter-btn" onclick="resetFilter()">Сбросить фильтр</button>
+
                 </div>
             </div>
 

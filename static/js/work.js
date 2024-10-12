@@ -193,7 +193,11 @@ function toggleDropdown(menuId) {
 }
 
 function applyGroupFilter(group) {
-    window.location.href = `/work?group=${group}`;
+    if (group === 'all') {
+        window.location.href = '/work'; // Перенаправление на страницу со всеми сотрудниками
+    } else {
+        window.location.href = `/work?group=${group}`; // Перенаправление на страницу с выбранной группой
+    }
 }
 
 function applyFilter(filterType) {
@@ -261,3 +265,100 @@ window.addEventListener('click', function(event) {
         if (groupDropdownMenu && groupDropdownMenu.classList.contains('show')) { groupDropdownMenu.classList.remove('show'); }
     }
 });
+document.querySelector('#dotButton').addEventListener('click', function(event) {
+    const modal = document.getElementById('editTimeModal');
+    const overlay = document.getElementById('modalOverlay');
+
+    // Установка позиции модального окна
+    const selectLabel = document.querySelector('.select-label');
+    const labelRect = selectLabel.getBoundingClientRect();
+
+    // Расчет позиции модального окна
+    modal.style.left = `${labelRect.left}px`; // Позиция по оси X
+    modal.style.top = `${labelRect.bottom + window.scrollY}px`; // Позиция по оси Y с учетом прокрутки
+
+    // Показать модальное окно и оверлей
+    modal.style.display = 'block';
+    overlay.style.display = 'block';
+});
+
+// Закрытие модального окна
+overlay.addEventListener('click', function() {
+    const modal = document.getElementById('editTimeModal');
+    modal.style.display = 'none';
+    overlay.style.display = 'none';
+});
+function applyDateFilter() {
+    const selectedDate = document.getElementById("datePicker").value;
+    document.getElementById("selectedDateDisplay").textContent = selectedDate; // Отображаем выбранную дату
+
+    fetch(`/get_logs_by_date?date=${selectedDate}`)
+        .then(response => response.json())
+        .then(data => {
+            // Очищаем текущие логи
+            const logsContainer = document.querySelector(".work-logs");
+            logsContainer.innerHTML = '';
+
+            if (data.length === 0) {
+                const message = document.createElement('div');
+                message.textContent = 'Нет записей для выбранной даты.';
+                logsContainer.appendChild(message);
+                return;
+            }
+
+            // Заполняем таблицу данными
+            data.forEach(log => {
+                const employeeLog = document.createElement('div');
+                employeeLog.classList.add('employee-log');
+                employeeLog.innerHTML = `
+                    <input type="checkbox" class="checkbox-input" id="employee_${log.employeeId}">
+                    <label class="checkbox-label" for="employee_${log.employeeId}"></label>
+                    <h2>${log.employeeName} - ${log.position}</h2>
+                    <div class="logs-container">
+                        <table class="logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Entra</th>
+                                    <th>Salida</th>
+                                    <th>Total</th>
+                                    <th>Holidays</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>${log.logDate}</td>
+                                    <td>${log.checkInTime || '--:--'}</td>
+                                    <td>${log.checkOutTime || '--:--'}</td>
+                                    <td>${log.totalHours ? log.totalHours.toFixed(2) + ' hours' : '0 hours'}</td>
+                                    <td>
+                                        <select onchange="updateHolidayStatus('${log.holidayId}', this.value)">
+                                            <option value="workingday" ${log.holidays === 'Working day' ? 'selected' : ''}>Working day</option>
+                                            <option value="paid" ${log.holidays === 'Paid' ? 'selected' : ''}>Paid</option>
+                                            <option value="unpaid" ${log.holidays === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
+                                            <option value="weekend" ${log.holidays === 'Weekend' ? 'selected' : ''}>Weekend</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                logsContainer.appendChild(employeeLog);
+            });
+
+            // Обновление общей информации о часах
+            const totalHours = data.reduce((sum, log) => sum + (log.totalHours || 0), 0);
+            document.getElementById('total-hours-display').textContent = `Общее количество часов: ${totalHours.toFixed(2)}`;
+        })
+        .catch(error => console.error('Ошибка при получении данных:', error));
+}
+
+
+function resetFilter() {
+    // Сбрасываем выбранную дату
+    document.getElementById("datePicker").value = '';
+    document.getElementById("selectedDateDisplay").textContent = ''; // Очищаем отображаемую дату
+    // Перенаправляем на страницу с логами без фильтров
+    window.location.href = '/work';
+}
