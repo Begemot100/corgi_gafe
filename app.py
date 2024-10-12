@@ -69,9 +69,13 @@ class WorkLog(db.Model):
     check_out_time = db.Column(db.DateTime, nullable=True)
     worked_hours = db.Column(db.Float, default=0)
     log_date = db.Column(db.Date, nullable=False)
-    holidays = db.Column(db.String(50), default='-')
+    holidays = db.Column(db.String(50), default='Working day')
     # work_log = db.session.get(WorkLog, id)
-
+    def calculate_worked_hours(self):
+        if self.check_in_time and self.check_out_time:
+            time_diff = self.check_out_time - self.check_in_time
+            return time_diff.total_seconds() / 3600  # возвращаем количество часов
+        return 0
 
 # Главная страница - Страница входа
 @app.route('/')
@@ -420,11 +424,11 @@ def update_holiday_status(id):
     data = request.get_json()
     app.logger.info(f"Получены данные для обновления статуса: {data}")
 
-    new_status = data.get('holiday_status', '').capitalize()
+    new_status = data.get('holiday_status', 'Working day').capitalize()
     valid_statuses = ['Working day', 'Paid', 'Unpaid', 'Weekend']
 
     if new_status in valid_statuses:
-        work_log = WorkLog.query.get(id)
+        work_log = db.session.get(WorkLog, id)
         if not work_log:
             return jsonify({'error': 'Запись не найдена'}), 404
 
@@ -537,30 +541,40 @@ def edit_check_time(log_id):
 
 
 
-# Пример замены в функции update_check_time
-@app.route('/update_check_time/<int:log_id>', methods=['POST'])
-def update_check_time(log_id):
+
+
+
+@app.route('/update_check_time/<int:id>', methods=['POST'])
+def update_check_time(id):
     data = request.get_json()
+    check_in_time_str = data.get('check_in_time', '')
+    check_out_time_str = data.get('check_out_time', '')
 
-    # Преобразуем `check_in_time` и `check_out_time` в `datetime` с использованием текущей даты
-    check_in_time = datetime.combine(date.today(), datetime.strptime(data['check_in_time'], '%H:%M').time())
-    check_out_time = datetime.combine(date.today(), datetime.strptime(data['check_out_time'], '%H:%M').time())
+    try:
+        # Преобразование строки времени в datetime объект
+        check_in_time = datetime.combine(date.today(), datetime.strptime(check_in_time_str, '%H:%M').time()) if check_in_time_str else None
+        check_out_time = datetime.combine(date.today(), datetime.strptime(check_out_time_str, '%H:%M').time()) if check_out_time_str else None
 
-    work_log = db.session.get(WorkLog, log_id)
-    if work_log:
-        work_log.check_in_time = check_in_time
-        work_log.check_out_time = check_out_time
+        # Поиск и обновление записи
+        work_log = db.session.get(WorkLog, id)
+        if work_log:
+            work_log.check_in_time = check_in_time
+            work_log.check_out_time = check_out_time
 
-        # Рассчитываем отработанные часы
-        delta = check_out_time - check_in_time
-        worked_hours = delta.total_seconds() / 3600
-        work_log.worked_hours = worked_hours
+            # Пересчет рабочих часов
+            work_log.calculate_worked_hours()
+            db.session.commit()
+            return jsonify({'success': True})
+        else:
+            return jsonify({'error': 'Запись не найдена'}), 404
 
-        db.session.commit()
-        return jsonify(success=True, worked_hours=worked_hours)
-    return jsonify(success=False), 404
-
-
+    except ValueError as e:
+        app.logger.error(f"Неверный формат времени: {e}")
+        return jsonify({'error': 'Неверный формат времени'}), 400
+    except Exception as e:
+        app.logger.error(f"Ошибка при обновлении времени: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Не удалось сохранить время'}), 500
 @app.route('/get_employee_logs/<int:employee_id>', methods=['GET'])
 def get_employee_logs(employee_id):
     logs = WorkLog.query.filter_by(employee_id=employee_id).all()
@@ -573,6 +587,9 @@ def get_employee_logs(employee_id):
     } for log in logs]
 
     return jsonify(success=True, logs=logs_data)
+@app.route('/edit_modal')
+def edit_modal():
+    return render_template('edit_modal.html')
 
 
 if __name__ == '__main__':

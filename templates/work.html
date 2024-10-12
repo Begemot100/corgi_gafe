@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/work.css') }}?v={{ current_time }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/filters.css') }}">
     <title>Work Logs</title>
 </head>
 <body>
-    <header>
+   <header>
         <div class="logo">
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
         </div>
@@ -16,12 +18,14 @@
         </div>
     </header>
 
-    <main class="work-container">
+ <main class="work-container">
         <h1>Employees</h1>
+        <div id="editModalContainer" style="display: none;"></div>
+
         <div class="filter-bar">
             <div class="left-section">
                 <div class="dropdown">
-                    <button class="filter-btn" onclick="toggleDropdown()">Hoy</button>
+                    <button class="filter-btn" onclick="toggleDropdown('dropdown-menu')">Hoy</button>
                     <div id="dropdown-menu" class="dropdown-menu">
                         <a href="#" onclick="applyFilter('today')">Hoy</a>
                         <a href="#" onclick="applyFilter('yesterday')">Ayer</a>
@@ -35,7 +39,7 @@
 
                 <input type="date" id="datePicker" class="filter-btn" onchange="applyDateFilter()">
                 <div class="dropdown">
-                    <button class="filter-btn" onclick="toggleGroupDropdown()">Grupo</button>
+                    <button class="filter-btn" onclick="toggleDropdown('group-dropdown-menu')">Grupo</button>
                     <div id="group-dropdown-menu" class="dropdown-menu">
                         <a href="#" onclick="applyGroupFilter('cocina')">Cocina</a>
                         <a href="#" onclick="applyGroupFilter('sala')">Sala</a>
@@ -51,33 +55,33 @@
             </div>
         </div>
 
-        <div id="modal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="toggleModal()">&times;</span>
-                <ul class="modal-options">
-                    <li><button onclick="selectAllEmployees()">Select All</button></li>
-                    <button onclick="getSelectedEmployeeAndOpenEditModal()">Edit</button>
-                    <li><button onclick="exportExcel()">Export Excel</button></li>
-                    <li><button onclick="exportPdf()">Export PDF</button></li>
-                    <li><button onclick="deleteEmployee()">Delete</button></li>
-                </ul>
+        <div id="modalOverlay" class="modal-overlay" onclick="toggleModal()"></div>
+            <div id="modal" class="modal">
+                <div class="modal-content">
+                    <ul class="modal-options">
+                        <li><button onclick="selectAllEmployees()">Select All</button></li>
+                        <button onclick="getSelectedEmployeeAndOpenEditModal()">Edit</button>
+                        <li><button onclick="exportExcel()">Export Excel</button></li>
+                        <li><button onclick="exportPdf()">Export PDF</button></li>
+                        <li><button onclick="deleteEmployee()">Delete</button></li>
+                    </ul>
+                </div>
             </div>
-        </div>
+
 
         <div id="editTimeModal" class="modal">
             <div class="modal-content">
-                <span class="close" onclick="closeEditModal()">&times;</span>
-                <h3>Редактировать время
-                    <label for="editDate">Дата:</label>
-                    <select id="editDate" onchange="updateSelectedLogId()"></select>
+                <h3>Редактировать время</h3>
+                <label for="editDate">Дата:</label>
+                <select id="editDate" onchange="updateSelectedLogId()"></select>
 
-                    <label for="editCheckIn">Check-in:</label>
-                    <input type="time" id="editCheckIn">
+                <label for="editCheckIn">Check-in:</label>
+                <input type="time" id="editCheckIn">
 
-                    <label for="editCheckOut">Check-out:</label>
-                    <input type="time" id="editCheckOut">
+                <label for="editCheckOut">Check-out:</label>
+                <input type="time" id="editCheckOut">
 
-                    <button onclick="saveEditedTime()">Сохранить</button>
+                <button onclick="saveEditedTime()">Сохранить</button>
             </div>
         </div>
 
@@ -113,7 +117,6 @@
                                              <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>Unpaid</option>
                                             <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
                                         </select>
-
                                     </td>
                                 </tr>
                                 {% endfor %}

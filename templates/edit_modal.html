@@ -1,0 +1,22 @@
+<!-- templates/edit_modal.html -->
+<div id="editTimeModal" class="modal">
+    <div class="modal-content">
+<!--        <span class="close" onclick="closeEditModal()">&times;</span>-->
+        <h2>Редактировать время</h2>
+        <form id="edit-form">
+            <label for="editDate">Дата:</label>
+            <select id="editDate" onchange="updateSelectedLogId()" required></select>
+
+            <label for="editCheckIn">Check-in:</label>
+            <input type="time" id="editCheckIn" required>
+
+            <label for="editCheckOut">Check-out:</label>
+            <input type="time" id="editCheckOut" required>
+
+            <div class="form-buttons">
+                <button type="button" class="cancel-btn" onclick="closeEditModal()">Отмена</button>
+                <button type="button" class="register-btn" onclick="saveEditedTime()">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>

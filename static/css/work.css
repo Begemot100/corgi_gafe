@@ -69,36 +69,50 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    position: relative; /* Для позиционирования модального окна */
+    position: relative;
+    justify-content: flex-end;
+    flex-grow: 1;
 }
+
 /* Убираем точки перед элементами списка в модальном окне */
 .modal-options {
-    list-style-type: none; /* Убираем маркеры (точки) у списка */
-    padding-left: 0; /* Убираем отступы слева у списка */
+    list-style-type: none;
+    padding-left: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center; /* Центрируем кнопки по вертикали */
-    align-items: center; /* Центрируем кнопки по горизонтали */
-    height: 100%; /* Растягиваем контейнер на всю высоту модального окна */
+    justify-content: center;
+    align-items: center;
+    height: 100%;
 }
 
 .modal-options li {
-    margin: 0; /* Убираем отступы для элементов списка */
+    margin: 0;
 }
 
 /* Стили для модального окна */
 .modal {
-    display: none; /* По умолчанию скрыто */
-    position: absolute; /* Абсолютное позиционирование относительно кнопки */
-    top: 240px; /* Сразу под кнопкой */
-    right: 0;
-    width: 150px;
-    padding: 14px;
+    display: none;
+    position: fixed;
+    bottom: 10%;
+    right: 5%;
+    width: 300px;
+    padding: 20px;
     background-color: #fff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     border-radius: 8px;
     z-index: 1000;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    z-index: 999;
 }
 
 .modal-content {
@@ -112,16 +126,14 @@
     font-size: 14px;
     padding: 10px;
     cursor: pointer;
-    text-align: center; /* Центрируем текст */
-    transition: background-color 0.3s ease; /* Плавный переход для фона */
-    justify-content: center; /* Центрируем текст по горизонтали */
-    align-items: center; /* Центрируем текст по вертикали */
+    text-align: center;
+    transition: background-color 0.3s ease;
     width: 100%;
 }
 
 .modal-options button:hover {
     background-color: #f0f0f0;
-    border-radius: 12px;
+    border-radius: 8px;
 }
 
 /* Кнопка закрытия модального окна */
@@ -132,25 +144,55 @@
     cursor: pointer;
     font-size: 16px;
 }
-
-/* Контейнер для логов и итогов */
 .logs-container {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 20px; /* Расстояние между таблицей и правым блоком */
+    gap: 20px; /* Расстояние между таблицей и итогами */
+    margin-top: 20px;
+    width: 100%;
 }
 
 /* Таблица с логами */
 .logs-table {
-    width: 180%; /* Уменьшаем ширину таблицы до 65% */
+    width: 80%;
     border-collapse: collapse;
     margin-bottom: 20px;
 }
 
+.logs-table th, .logs-table td {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+}
+
+.logs-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.logs-table td {
+    color: #333;
+}
+
+/* Настройка ширины колонок */
+.logs-table th:nth-child(1), .logs-table td:nth-child(1) {
+    width: 20%;
+}
+
+.logs-table th:nth-child(2), .logs-table td:nth-child(2),
+.logs-table th:nth-child(3), .logs-table td:nth-child(3),
+.logs-table th:nth-child(4), .logs-table td:nth-child(4) {
+    width: 15%;
+}
+
+.logs-table th:nth-child(5), .logs-table td:nth-child(5) {
+    width: 35%;
+}
+
 /* Блок итогов */
 .summary-container {
-    width: 30%; /* Устанавливаем ширину блока с итогами */
+    width: 20%;
     background-color: #f9f9f9;
     padding: 15px;
     border-radius: 8px;
@@ -160,12 +202,10 @@
     color: #333;
 }
 
-/* Стиль для итогов в правом блоке */
 .summary-container p {
     margin: 5px 0;
     font-size: 14px;
 }
-
 
 /* Основные стили страницы */
 body {
@@ -175,36 +215,7 @@ body {
     padding: 0;
 }
 
-/* Шапка страницы */
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #fff;
-    padding: 20px;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.logo img {
-    height: 50px;
-}
-
-.logout a {
-    color: #ff6347;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-/* Основная рабочая область */
-.work-container {
-    padding: 20px;
-}
-
-h1 {
-    margin-bottom: 20px;
-}
-
-/* Панель с фильтрами */
+/* Фильтр */
 .filter-bar {
     display: flex;
     justify-content: space-between;
@@ -212,142 +223,34 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Левая часть с кнопками Hoy и Grupo */
 .left-section {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-grow: 1;
 }
 
-/* Правая часть с кнопками Select и троеточием */
-.right-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-}
-
-.right-section span {
-    font-size: 16px;
-    color: #333;
-}
-
-/* Кнопка для правой части */
-.dot-button {
-    background-color: #D9D9D9;
-    border: none;
-    border-radius: 4px;
-    padding: 8px;
-    cursor: pointer;
-}
-
-.dot-button:hover {
-    background-color: #b3b3b3;
-}
-
-.dot-icon {
-    width: 16px;
-    height: 16px;
-}
-
-/* Стиль кнопок для фильтров */
 .filter-btn {
-    background-color: #ff6347;
-    color: #fff;
-    border-radius: 20px;
-    padding: 10px 15px;
+    background-color: #FC8C86;
+    color: #333;
     border: none;
+    padding: 10px 20px;
     cursor: pointer;
-    white-space: nowrap;
-    font-weight: bold;
+    border-radius: 4px;
 }
 
-.filter-btn:hover {
-    background-color: #919191;
-}
-
-/* Выпадающее меню */
 .dropdown-menu {
     display: none;
     position: absolute;
     background-color: white;
-    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 4px;
-    min-width: 160px;
+    padding: 10px;
     z-index: 1;
 }
 
-.dropdown-menu a {
-    width: 100%;
-    padding: 12px 16px;
-    text-align: left;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.dropdown-menu a:hover {
-    background-color: #f1f1f1;
-}
-
-.show {
+.dropdown-menu.show {
     display: block;
-}
-
-/* Оформление таблицы логов работы */
-.employee-log {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-    padding: 20px;
-}
-
-.logs-table th, .logs-table td {
-    border: 1px solid #e0e0e0;
-    padding: 12px;
-    text-align: center;
-}
-
-.logs-table th {
-    background-color: #f5f5f5;
-    color: #666;
-    font-weight: bold;
-}
-
-.logs-table td {
-    color: #333;
-}
-
-/* Выпадающие списки */
-select {
-    padding: 5px 10px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    cursor: pointer;
-}
-
-select option[value="paid"] {
-    background-color: #ffcc00;
-    color: #333;
-}
-
-select option[value="unpaid"] {
-    background-color: #ff6347;
-    color: #fff;
-}
-
-select option[value="weekend"] {
-    background-color: #919191;
-    color: #fff;
-}
-
-/* Блок для итогов */
-.summary-container {
-    margin-top: 10px;
-    font-weight: bold;
-    font-size: 14px;
-    color: #333;
 }
 
 /* Адаптивный дизайн для мобильных устройств */
@@ -357,10 +260,6 @@ select option[value="weekend"] {
         gap: 5px;
     }
 
-    .filter-btn {
-        width: 100%;
-    }
-
     .logs-table th, .logs-table td {
         padding: 8px;
     }
@@ -368,4 +267,21 @@ select option[value="weekend"] {
     .employee-log {
         padding: 15px;
     }
+}
+.logo img {
+    width: 100px; /* Задайте желаемую ширину */
+    height: auto; /* Высота будет подстраиваться автоматически */
+}
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.logout a {
+    color: #ff6347;
+    text-decoration: none;
+    font-weight: bold;
 }

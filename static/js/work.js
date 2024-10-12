@@ -3,6 +3,36 @@ let employeeLogs = {}; // Сохраняем логи по датам для т�
 let currentEmployeeId = null; // Сохраняем текущего выбранного сотрудника
 let allSelected = false;
 
+// Функция для открытия/закрытия выбранного меню по id
+function toggleDropdown(menuId) {
+    const dropdownMenu = document.getElementById(menuId);
+    if (dropdownMenu) {
+        dropdownMenu.classList.toggle("show");
+    } else {
+        console.error(`Элемент с id ${menuId} не найден`);
+    }
+}
+
+// Функция для открытия/закрытия основного модального окна
+function toggleModal() {
+    const modal = document.getElementById('modal');
+    if (modal) {
+        modal.style.display = (modal.style.display === 'block') ? 'none' : 'block';
+    } else {
+        console.error("Элемент модального окна не найден");
+    }
+}
+
+// Функция открытия модального окна редактирования времени
+function openEditModal(employeeId) {
+    currentEmployeeId = employeeId;
+    document.getElementById('editTimeModal').style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('editTimeModal').style.display = 'none';
+}
+
 // Получение ID выбранного сотрудника и открытие модального окна
 function getSelectedEmployeeAndOpenEditModal() {
     const checkboxes = document.querySelectorAll('.checkbox-input');
@@ -21,17 +51,26 @@ function getSelectedEmployeeAndOpenEditModal() {
     }
 }
 
-// Функция открытия модального окна
+// Функция загрузки и отображения модального окна для редактирования
+function loadEditModal() {
+    fetch('/edit_modal')
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('editModalContainer').innerHTML = html;
+            document.getElementById('editTimeModal').style.display = 'block';
+        })
+        .catch(error => console.error('Ошибка загрузки модального окна:', error));
+}
+
+// Функция открытия модального окна редактирования времени
 function openEditModal(employeeId) {
     currentEmployeeId = employeeId;
     employeeLogs = {};
 
-    // Загрузка логов с сервера, чтобы убедиться, что данные актуальны
     fetch(`/get_employee_logs/${employeeId}`)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Заполнение employeeLogs с правильными данными
                 data.logs.forEach(log => {
                     employeeLogs[log.date] = {
                         logId: log.log_id,
@@ -41,13 +80,8 @@ function openEditModal(employeeId) {
                     };
                 });
 
-                // Заполнение выпадающего списка дат
                 const dateSelect = document.getElementById('editDate');
-                dateSelect.innerHTML = '';
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = '-- Выберите дату --';
-                dateSelect.appendChild(defaultOption);
+                dateSelect.innerHTML = '<option value="">-- Выберите дату --</option>';
 
                 for (const date in employeeLogs) {
                     const option = document.createElement('option');
@@ -56,37 +90,14 @@ function openEditModal(employeeId) {
                     dateSelect.appendChild(option);
                 }
 
-                // Сброс значений времени
                 document.getElementById('editCheckIn').value = '';
                 document.getElementById('editCheckOut').value = '';
-
-                // Показ модального окна
                 document.getElementById('editTimeModal').style.display = 'block';
             }
         })
         .catch(error => console.error('Ошибка загрузки логов:', error));
 }
-function saveHolidayStatus(logId, newStatus) {
-    fetch(`/update_holiday_status/${logId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ holiday_status: newStatus })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            // Обновляем статус отпуска в локальном объекте
-            employeeLogs[selectedDate].holidays = newStatus;
-            console.log(`Статус для ${selectedLogId} обновлен на ${newStatus}`);
-        } else {
-            console.error('Ошибка обновления статуса отпуска');
-        }
-    })
-    .catch(error => console.error('Ошибка:', error));
-}
-// Функция для обновления logId и времени при выборе новой даты
+
 function updateSelectedLogId() {
     const selectedDate = document.getElementById('editDate').value;
 
@@ -94,6 +105,7 @@ function updateSelectedLogId() {
         const { logId, checkInTime, checkOutTime } = employeeLogs[selectedDate];
         selectedLogId = logId;
 
+        // Заполняем поля времени
         document.getElementById('editCheckIn').value = checkInTime !== '--:--' ? checkInTime : '';
         document.getElementById('editCheckOut').value = checkOutTime !== '--:--' ? checkOutTime : '';
     } else {
@@ -102,6 +114,30 @@ function updateSelectedLogId() {
         document.getElementById('editCheckOut').value = '';
     }
 }
+
+// Обновление статуса праздника
+function updateHolidayStatus(logId, status) {
+    const formattedStatus = status.replace(/(^|\s)\S/g, letter => letter.toUpperCase()).replace("Workingday", "Working day");
+
+    fetch(`/update_holiday_status/${logId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ holiday_status: formattedStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            console.log(`Статус для ${logId} обновлен: ${formattedStatus}`);
+        } else {
+            console.error('Ошибка при обновлении статуса');
+        }
+    })
+    .catch(error => console.error('Ошибка:', error));
+}
+
+// Сохранение отредактированного времени
 function saveEditedTime() {
     const checkInTime = document.getElementById('editCheckIn').value;
     const checkOutTime = document.getElementById('editCheckOut').value;
@@ -113,19 +149,14 @@ function saveEditedTime() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                check_in_time: checkInTime,
-                check_out_time: checkOutTime
-            })
+            body: JSON.stringify({ check_in_time: checkInTime, check_out_time: checkOutTime })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Обновляем отображение времени Check-in и Check-out
                 document.getElementById(`check-in-time-${selectedLogId}`).textContent = checkInTime || '--:--';
                 document.getElementById(`check-out-time-${selectedLogId}`).textContent = checkOutTime || '--:--';
 
-                // Обновляем employeeLogs для актуальности данных
                 employeeLogs[selectedDate] = {
                     logId: selectedLogId,
                     checkInTime: checkInTime,
@@ -133,22 +164,14 @@ function saveEditedTime() {
                     worked_hours: data.worked_hours
                 };
 
-                // Пересчитываем и обновляем общее количество часов
                 let totalHours = 0;
                 for (const date in employeeLogs) {
-                    const workedHours = employeeLogs[date].worked_hours || 0;
-                    totalHours += workedHours;
+                    totalHours += employeeLogs[date].worked_hours || 0;
                 }
 
                 const hours = Math.floor(totalHours);
                 const minutes = Math.round((totalHours % 1) * 60);
-                const totalHoursElement = document.getElementById(`total-hours-${currentEmployeeId}`);
-
-                if (totalHoursElement) {
-                    totalHoursElement.textContent = `${hours}h ${minutes}min`;
-                } else {
-                    console.warn(`Элемент для total-hours не найден для сотрудника ID: ${currentEmployeeId}`);
-                }
+                document.getElementById(`total-hours-${currentEmployeeId}`).textContent = `${hours}h ${minutes}min`;
 
                 closeEditModal();
             } else {
@@ -159,8 +182,39 @@ function saveEditedTime() {
     }
 }
 
+// Функции для работы с фильтрацией по датам и группам
+function toggleDropdown(menuId) {
+    const dropdownMenu = document.getElementById(menuId);
+    if (dropdownMenu) {
+        dropdownMenu.classList.toggle("show");
+    } else {
+        console.error(`Элемент с id ${menuId} не найден`);
+    }
+}
+
+function applyGroupFilter(group) {
+    window.location.href = `/work?group=${group}`;
+}
+
+function applyFilter(filterType) {
+    window.location.href = `/work?filter=${filterType}`;
+}
+
+function applyDateFilter() {
+    const selectedDate = document.getElementById("datePicker").value;
+    if (selectedDate) {
+        window.location.href = `/work?date=${selectedDate}`;
+    }
+}
+
+// Управление выбором всех сотрудников
+function selectAllEmployees() {
+    const checkboxes = document.querySelectorAll('.checkbox-input');
+    checkboxes.forEach(checkbox => checkbox.checked = !allSelected);
+    allSelected = !allSelected;
+}
+
 function exportExcel() {
-    // Получаем ID всех выбранных сотрудников
     const selectedEmployees = Array.from(document.querySelectorAll('input.checkbox-input:checked')).map(input => input.id.split('_')[1]);
 
     if (selectedEmployees.length === 0) {
@@ -182,7 +236,7 @@ function exportExcel() {
         return response.blob();
     })
     .then(blob => {
-        const url = window.URL.createObjectURL(new Blob([blob]));
+        const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', 'work_logs.xlsx');
@@ -195,69 +249,7 @@ function exportExcel() {
     });
 }
 
-function updateHolidayStatus(logId, status) {
-    // Преобразуем статус в правильный формат
-    let formattedStatus;
-    switch (status.toLowerCase()) {
-        case 'workingday':
-            formattedStatus = 'Working day';
-            break;
-        case 'paid':
-            formattedStatus = 'Paid';
-            break;
-        case 'unpaid':
-            formattedStatus = 'Unpaid';
-            break;
-        case 'weekend':
-            formattedStatus = 'Weekend';
-            break;
-        default:
-            console.error('Неверный статус');
-            return; // Прекращаем выполнение, если статус некорректен
-    }
-
-    // Отправляем обновленный статус на сервер
-    fetch(`/update_holiday_status/${logId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ holiday_status: formattedStatus })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.message) {
-            console.log(data.message);
-        } else if (data.error) {
-            console.error(data.error);
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
-    });
-}
-
-
-// Закрытие модального окна
-function closeEditModal() {
-    document.getElementById('editTimeModal').style.display = 'none';
-}
-
-// Функция для выбора всех сотрудников или снятия галочек
-function selectAllEmployees() {
-    const checkboxes = document.querySelectorAll('.checkbox-input');
-    checkboxes.forEach(checkbox => checkbox.checked = !allSelected);
-    allSelected = !allSelected;
-}
-
-// Функция для управления модальными окнами и меню
-function toggleDropdown() { document.getElementById("dropdown-menu").classList.toggle("show"); }
-function toggleGroupDropdown() { document.getElementById("group-dropdown-menu").classList.toggle("show"); }
-function applyFilter(filterType) { window.location.href = `/work?filter=${filterType}`; }
-function applyGroupFilter(groupType) { window.location.href = `/work?group=${groupType}`; }
-function applyDateFilter() { const selectedDate = document.getElementById("datePicker").value; if (selectedDate) { window.location.href = `/work?date=${selectedDate}`; } }
-function toggleModal() { const modal = document.getElementById('modal'); modal.style.display = (modal.style.display === 'block') ? 'none' : 'block'; }
-
+// Закрытие модальных окон и меню при клике вне их области
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('modal');
     const dropdownMenu = document.getElementById("dropdown-menu");

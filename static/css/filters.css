@@ -1,0 +1,39 @@
+.filter-btn {
+    background-color: #FC8C86;
+    color: #333;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 200px;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-menu a {
+    color: #333;
+    padding: 10px;
+    text-decoration: none;
+    display: block;
+    border-radius: 5px;
+}
+
+.dropdown-menu a:hover {
+    background-color: #f0f0f0;
+}
+h1 {
+    margin-left: 20px; /* Установите нужное значение отступа */
+}
+.filter-bar {
+    padding-left: 20px; /* Установите нужное значение отступа */
+}
