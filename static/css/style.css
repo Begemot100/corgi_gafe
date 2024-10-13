@@ -9,7 +9,6 @@
 body {
     font-family: 'Arial', sans-serif;
     background-color: #f9f9f9;
-    margin: 0;
     display: flex;
     height: 100vh;
 }
@@ -120,9 +119,7 @@ nav ul li a {
 
 .filters-container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+    gap: 10px;
 }
 
 .filters {
@@ -140,46 +137,79 @@ button {
     transition: background-color 0.3s ease;
 }
 
-/* Основной цвет для кнопок */
-.filter-btn, .new-employee-btn {
+.filter-btn {
     background-color: #FC8C86; /* Основной цвет */
     color: white;
-    border-radius: 5px;
+    border: none;              /* Убираем границы */
+    padding: 10px 15px;       /* Добавляем отступы для кнопок */
+    cursor: pointer;           /* Курсор при наведении */
+    border-radius: 5px;       /* Скругляем углы */
+    transition: background-color 0.3s; /* Плавный переход */
 }
 
-/* Hover эффект для кнопок */
-.filter-btn:hover, .new-employee-btn:hover {
-    background-color: #FF4E42; /* Цвет при наведении */
+.filter-btn.active {
+    background-color: #FF4E42; /* Цвет для активной кнопки */
 }
 
-/* Table styling */
-.employee-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
+/* Employee list */
+.employee-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Отступы между карточками */
 }
 
-.employee-table th, .employee-table td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
+/* Employee card styling */
+.employee-card {
+    display: flex;
+    justify-content: space-between; /* Равномерное распределение */
+    align-items: center;
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Лёгкая тень */
+    transition: box-shadow 0.3s ease;
 }
 
-/* Action buttons */
-.action-btn, .edit-btn, .delete-btn {
-    background-color: #FC8C86;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
+/* Employee info styles */
+.employee-info {
+    display: flex;
+    flex-grow: 1; /* Занять оставшееся пространство */
+    gap: 20px; /* Отступы между элементами в строке */
 }
 
-.edit-btn:hover, .delete-btn:hover {
-    background-color: #FF4E42;
+/* Устанавливаем ширину для каждого поля */
+.employee-name,
+.employee-position,
+.employee-phone,
+.employee-nie,
+.employee-email {
+    min-width: 180px; /* Увеличена ширина для выравнивания */
+    text-align: left; /* Выравнивание текста по левому краю */
 }
 
-/* Modal styles for "New Employee" */
+/* Employee action buttons */
+.employee-actions {
+    display: flex;
+    gap: 10px; /* Отступ между кнопками */
+}
+
+/* Action buttons styles */
+.edit-btn,
+.delete-btn {
+    background-color: #007bff; /* Цвет фона для кнопок */
+    color: white; /* Цвет текста */
+    border: none; /* Убираем границы */
+    padding: 5px 10px; /* Отступы внутри кнопок */
+    cursor: pointer; /* Курсор при наведении */
+    border-radius: 4px; /* Скругление углов */
+}
+
+.edit-btn:hover,
+.delete-btn:hover {
+    background-color: #0056b3; /* Темнее цвет при наведении */
+}
+
+/* Modal styles for adding/editing employees */
 .modal {
     display: none;
     position: fixed;
@@ -190,14 +220,14 @@ button {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5); /* Dark overlay */
     justify-content: center;
-    align-items: flex-start;
-    overflow-y: auto;
+    align-items: center;
 }
 
+/* Modal content */
 .modal-content {
     background-color: #fff;
     padding: 30px;
-    border-radius: 15px;
+    border-radius: 10px;
     width: 500px;
     position: relative;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Adds shadow for depth */
@@ -234,23 +264,13 @@ button {
 .modal-content input[type="date"],
 .modal-content input[type="number"],
 .modal-content select {
-    width: calc(50% - 10px);
+    width: 100%;
     padding: 12px;
     margin-bottom: 15px;
     font-size: 14px;
     border: 1px solid #ccc;
     border-radius: 8px;
     background-color: #f9f9f9;
-}
-
-.modal-content select {
-    width: 100%;
-}
-
-/* Flex container for date inputs */
-.modal-content .form-flex {
-    display: flex;
-    justify-content: space-between;
 }
 
 /* Button styles inside modal */
@@ -279,121 +299,9 @@ button {
     font-weight: bold;
 }
 
-/* Full width for full name, NIE, phone, email */
-.modal-content input#full_name,
-.modal-content input#nie,
-.modal-content input#phone,
-.modal-content input#email {
-    width: 100%;
-}
-
-/* Half-width for hours and days per week */
-.modal-content input#hours_per_week,
-.modal-content input#days_per_week {
-    width: calc(50% - 10px);
-}
-
-/* Active button filter */
-.filter-btn.active {
-    background-color: #FF4E42;
-    color: white;
-}
-
-/* Новый раздел для карточек сотрудников */
-.employee-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* Промежуток между карточками */
-    padding: 20px;
-}
-
-/* Стиль для карточки сотрудника */
-.employee-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: white;
-    border-radius: 12px;
-    padding: 15px 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Лёгкая тень */
-    font-family: Arial, sans-serif;
-    transition: box-shadow 0.3s ease;
-}
-
-/* Добавляем эффект при наведении */
-.employee-card:hover {
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-}
-
-/* Секция с информацией о сотруднике */
-.employee-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.employee-name {
-    font-weight: bold;
-    font-size: 16px;
-    color: #333;
-}
-
-.employee-position {
-    color: #888;
-    font-size: 14px;
-}
-
-/* Секция с контактами сотрудника */
-.employee-contact {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-.employee-phone,
-.employee-email {
-    font-size: 14px;
-    color: #888;
-}
-
-/* Кнопка действий */
-.employee-actions {
-    position: relative;
-}
-
-.action-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-}
-
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 30px;
-    right: 0;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 10px;
-}
-
-.dropdown-menu button {
-    display: block;
-    background: none;
-    border: none;
-    color: #333;
-    padding: 8px 12px;
-    cursor: pointer;
-    text-align: left;
-    width: 100%;
-}
-
-.dropdown-menu button:hover {
-    background-color: #f4f4f4;
-}
-
-/* Показываем выпадающее меню при наведении */
-.employee-actions:hover .dropdown-menu {
-    display: block;
+/* Media queries for responsiveness */
+@media (max-width: 768px) {
+    .employee-card {
+        flex-direction: column; /* Stack the content on smaller screens */
+    }
 }

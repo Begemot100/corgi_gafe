@@ -36,18 +36,21 @@ function closeEditModal() {
 // Получение ID выбранного сотрудника и открытие модального окна
 function getSelectedEmployeeAndOpenEditModal() {
     const checkboxes = document.querySelectorAll('.checkbox-input');
-    let selectedEmployeeId = null;
+    let selectedEmployeeIds = [];
 
     checkboxes.forEach(checkbox => {
         if (checkbox.checked) {
-            selectedEmployeeId = checkbox.id.split('_')[1];
+            selectedEmployeeIds.push(checkbox.id.split('_')[1]);
         }
     });
 
-    if (selectedEmployeeId) {
-        openEditModal(selectedEmployeeId);
+    // Проверяем количество выбранных сотрудников
+    if (selectedEmployeeIds.length === 0) {
+        alert('Пожалуйста, выберите хотя бы одного сотрудника');
+    } else if (selectedEmployeeIds.length > 1) {
+        alert('Пожалуйста, выберите только одного сотрудника для редактирования');
     } else {
-        alert('Пожалуйста, выберите сотрудника');
+        openEditModal(selectedEmployeeIds[0]); // Открываем модальное окно для одного выбранного сотрудника
     }
 }
 
@@ -154,26 +157,22 @@ function saveEditedTime() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                // Обновляем отображаемые значения
                 document.getElementById(`check-in-time-${selectedLogId}`).textContent = checkInTime || '--:--';
                 document.getElementById(`check-out-time-${selectedLogId}`).textContent = checkOutTime || '--:--';
 
-                employeeLogs[selectedDate] = {
-                    logId: selectedLogId,
-                    checkInTime: checkInTime,
-                    checkOutTime: checkOutTime,
-                    worked_hours: data.worked_hours
-                };
-
+                // Пересчитываем рабочие часы
                 let totalHours = 0;
                 for (const date in employeeLogs) {
-                    totalHours += employeeLogs[date].worked_hours || 0;
+                    totalHours += employeeLogs[date].worked_hours || 0; // Суммируем часы
                 }
 
+                // Обновляем элемент с общими часами
                 const hours = Math.floor(totalHours);
                 const minutes = Math.round((totalHours % 1) * 60);
                 document.getElementById(`total-hours-${currentEmployeeId}`).textContent = `${hours}h ${minutes}min`;
+                closeEditModal(); // Закрываем модальное окно
 
-                closeEditModal();
             } else {
                 alert('Ошибка при сохранении времени');
             }
@@ -192,13 +191,25 @@ function toggleDropdown(menuId) {
     }
 }
 
-function applyGroupFilter(group) {
-    if (group === 'all') {
-        window.location.href = '/work'; // Перенаправление на страницу со всеми сотрудниками
+function applyGroupFilter() {
+    const cocinaChecked = document.getElementById('filterCocina').checked;
+    const salaChecked = document.getElementById('filterSala').checked;
+
+    let groupFilters = [];
+
+    // Проверяем, какие группы выбраны
+    if (cocinaChecked) groupFilters.push('cocina');
+    if (salaChecked) groupFilters.push('sala');
+
+    // Перенаправляем на страницу с выбранными группами
+    if (groupFilters.length > 0) {
+        window.location.href = `/work?groups=${groupFilters.join(',')}`;
     } else {
-        window.location.href = `/work?group=${group}`; // Перенаправление на страницу с выбранной группой
+        window.location.href = '/work'; // Если не выбрано ни одной группы, показываем всех сотрудников
     }
 }
+
+
 
 function applyFilter(filterType) {
     window.location.href = `/work?filter=${filterType}`;
@@ -284,76 +295,8 @@ document.querySelector('#dotButton').addEventListener('click', function(event) {
 
 // Закрытие модального окна
 overlay.addEventListener('click', function() {
-    const modal = document.getElementById('editTimeModal');
-    modal.style.display = 'none';
-    overlay.style.display = 'none';
+    closeEditModal();
 });
-function applyDateFilter() {
-    const selectedDate = document.getElementById("datePicker").value;
-    document.getElementById("selectedDateDisplay").textContent = selectedDate; // Отображаем выбранную дату
-
-    fetch(`/get_logs_by_date?date=${selectedDate}`)
-        .then(response => response.json())
-        .then(data => {
-            // Очищаем текущие логи
-            const logsContainer = document.querySelector(".work-logs");
-            logsContainer.innerHTML = '';
-
-            if (data.length === 0) {
-                const message = document.createElement('div');
-                message.textContent = 'Нет записей для выбранной даты.';
-                logsContainer.appendChild(message);
-                return;
-            }
-
-            // Заполняем таблицу данными
-            data.forEach(log => {
-                const employeeLog = document.createElement('div');
-                employeeLog.classList.add('employee-log');
-                employeeLog.innerHTML = `
-                    <input type="checkbox" class="checkbox-input" id="employee_${log.employeeId}">
-                    <label class="checkbox-label" for="employee_${log.employeeId}"></label>
-                    <h2>${log.employeeName} - ${log.position}</h2>
-                    <div class="logs-container">
-                        <table class="logs-table">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Entra</th>
-                                    <th>Salida</th>
-                                    <th>Total</th>
-                                    <th>Holidays</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>${log.logDate}</td>
-                                    <td>${log.checkInTime || '--:--'}</td>
-                                    <td>${log.checkOutTime || '--:--'}</td>
-                                    <td>${log.totalHours ? log.totalHours.toFixed(2) + ' hours' : '0 hours'}</td>
-                                    <td>
-                                        <select onchange="updateHolidayStatus('${log.holidayId}', this.value)">
-                                            <option value="workingday" ${log.holidays === 'Working day' ? 'selected' : ''}>Working day</option>
-                                            <option value="paid" ${log.holidays === 'Paid' ? 'selected' : ''}>Paid</option>
-                                            <option value="unpaid" ${log.holidays === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
-                                            <option value="weekend" ${log.holidays === 'Weekend' ? 'selected' : ''}>Weekend</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-                logsContainer.appendChild(employeeLog);
-            });
-
-            // Обновление общей информации о часах
-            const totalHours = data.reduce((sum, log) => sum + (log.totalHours || 0), 0);
-            document.getElementById('total-hours-display').textContent = `Общее количество часов: ${totalHours.toFixed(2)}`;
-        })
-        .catch(error => console.error('Ошибка при получении данных:', error));
-}
-
 
 function resetFilter() {
     // Сбрасываем выбранную дату
@@ -361,4 +304,23 @@ function resetFilter() {
     document.getElementById("selectedDateDisplay").textContent = ''; // Очищаем отображаемую дату
     // Перенаправляем на страницу с логами без фильтров
     window.location.href = '/work';
+}
+
+function calculateTotalHours() {
+    let totalHours = 0;
+
+    // Проходим по всем логам сотрудников
+    for (const date in employeeLogs) {
+        // Проверяем, если у нас есть рабочие часы для этой даты
+        if (employeeLogs[date]) {
+            totalHours += employeeLogs[date].worked_hours || 0; // Суммируем часы, если они есть
+        }
+    }
+
+    // Преобразуем общее количество часов в формат "Xh Ymin"
+    const hours = Math.floor(totalHours); // Целые часы
+    const minutes = Math.round((totalHours - hours) * 60); // Остаток в минутах
+
+    // Формируем строку для отображения
+    return `${hours}h ${minutes}min`;
 }

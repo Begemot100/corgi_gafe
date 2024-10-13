@@ -170,10 +170,10 @@ def work():
         logs = WorkLog.query.all()
 
     # Фильтр по группам "Sala" и "Cocina"
-    if group_type == 'cocina':
-        employees = Employee.query.filter_by(section='Cocina').all()
-    elif group_type == 'sala':
-        employees = Employee.query.filter_by(section='Sala').all()
+    if group_type:
+        group_filters_list = group_type.split(',')  # Получаем список групп из строки
+        employees = Employee.query.filter(
+            Employee.section.in_(group_filters_list)).all()  # Фильтруем сотрудников по выбранным группам
     else:
         employees = Employee.query.all()
 
@@ -583,30 +583,27 @@ def update_check_time(id):
     check_out_time_str = data.get('check_out_time', '')
 
     try:
-        # Преобразование строки времени в datetime объект
         check_in_time = datetime.combine(date.today(), datetime.strptime(check_in_time_str, '%H:%M').time()) if check_in_time_str else None
         check_out_time = datetime.combine(date.today(), datetime.strptime(check_out_time_str, '%H:%M').time()) if check_out_time_str else None
 
-        # Поиск и обновление записи
         work_log = db.session.get(WorkLog, id)
         if work_log:
             work_log.check_in_time = check_in_time
             work_log.check_out_time = check_out_time
 
             # Пересчет рабочих часов
-            work_log.calculate_worked_hours()
+            work_log.worked_hours = work_log.calculate_worked_hours()  # Убедитесь, что эта функция возвращает правильные часы
             db.session.commit()
-            return jsonify({'success': True})
+            return jsonify({'success': True, 'worked_hours': work_log.worked_hours})
         else:
             return jsonify({'error': 'Запись не найдена'}), 404
 
     except ValueError as e:
-        app.logger.error(f"Неверный формат времени: {e}")
         return jsonify({'error': 'Неверный формат времени'}), 400
     except Exception as e:
-        app.logger.error(f"Ошибка при обновлении времени: {e}")
         db.session.rollback()
         return jsonify({'error': 'Не удалось сохранить время'}), 500
+
 @app.route('/get_employee_logs/<int:employee_id>', methods=['GET'])
 def get_employee_logs(employee_id):
     logs = WorkLog.query.filter_by(employee_id=employee_id).all()
@@ -648,4 +645,4 @@ def get_logs_by_date():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5002)
+    app.run(debug=True, port=5001)

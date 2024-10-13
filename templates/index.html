@@ -50,119 +50,63 @@
         <section class="employees">
             <div class="employees-header">
                 <h2>Employees</h2>
-            </div>
-            <div class="filters-container">
-                <div class="filters">
+                <div class="filters-container">
                     <button class="filter-btn" id="show-all">All</button>
                     <button class="filter-btn" id="show-hall">Sala</button>
                     <button class="filter-btn" id="show-kitchen">Cocina</button>
+                    <button class="new-employee-btn" id="open-modal-btn">+ New Employee</button>
                 </div>
-                <button class="new-employee-btn" id="open-modal-btn">+ New Employee</button>
             </div>
 
-            <!-- Kitchen employees -->
-            <h2>Cocina</h2>
-            <table class="employee-table kitchen-section">
-                <thead>
-                    <tr>
-                        <th>Full Name</th>
-                        <th>NIE</th>
-                        <th>Phone</th>
-                        <th>Position</th>
-                        <th>Contract Start Date</th>
-                        <th>Contract End Date</th>
-                        <th>Hours per Week</th>
-                        <th>Days per Week</th>
-                        <th>Email</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for employee in kitchen_employees %}
-                    <tr>
-                        <td>{{ employee.full_name }}</td>
-                        <td>{{ employee.nie }}</td>
-                        <td>{{ employee.phone }}</td>
-                        <td>{{ employee.position }}</td>
-                        <td>{{ employee.start_date.strftime('%d.%m.%Y') }}</td>
-                        <td>{% if employee.end_date %}{{ employee.end_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
-                        <td>{{ employee.hours_per_week }}</td>
-                        <td>{{ employee.days_per_week }}</td>
-                        <td>{{ employee.email }}</td>
-                        <td>
-                            <button
-                                class="edit-btn"
+            <div class="employee-list">
+                {% for employee in kitchen_employees %}
+                    <div class="employee-card" data-section="Cocina">
+                        <div class="employee-info">
+                            <span class="employee-name">{{ employee.full_name }}</span>
+                            <span class="employee-position">{{ employee.position }}</span>
+                            <span class="employee-phone">{{ employee.phone }}</span>
+                            <span class="employee-nie">{{ employee.nie }}</span>
+                            <span class="employee-email">{{ employee.email }}</span>
+                        </div>
+                        <div class="employee-actions">
+                            <button class="edit-btn"
                                 data-id="{{ employee.id }}"
                                 data-full-name="{{ employee.full_name }}"
                                 data-nie="{{ employee.nie }}"
                                 data-phone="{{ employee.phone }}"
                                 data-position="{{ employee.position }}"
-                                data-start-date="{{ employee.start_date }}"
-                                data-end-date="{{ employee.end_date }}"
-                                data-hours-per-week="{{ employee.hours_per_week }}"
-                                data-days-per-week="{{ employee.days_per_week }}"
-                                data-email="{{ employee.email }}">Edit</button>
-                            <button
-                                class="delete-btn"
-                                data-id="{{ employee.id }}"
-                                data-name="{{ employee.full_name }}">Delete</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                                data-email="{{ employee.email }}">
+                            Edit
+                        </button>
+                            <button class="delete-btn" data-id="{{ employee.id }}">Delete</button>
+                        </div>
+                    </div>
+                {% endfor %}
 
-            <!-- Hall employees -->
-            <h2>Sala</h2>
-            <table class="employee-table hall-section">
-                <thead>
-                    <tr>
-                        <th>Full Name</th>
-                        <th>NIE</th>
-                        <th>Phone</th>
-                        <th>Position</th>
-                        <th>Contract Start Date</th>
-                        <th>Contract End Date</th>
-                        <th>Hours per Week</th>
-                        <th>Days per Week</th>
-                        <th>Email</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for employee in hall_employees %}
-                    <tr>
-                        <td>{{ employee.full_name }}</td>
-                        <td>{{ employee.nie }}</td>
-                        <td>{{ employee.phone }}</td>
-                        <td>{{ employee.position }}</td>
-                        <td>{{ employee.start_date.strftime('%d.%m.%Y') }}</td>
-                        <td>{% if employee.end_date %}{{ employee.end_date.strftime('%d.%m.%Y') }}{% else %}—{% endif %}</td>
-                        <td>{{ employee.hours_per_week }}</td>
-                        <td>{{ employee.days_per_week }}</td>
-                        <td>{{ employee.email }}</td>
-                        <td>
-                            <button
-                                class="edit-btn"
+                {% for employee in hall_employees %}
+                    <div class="employee-card" data-section="Sala">
+                        <div class="employee-info">
+                            <span class="employee-name">{{ employee.full_name }}</span>
+                            <span class="employee-position">{{ employee.position }}</span>
+                            <span class="employee-phone">{{ employee.phone }}</span>
+                            <span class="employee-nie">{{ employee.nie }}</span>
+                            <span class="employee-email">{{ employee.email }}</span>
+                        </div>
+                        <div class="employee-actions">
+                            <button class="edit-btn"
                                 data-id="{{ employee.id }}"
                                 data-full-name="{{ employee.full_name }}"
                                 data-nie="{{ employee.nie }}"
                                 data-phone="{{ employee.phone }}"
                                 data-position="{{ employee.position }}"
-                                data-start-date="{{ employee.start_date }}"
-                                data-end-date="{{ employee.end_date }}"
-                                data-hours-per-week="{{ employee.hours_per_week }}"
-                                data-days-per-week="{{ employee.days_per_week }}"
-                                data-email="{{ employee.email }}">Edit</button>
-                            <button
-                                class="delete-btn"
-                                data-id="{{ employee.id }}"
-                                data-name="{{ employee.full_name }}">Delete</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                                data-email="{{ employee.email }}">
+                            Edit
+                        </button>
+                            <button class="delete-btn" data-id="{{ employee.id }}">Delete</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
         </section>
     </main>
 
