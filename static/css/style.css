@@ -88,6 +88,8 @@ nav ul li a {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Плавный переход */
+
 }
 
 .company-details {
@@ -143,19 +145,20 @@ button {
     border: none;              /* Убираем границы */
     padding: 10px 15px;       /* Добавляем отступы для кнопок */
     cursor: pointer;           /* Курсор при наведении */
-    border-radius: 5px;       /* Скругляем углы */
+    border-radius: 12px;       /* Скругляем углы */
     transition: background-color 0.3s; /* Плавный переход */
 }
 
-.filter-btn.active {
-    background-color: #FF4E42; /* Цвет для активной кнопки */
+.filter-btn:hover {
+    background-color: #E67A74; /* Цвет кнопки при наведении */
 }
 
 /* Employee list */
 .employee-list {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Отступы между карточками */
+    gap: 10px; /* Отступы между карточками */
+
 }
 
 /* Employee card styling */
@@ -164,12 +167,15 @@ button {
     justify-content: space-between; /* Равномерное распределение */
     align-items: center;
     background-color: #fff;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 15px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Лёгкая тень */
+    box-shadow: 0px 4px 10px 2px rgba(0, 0, 0, 0.25);
     transition: box-shadow 0.3s ease;
 }
-
+.employee-card:hover {
+    transform: scale(1.01); /* Увеличение карточки до 105% */
+    box-shadow: 0px 6px 15px 4px rgba(0, 0, 0, 0.1); /* Увеличенная тень при наведении */
+}
 /* Employee info styles */
 .employee-info {
     display: flex;
@@ -196,17 +202,17 @@ button {
 /* Action buttons styles */
 .edit-btn,
 .delete-btn {
-    background-color: #007bff; /* Цвет фона для кнопок */
+    background-color: #FC8C86; /* Цвет фона для кнопок */
     color: white; /* Цвет текста */
     border: none; /* Убираем границы */
     padding: 5px 10px; /* Отступы внутри кнопок */
     cursor: pointer; /* Курсор при наведении */
-    border-radius: 4px; /* Скругление углов */
+    border-radius: 8px; /* Скругление углов */
 }
 
 .edit-btn:hover,
 .delete-btn:hover {
-    background-color: #0056b3; /* Темнее цвет при наведении */
+    background-color: #E67A74; /* Темнее цвет при наведении */
 }
 
 /* Modal styles for adding/editing employees */
@@ -304,4 +310,18 @@ button {
     .employee-card {
         flex-direction: column; /* Stack the content on smaller screens */
     }
+}
+.new-employee-btn {
+    background-color: #FDBD38; /* Основной цвет для кнопки */
+    color: #fff;               /* Белый цвет текста */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease; /* Плавный переход при наведении */
+}
+
+.new-employee-btn:hover {
+    background-color: #E6A933; /* Чуть более тёмный оттенок при наведении */
 }
