@@ -6,22 +6,24 @@ body {
 
 .header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     background-color: #fff;
-    padding: 20px;
+    padding: 10px;
     border-bottom: 1px solid #e0e0e0;
 }
 
-.header .logo img {
-    height: 50px;
+.logo {
+    margin: 0 auto;
+}
+.logo img {
+    width: 70px; /* Устанавливаем нужную ширину */
+    height: auto; /* Высота изменяется пропорционально ширине */
 }
 
 .current-date {
     font-size: 18px;
     font-weight: bold;
 }
-
 .logout a {
     color: #ff6347;
     text-decoration: none;
@@ -30,26 +32,37 @@ body {
 
 /* Контейнер дашборда */
 .dashboard-container {
-    padding: 20px;
+    padding: 30px;
 }
 
 .employee-card {
     background-color: #fff;
     border: 1px solid #e0e0e0;
-    border-radius: 8px;
+    border-radius: 20px;
     padding: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0px 4px 10px 2px rgba(0, 0, 0, 0.25);
 }
 
 .employee-info {
+    display: flex;
+    align-items: flex-start; /* Выровнять элементы по верхнему краю */
+    gap: 20px; /* Расстояние между элементами */
     flex-grow: 1;
 }
 
+
+.employee-name,
+.employee-position,
+.employee-phone {
+    width: 250px; /* Установите одинаковую ширину для выравнивания */
+    font-size: 16px;
+}
+
 .employee-name {
-    font-size: 18px;
     font-weight: bold;
 }
 
@@ -57,6 +70,9 @@ body {
     color: #888;
 }
 
+.employee-phone {
+    color: #333;
+}
 /* Общие стили для кнопок */
 .check-in-out {
     display: flex;
