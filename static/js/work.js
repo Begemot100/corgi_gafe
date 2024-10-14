@@ -16,22 +16,37 @@ function toggleDropdown(menuId) {
 // Функция для открытия/закрытия основного модального окна
 function toggleModal() {
     const modal = document.getElementById('modal');
-    if (modal) {
-        modal.style.display = (modal.style.display === 'block') ? 'none' : 'block';
-    } else {
-        console.error("Элемент модального окна не найден");
-    }
+    const dotIcon = document.querySelector('.dot-icon'); // Троеточие
+
+    if (!modal || !dotIcon) return;
+    // Получаем координаты троеточия
+    const rect = dotIcon.getBoundingClientRect();
+
+    // Устанавливаем позицию модального окна под троеточием
+    modal.style.top = `${rect.bottom + window.scrollY - 170}px`; // смещение вниз
+    modal.style.left = `${rect.left + window.scrollX - 1000}px`; // выравнивание слева под троеточие
+    modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+
 }
 
-// Функция открытия модального окна редактирования времени
-function openEditModal(employeeId) {
-    currentEmployeeId = employeeId;
-    document.getElementById('editTimeModal').style.display = 'block';
+
+
+
+function loadEditModal() {
+    fetch('/edit_modal')
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('editModalContainer').innerHTML = html;
+            const editModal = document.getElementById('editTimeModal');
+            if (editModal) {
+                editModal.style.display = 'block'; // Показываем модальное окно
+            } else {
+                console.error("editTimeModal не найден после загрузки.");
+            }
+        })
+        .catch(error => console.error('Ошибка загрузки модального окна:', error));
 }
 
-function closeEditModal() {
-    document.getElementById('editTimeModal').style.display = 'none';
-}
 
 // Получение ID выбранного сотрудника и открытие модального окна
 function getSelectedEmployeeAndOpenEditModal() {
@@ -50,55 +65,26 @@ function getSelectedEmployeeAndOpenEditModal() {
     } else if (selectedEmployeeIds.length > 1) {
         alert('Пожалуйста, выберите только одного сотрудника для редактирования');
     } else {
-        openEditModal(selectedEmployeeIds[0]); // Открываем модальное окно для одного выбранного сотрудника
+        loadEditModal(); // Открывает и загружает модальное окно редактирования
     }
 }
 
 // Функция загрузки и отображения модального окна для редактирования
-function loadEditModal() {
-    fetch('/edit_modal')
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById('editModalContainer').innerHTML = html;
-            document.getElementById('editTimeModal').style.display = 'block';
-        })
-        .catch(error => console.error('Ошибка загрузки модального окна:', error));
-}
 
-// Функция открытия модального окна редактирования времени
+
 function openEditModal(employeeId) {
     currentEmployeeId = employeeId;
-    employeeLogs = {};
+    const editModal = document.getElementById('editTimeModal');
+    const rect = document.querySelector('.dot-icon').getBoundingClientRect(); // координаты базового элемента
 
-    fetch(`/get_employee_logs/${employeeId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                data.logs.forEach(log => {
-                    employeeLogs[log.date] = {
-                        logId: log.log_id,
-                        checkInTime: log.check_in_time || '--:--',
-                        checkOutTime: log.check_out_time || '--:--',
-                        worked_hours: log.worked_hours
-                    };
-                });
+    // Устанавливаем окно по центру экрана
+    editModal.style.position = 'fixed';
+    editModal.style.top = '50%';
+    editModal.style.left = '50%';
+    editModal.style.transform = 'translate(-50%, -50%)';
 
-                const dateSelect = document.getElementById('editDate');
-                dateSelect.innerHTML = '<option value="">-- Выберите дату --</option>';
-
-                for (const date in employeeLogs) {
-                    const option = document.createElement('option');
-                    option.value = date;
-                    option.textContent = date;
-                    dateSelect.appendChild(option);
-                }
-
-                document.getElementById('editCheckIn').value = '';
-                document.getElementById('editCheckOut').value = '';
-                document.getElementById('editTimeModal').style.display = 'block';
-            }
-        })
-        .catch(error => console.error('Ошибка загрузки логов:', error));
+    // Отображаем окно
+    editModal.style.display = 'block';
 }
 
 function updateSelectedLogId() {
@@ -278,7 +264,6 @@ window.addEventListener('click', function(event) {
 });
 document.querySelector('#dotButton').addEventListener('click', function(event) {
     const modal = document.getElementById('editTimeModal');
-    const overlay = document.getElementById('modalOverlay');
 
     // Установка позиции модального окна
     const selectLabel = document.querySelector('.select-label');
@@ -290,13 +275,11 @@ document.querySelector('#dotButton').addEventListener('click', function(event) {
 
     // Показать модальное окно и оверлей
     modal.style.display = 'block';
-    overlay.style.display = 'block';
+
 });
 
 // Закрытие модального окна
-overlay.addEventListener('click', function() {
-    closeEditModal();
-});
+
 
 function resetFilter() {
     // Сбрасываем выбранную дату

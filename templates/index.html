@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/employee_card.css') }}"> <!-- Include the custom styles here -->
+
 </head>
 <body>
     <!-- Sidebar -->
@@ -58,53 +60,41 @@
                 </div>
             </div>
 
-            <div class="employee-list">
+            <!-- Cocina Сотрудники -->
+            <h2 class="section-title">Cocina</h2>
+            <div id="cocina-employees" class="employee-section">
                 {% for employee in kitchen_employees %}
                     <div class="employee-card" data-section="Cocina">
-                        <div class="employee-info">
-                            <span class="employee-name">{{ employee.full_name }}</span>
-                            <span class="employee-position">{{ employee.position }}</span>
-                            <span class="employee-phone">{{ employee.phone }}</span>
-                            <span class="employee-nie">{{ employee.nie }}</span>
-                            <span class="employee-email">{{ employee.email }}</span>
-                        </div>
-                        <div class="employee-actions">
-                            <button class="edit-btn"
-                                data-id="{{ employee.id }}"
-                                data-full-name="{{ employee.full_name }}"
-                                data-nie="{{ employee.nie }}"
-                                data-phone="{{ employee.phone }}"
-                                data-position="{{ employee.position }}"
-                                data-email="{{ employee.email }}">
-                            Edit
-                        </button>
-                            <button class="delete-btn" data-id="{{ employee.id }}">Delete</button>
-                        </div>
-                    </div>
-                {% endfor %}
+                        <p>{{ employee.full_name }}</p>
+                        <p>{{ employee.position }}</p>
+                        <p>{{ employee.phone }}</p>
+                        <p>{{ employee.nie }}</p>
+                        <p>{{ employee.start_date }}</p>
+                        <p>{{ employee.end_date }}</p>
+                        <p>{{ employee.email }}</p>
+                        <button class="ellipsis-btn" data-id="{{ employee.id }}">⋮</button>
 
+                    </div>
+
+            </div>
+                {% endfor %}
+            </div>
+
+            <!-- Sala Сотрудники -->
+            <h2 class="section-title">Sala</h2>
+            <div id="sala-employees" class="employee-section">
                 {% for employee in hall_employees %}
                     <div class="employee-card" data-section="Sala">
-                        <div class="employee-info">
-                            <span class="employee-name">{{ employee.full_name }}</span>
-                            <span class="employee-position">{{ employee.position }}</span>
-                            <span class="employee-phone">{{ employee.phone }}</span>
-                            <span class="employee-nie">{{ employee.nie }}</span>
-                            <span class="employee-email">{{ employee.email }}</span>
-                        </div>
-                        <div class="employee-actions">
-                            <button class="edit-btn"
-                                data-id="{{ employee.id }}"
-                                data-full-name="{{ employee.full_name }}"
-                                data-nie="{{ employee.nie }}"
-                                data-phone="{{ employee.phone }}"
-                                data-position="{{ employee.position }}"
-                                data-email="{{ employee.email }}">
-                            Edit
-                        </button>
-                            <button class="delete-btn" data-id="{{ employee.id }}">Delete</button>
-                        </div>
+                        <p>{{ employee.full_name }}</p>
+                        <p>{{ employee.position }}</p>
+                        <p>{{ employee.phone }}</p>
+                        <p>{{ employee.nie }}</p>
+                        <p>{{ employee.start_date }}</p>
+                        <p>{{ employee.end_date }}</p>
+                        <p>{{ employee.email }}</p>
+                        <button class="ellipsis-btn" data-id="{{ employee.id }}">⋮</button>
                     </div>
+
                 {% endfor %}
             </div>
         </section>
@@ -175,7 +165,7 @@
             <button class="close">Cancel</button>
         </div>
     </div>
-
+    {% include 'modal.html' %}
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

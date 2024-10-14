@@ -325,3 +325,13 @@ button {
 .new-employee-btn:hover {
     background-color: #E6A933; /* Чуть более тёмный оттенок при наведении */
 }
+
+h2.section-title {
+    margin-bottom: 20px;
+}
+.employee-section {
+    display: block; /* Видимость по умолчанию */
+}
+.employee-section.hidden {
+    display: none; /* Скрываем, если добавлен класс hidden */
+}

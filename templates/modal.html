@@ -1,0 +1,64 @@
+<!-- New Employee Modal -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeNewEmployeeModal()">&times;</span>
+        <h2 id="modal-title">New Employee</h2>
+        <form id="employee-form" action="{{ url_for('add_employee') }}" method="POST">
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" name="full_name" placeholder="Full Name" required>
+
+            <label for="nie">NIE</label>
+            <input type="text" id="nie" name="nie" placeholder="NIE" required>
+
+            <label for="start_date">Contract Start Date</label>
+            <input type="date" id="start_date" name="start_date" required>
+
+            <label for="end_date">Contract End Date</label>
+            <input type="date" id="end_date" name="end_date">
+
+            <label for="hours_per_week">Hours per Week</label>
+            <input type="number" id="hours_per_week" name="hours_per_week" placeholder="Type here" required>
+
+            <label for="days_per_week">Days per Week</label>
+            <input type="number" id="days_per_week" name="days_per_week" placeholder="Type here" required>
+
+            <label for="position">Position</label>
+            <select id="position" name="position" required>
+                <option value="Waiter">Waiter</option>
+                <option value="Admin">Admin</option>
+                <option value="Cleaning lady">Cleaning lady</option>
+                <option value="Runner">Runner</option>
+                <option value="Chef">Chef</option>
+                <option value="Su-Chef">Su-Chef</option>
+                <option value="Cook">Cook</option>
+            </select>
+
+            <label for="section">Section</label>
+            <select id="section" name="section" required>
+                <option value="Cocina">Cocina</option>
+                <option value="Sala">Sala</option>
+            </select>
+
+            <label for="phone">Phone Number</label>
+            <input type="text" id="phone" name="phone" placeholder="Phone number" required>
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Email" required>
+
+            <div class="form-buttons">
+                <button type="button" class="cancel-btn" onclick="closeNewEmployeeModal()">Cancel</button>
+                <button type="submit" class="save-btn">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Action Modal for Edit/Delete -->
+<div id="action-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeActionModal()">&times;</span>
+        <h2>Actions</h2>
+        <button id="edit-action" onclick="triggerEdit()">Edit</button>
+        <button id="delete-action" onclick="triggerDelete()">Delete</button>
+    </div>
+</div>

@@ -82,16 +82,21 @@ class WorkLog(db.Model):
 def index():
     return render_template('login.html')  # Возврат формы входа
 
+
 @app.route('/admin', methods=['GET'])
 def admin():
-    # Проверка, вошел ли администратор
     if 'admin_id' not in session:
-        return redirect(url_for('index'))  # Перенаправление на страницу входа, если администратор не вошел
+        return redirect(url_for('index'))
 
-    # Логика для отображения админской панели
     kitchen_employees = Employee.query.filter_by(section="Cocina").all()
     hall_employees = Employee.query.filter_by(section="Sala").all()
+
+    # Логирование сотрудников для проверки
+    logging.info(f"Сотрудники Cocina: {[e.full_name for e in kitchen_employees]}")
+    logging.info(f"Сотрудники Sala: {[e.full_name for e in hall_employees]}")
+
     return render_template('index.html', kitchen_employees=kitchen_employees, hall_employees=hall_employees)
+
 
 # Функция для преобразования десятичных часов в формат HH:MM
 def decimal_hours_to_time(decimal_hours):
@@ -228,10 +233,10 @@ def format_hours(value):
 def add_employee():
     full_name = request.form['full_name']
     nie = request.form['nie']
-    start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%d')
-    end_date = request.form.get('end_date')
-    if end_date:
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+    start_date_str = request.form.get('start_date')  # Получаем как строку
+    end_date_str = request.form.get('end_date')
+    if end_date_str:
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
     hours_per_week = request.form['hours_per_week']
     days_per_week = request.form['days_per_week']
     position = request.form['position']
@@ -239,13 +244,20 @@ def add_employee():
     email = request.form['email']
     section = request.form['section']
 
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date() if start_date_str else None
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date() if end_date_str else None
+    except ValueError as e:
+        logging.error(f"Ошибка при парсинге даты: {e}")
+        return jsonify({'error': 'Некорректный формат даты'}), 400
+
     new_employee = Employee(
         full_name=full_name,
         nie=nie,
         start_date=start_date,
         end_date=end_date,
-        hours_per_week=hours_per_week,
-        days_per_week=days_per_week,
+        hours_per_week=int(hours_per_week),
+        days_per_week=int(days_per_week),
         position=position,
         phone=phone,
         email=email,
@@ -255,11 +267,16 @@ def add_employee():
     try:
         db.session.add(new_employee)
         db.session.commit()
+        logging.info(f"Сотрудник {full_name} успешно добавлен в раздел {section}.")
     except Exception as e:
         db.session.rollback()
-        print(f"Error adding employee: {e}")
+        logging.error(f"Ошибка при добавлении сотрудника: {e}")
+        return jsonify({'error': 'Ошибка при добавлении сотрудника'}), 500
 
+        # Возвращаем JSON-ответ для обновления страницы
+        return jsonify({'message': 'Сотрудник успешно добавлен!'}), 200
     return redirect(url_for('admin'))
+
 
 # Удаление сотрудника
 @app.route('/delete/<int:id>', methods=['POST'])
@@ -642,6 +659,34 @@ def get_logs_by_date():
         })
 
     return jsonify(employee_logs)
+@app.route('/get_employee_list', methods=['GET'])
+def get_employee_list():
+    kitchen_employees = Employee.query.filter_by(section="Cocina").all()
+    hall_employees = Employee.query.filter_by(section="Sala").all()
+
+    cocina = [{'full_name': emp.full_name} for emp in kitchen_employees]
+    sala = [{'full_name': emp.full_name} for emp in hall_employees]
+
+    return jsonify({'cocina': cocina, 'sala': sala})
+
+@app.route('/get_employee_data/<int:employee_id>')
+def get_employee_data(employee_id):
+    employee = Employee.query.get(employee_id)
+    if employee:
+        return jsonify({
+            'fullName': employee.full_name,
+            'nie': employee.nie,
+            'phone': employee.phone,
+            'position': employee.position,
+            'email': employee.email,
+            'startDate': employee.start_date.strftime('%Y-%m-%d') if employee.start_date else '',
+            'endDate': employee.end_date.strftime('%Y-%m-%d') if employee.end_date else '',
+            'section': employee.section,
+            'hoursPerWeek': employee.hours_per_week,
+            'daysPerWeek': employee.days_per_week
+        })
+    else:
+        return jsonify({'error': 'Employee not found'}), 404
 
 
 if __name__ == '__main__':

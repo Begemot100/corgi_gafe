@@ -15,7 +15,6 @@
             <div class="logo">
                 <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
             </div>
-
         </aside>
 
         <!-- Основной контент -->
@@ -29,7 +28,7 @@
             <main class="work-container">
                 <h1>Employees</h1>
                 <!-- Модальное окно для редактирования -->
-                <div id="editModalContainer" style="display: none;"></div>
+                <div id="editTimeModal" style="display: none;"></div>
 
                 <!-- Панель фильтров -->
                 <div class="filter-bar">
@@ -68,7 +67,6 @@
                 </div>
 
                 <!-- Модальное окно для действий с сотрудниками -->
-                <div id="modalOverlay" class="modal-overlay" onclick="toggleModal()"></div>
                 <div id="modal" class="modal">
                     <div class="modal-content">
                         <ul class="modal-options">
