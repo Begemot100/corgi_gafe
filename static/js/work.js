@@ -249,6 +249,32 @@ function exportExcel() {
         console.error('Ошибка при экспорте в Excel:', error);
     });
 }
+document.addEventListener('DOMContentLoaded', function() {
+    const holidaySelects = document.querySelectorAll('select[name="holiday_type"]');
+
+    // Функция для обновления цвета фона
+    function updateSelectBackground(selectElement) {
+        if (selectElement.value === 'paid') {
+            selectElement.style.backgroundColor = '#FEDB5B';
+        } else if (selectElement.value === 'unpaid') {
+            selectElement.style.backgroundColor = '#DD8137';
+            selectElement.style.color = '#FFFFFF';
+        } else {
+            selectElement.style.backgroundColor = ''; // Сброс до стандартного
+            selectElement.style.color = ''; // Сброс до стандартного
+        }
+    }
+
+    // Инициализация фона при загрузке страницы
+    holidaySelects.forEach(select => {
+        updateSelectBackground(select);
+
+        // Слушатель на изменение для обновления фона
+        select.addEventListener('change', function() {
+            updateSelectBackground(select);
+        });
+    });
+});
 
 // Закрытие модальных окон и меню при клике вне их области
 window.addEventListener('click', function(event) {

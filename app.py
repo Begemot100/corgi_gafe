@@ -115,15 +115,21 @@ def dashboard():
         work_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
 
         # Если нет логов, устанавливаем значения по умолчанию
-        if work_log:
-            check_in_time = work_log.check_in_time.strftime('%H:%M') if work_log.check_in_time else '--:--'
-            check_out_time = work_log.check_out_time.strftime('%H:%M') if work_log.check_out_time else '--:--'
-            daily_hours = work_log.worked_hours if work_log.worked_hours else 0.0
-        else:
-            # Если логов нет, обнуляем чек-ин
-            check_in_time = '--:--'  # Обнуляем время чек-ина
-            check_out_time = '--:--'
-            daily_hours = 0.0
+        if not work_log:
+            # Если запись отсутствует, создаем её с прочерками
+            work_log = WorkLog(
+                employee_id=employee.id,
+                log_date=today,
+                check_in_time=None,
+                check_out_time=None,
+                worked_hours=0
+            )
+            db.session.add(work_log)
+
+            # Форматирование данных для отображения в интерфейсе
+        check_in_time = work_log.check_in_time.strftime('%H:%M') if work_log.check_in_time else '--:--'
+        check_out_time = work_log.check_out_time.strftime('%H:%M') if work_log.check_out_time else '--:--'
+        daily_hours = work_log.worked_hours if work_log.worked_hours else 0.0
 
         dashboard_data.append({
             'employee': employee,
@@ -132,6 +138,7 @@ def dashboard():
             'daily_hours': daily_hours,
             'monthly_hours': employee.monthly_hours
         })
+    db.session.commit()  # Сохранение новых записей, если они были добавлены
 
     return render_template('dashboard.html', dashboard_data=dashboard_data, current_date=today)
 
@@ -515,8 +522,7 @@ def export_excel():
     current_date = datetime.now().strftime('%d-%m-%Y')
 
     # Формируем название файла
-    filename = f"work_logs_{employee_names_str}_{current_date}.xlsx".replace(" ", "_").replace(",", "_").replace("__",
-                                                                                                                 "_")
+    filename = f"work_logs_{employee_names_str}_{current_date}.xlsx".replace(" ", "_").replace(",", "_").replace("__", "_")
     encoded_filename = quote(filename)
     logging.info("Получены IDs для экспорта: %s", employee_ids)
     logging.info("Количество сотрудников для экспорта: %d", len(employees))
@@ -525,25 +531,81 @@ def export_excel():
     # Создаем DataFrame с данными сотрудников
     data = []
     for employee in employees:
-        total_days_worked = len(employee.work_logs)
-        for i, log in enumerate(employee.work_logs):
+        # Подсчитываем количество дней каждого типа
+        paid_holidays = sum(1 for log in employee.work_logs if log.holidays == 'Paid')
+        unpaid_holidays = sum(1 for log in employee.work_logs if log.holidays == 'Unpaid')
+        weekends = sum(1 for log in employee.work_logs if log.holidays == 'Weekend')
+        working_days = sum(1 for log in employee.work_logs if log.holidays == 'Working day')
+        total_hours_worked = sum(log.worked_hours or 0 for log in employee.work_logs)
+
+
+        for log in employee.work_logs:
             formatted_hours = decimal_hours_to_time(log.worked_hours)
-            # Если это последняя запись для текущего сотрудника, добавляем 'Days Worked'
-            days_worked = total_days_worked if i == len(employee.work_logs) - 1 else ""
             data.append({
                 'Full Name': employee.full_name,
                 'Position': employee.position,
                 'Date': log.log_date.strftime('%Y-%m-%d'),
                 'Check In': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
                 'Check Out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
-                'Total Hours': formatted_hours,
+                'Total Day Hours': formatted_hours,
                 'Holiday Type': log.holidays,
-                'Days Worked': days_worked
+                'Days Worked': ''  # Пропускаем итоговые строки до конца блока сотрудника
             })
 
-        # Добавляем две пустые строки после последней записи текущего сотрудника
+        # Итоговая строка по каждому сотруднику
+        data.append({
+            'Full Name': '',
+            'Position': '',
+            'Date': '',
+            'Check In': '',
+            'Check Out': '',
+            'Holiday Type': 'Total Worked Days',
+            'Days Worked': working_days
+        })
+        data.append({
+            'Full Name': '',
+            'Position': '',
+            'Date': '',
+            'Check In': '',
+            'Check Out': '',
+            # 'Total Hours': '',
+            'Holiday Type': 'Paid Holiday',
+            'Days Worked': paid_holidays
+        })
+        data.append({
+            'Full Name': '',
+            'Position': '',
+            'Date': '',
+            'Check In': '',
+            'Check Out': '',
+            # 'Total Hours': '',
+            'Holiday Type': 'Unpaid Holiday',
+            'Days Worked': unpaid_holidays
+        })
+        data.append({
+            'Full Name': '',
+            'Position': '',
+            'Date': '',
+            'Check In': '',
+            'Check Out': '',
+            # 'Total Hours': '',
+            'Holiday Type': 'Weekend',
+            'Days Worked': weekends
+        })
+        data.append({
+            'Full Name': '',
+            'Position': '',
+            'Date': '',
+            'Check In': '',
+            'Check Out': '',
+            'Holiday Type': 'Total Hours',
+            'Days Worked': decimal_hours_to_time(total_hours_worked),
+        })
+
+        # Добавляем пустую строку для разделения сотрудников
         data.append({key: '' for key in data[0].keys()})
         data.append({key: '' for key in data[0].keys()})
+
 
     # Генерация Excel файла
     df = pd.DataFrame(data)
@@ -565,8 +627,7 @@ def export_excel():
 
     # Создание ответа с явной установкой заголовков
     response = make_response(output.read())
-    response.headers[
-        'Content-Disposition'] = f'attachment; filename="{encoded_filename}"; filename*=UTF-8\'\'{encoded_filename}'
+    response.headers['Content-Disposition'] = f'attachment; filename="{encoded_filename}"; filename*=UTF-8\'\'{encoded_filename}'
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     return response

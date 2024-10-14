@@ -289,3 +289,13 @@ header {
     text-align: center; /* Выравнивание по центру */
     vertical-align: middle; /* Вертикальное выравнивание по центру */
 }
+/* Стили для Paid */
+.logs-table select option[value="paid"] {
+    background-color: #FEDB5B;
+}
+
+/* Стили для Unpaid */
+.logs-table select option[value="unpaid"] {
+    background-color: #DD8137;
+    color: white;
+}
