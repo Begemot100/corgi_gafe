@@ -222,6 +222,8 @@ def work():
     # Получаем обновленный список логов
     work_logs = WorkLog.query.all()
     app.logger.info(f"Полученные логи: {logs}")
+    # В функции, которая передает данные на страницу work
+    app.logger.info(f"Отправленные логи на страницу: {[log.id for log in logs]}")
 
     return render_template('work.html', employees=employees, work_logs=work_logs, current_time=current_time)
 

@@ -250,6 +250,110 @@ function exportExcel() {
     });
 }
 document.addEventListener('DOMContentLoaded', function() {
+
+    const filterButtons = document.querySelectorAll('.filter-option');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();  // Предотвращаем стандартное поведение
+            event.stopPropagation();  // Останавливаем распространение события
+
+            const filterType = button.getAttribute('data-filter');
+            applyFilter(filterType);
+        });
+    });
+    // Логика для фильтрации по дате
+    function applyFilter(filterType) {
+        console.log("Applying filter:", filterType);
+
+        const today = new Date();
+        let startDate, endDate;
+
+        // Определяем диапазон дат на основе выбранного фильтра
+        if (filterType === 'today') {
+            startDate = today;
+            endDate = today;
+        } else if (filterType === 'yesterday') {
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 1);
+            endDate = startDate;
+        } else if (filterType === 'last_7_days') {
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 7);
+            endDate = today;
+        } else if (filterType === 'last_30_days') {
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 30);
+            endDate = today;
+        } else if (filterType === 'previous_month') {
+            const firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = new Date(firstDayOfCurrentMonth);
+            endDate.setDate(endDate.getDate() - 1);
+            startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+        } else if (filterType === 'current_month') {
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = today;
+        }
+
+        // Преобразуем даты в строку формата YYYY-MM-DD для сравнения
+        const formatDateString = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const startDateStr = formatDateString(startDate);
+        const endDateStr = formatDateString(endDate);
+        // Применение фильтра к строкам таблицы
+        console.log("Applying filter:", filterType, "Start:", startDate, "End:", endDate);
+
+        // Применяем фильтр по датам для каждой строки
+        document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
+            const logDate = row.getAttribute('data-log-date');
+            console.log(`Дата лога: ${logDate}, Диапазон: ${startDateStr} - ${endDateStr}`);
+
+            if (logDate >= startDateStr && logDate <= endDateStr) {
+                row.style.display = '';  // Показать строку
+            } else {
+                row.style.display = 'none';  // Скрыть строку
+            }
+        });
+
+    // Обновляем отображение выбранного диапазона
+        document.getElementById('selectedDateDisplay').textContent = `${filterType.replace('_', ' ').toUpperCase()}: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+    }
+    // Обработчики событий для кнопок фильтрации
+    document.querySelectorAll('.dropdown-menu a').forEach(link => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            const filterType = link.getAttribute('onclick').split('\'')[1]; // Получаем тип фильтра из атрибута onclick
+            applyFilter(filterType);
+        });
+    });
+
+    // Фильтрация по конкретной дате из datePicker
+    document.getElementById('datePicker').addEventListener('change', function() {
+        const selectedDate = this.value;
+        applyFilterByDate(selectedDate);
+    });
+
+    function applyFilterByDate(date) {
+        console.log("Выбранная дата для фильтрации:", date);
+        document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
+            const logDate = row.getAttribute('data-log-date');
+            console.log("Дата строки:", logDate);
+            if (logDate === selectedDate) {
+                row.style.display = ''; // Показать строку
+            } else {
+                row.style.display = 'none'; // Скрыть строку
+            }
+        });
+        document.getElementById('selectedDateDisplay').textContent = `Date: ${date}`;
+    }
+
+
+
+    // Логика для обновления цвета фона выбора отпуска
     const holidaySelects = document.querySelectorAll('select[name="holiday_type"]');
 
     // Функция для обновления цвета фона
