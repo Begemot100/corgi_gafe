@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/work.css') }}?v={{ current_time }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_modal.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/filters.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_time_modal.css') }}">
+
     <title>Work Logs</title>
 </head>
 <body>
@@ -28,7 +30,10 @@
             <main class="work-container">
                 <h1>Employees</h1>
                 <!-- Модальное окно для редактирования -->
-                <div id="editTimeModal" style="display: none;"></div>
+<!-- Основной HTML файл -->
+                <div id="editTimeModalContainer"></div>
+                    {% include 'edit_modal.html' %}
+
 
                 <!-- Панель фильтров -->
                 <div class="filter-bar">
@@ -63,7 +68,20 @@
                     <div class="right-section">
                         <span>Select</span>
                         <button class="dot-icon" onclick="toggleModal()">...</button>
+
+                        <div id="modal" class="modal" style="display: none;">
+                            <div class="modal-content">
+                                <span class="close" onclick="closeModal()">&times;</span>
+                                <ul class="modal-options">
+                                    <li><button onclick="selectAllEmployees()">Select All</button></li>
+                                    <li><button onclick="getSelectedEmployeeAndOpenEditModal()">Edit</button></li>
+                                    <li><button onclick="exportExcel()">Export Excel</button></li>
+                                    <li><button onclick="deleteEmployee()">Delete</button></li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
 
                 <!-- Таблица сотрудников -->
@@ -91,6 +109,7 @@
                                                 <td class="check-in-time" id="check-in-time-{{ log.id }}">{{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}</td>
                                                 <td class="check-out-time" id="check-out-time-{{ log.id }}">{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
                                                 <td id="daily-hours-{{ log.id }}">{{ log.worked_hours | format_hours if log.worked_hours else '0 hours' }}</td>
+
                                                 <td>
                                                     <select id="log-{{ log.id }}" name="holiday_type" onchange="updateHolidayStatus('{{ log.id }}', this.value)">
                                                         <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Working day</option>

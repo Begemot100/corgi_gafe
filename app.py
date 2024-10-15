@@ -651,11 +651,6 @@ def edit_check_time(log_id):
         return jsonify({'success': False}), 404
 
 
-
-
-
-
-
 @app.route('/update_check_time/<int:id>', methods=['POST'])
 def update_check_time(id):
     data = request.get_json()
@@ -672,17 +667,18 @@ def update_check_time(id):
             work_log.check_out_time = check_out_time
 
             # Пересчет рабочих часов
-            work_log.worked_hours = work_log.calculate_worked_hours()  # Убедитесь, что эта функция возвращает правильные часы
+            work_log.worked_hours = work_log.calculate_worked_hours()
             db.session.commit()
             return jsonify({'success': True, 'worked_hours': work_log.worked_hours})
         else:
             return jsonify({'error': 'Запись не найдена'}), 404
 
-    except ValueError as e:
+    except ValueError:
         return jsonify({'error': 'Неверный формат времени'}), 400
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': 'Не удалось сохранить время'}), 500
+        return jsonify({'error': 'Не удалось сохранить время', 'message': str(e)}), 500
+
 
 @app.route('/get_employee_logs/<int:employee_id>', methods=['GET'])
 def get_employee_logs(employee_id):

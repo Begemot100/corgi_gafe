@@ -1,14 +1,15 @@
-<div id="editTimeModal">
+<div id="editTimeModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close" onclick="closeEditModal()">&times;</span>
         <h2>Редактировать время</h2>
-        <!-- Здесь содержимое модального окна -->
+        <label for="editDate">Дата</label>
+        <select id="editDate" onchange="updateSelectedLogId()">
+            <!-- Опции дат будут добавлены здесь динамически -->
+        </select>
         <label for="editCheckIn">Время начала</label>
-        <input type="time" id="editCheckIn" name="editCheckIn">
-
+        <input type="time" id="editCheckIn">
         <label for="editCheckOut">Время окончания</label>
-        <input type="time" id="editCheckOut" name="editCheckOut">
-
+        <input type="time" id="editCheckOut">
         <div class="form-buttons">
             <button class="cancel-btn" onclick="closeEditModal()">Отмена</button>
             <button class="register-btn" onclick="saveEditedTime()">Сохранить</button>
