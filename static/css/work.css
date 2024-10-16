@@ -299,3 +299,18 @@ header {
     background-color: #DD8137;
     color: white;
 }
+/* Стиль для ячейки с чекбоксом */
+.checkbox-header,
+.checkbox-cell {
+    display: none;
+}
+
+.select-all-btn {
+    margin-top: 10px;
+    padding: 5px 10px;
+
+
+    border: 12px;
+    cursor: pointer;
+    font-size: 14px;
+}

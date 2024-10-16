@@ -469,7 +469,9 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 row.style.display = 'none';  // Скрыть строку
             }
+
         });
+
 
     // Обновляем отображение выбранного диапазона
         document.getElementById('selectedDateDisplay').textContent = `${filterType.replace('_', ' ').toUpperCase()}: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
@@ -608,4 +610,12 @@ function updateTotalHours() {
         const displayMinutes = Math.round((totalHours % 1) * 60);
         totalHoursElement.textContent = `${displayHours}h ${displayMinutes}min`;
     }
+}
+function toggleCheckboxes() {
+    // Находим все элементы с классом .checkbox-input
+    const checkboxes = document.querySelectorAll('.checkbox-input');
+    checkboxes.forEach(checkbox => {
+        // Переключаем видимость чекбоксов
+        checkbox.style.display = checkbox.style.display === 'none' ? 'inline-block' : 'none';
+    });
 }

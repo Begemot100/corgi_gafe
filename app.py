@@ -105,6 +105,7 @@ def decimal_hours_to_time(decimal_hours):
     return f'{hours:02d}:{minutes:02d}'
 
 # Панель управления
+# Панель управления
 @app.route('/dashboard')
 def dashboard():
     employees = Employee.query.all()  # Получаем всех сотрудников
@@ -112,24 +113,13 @@ def dashboard():
     today = date.today()
 
     for employee in employees:
+        # Ищем существующий лог, но не создаем новый автоматически
         work_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
 
-        # Если нет логов, устанавливаем значения по умолчанию
-        if not work_log:
-            # Если запись отсутствует, создаем её с прочерками
-            work_log = WorkLog(
-                employee_id=employee.id,
-                log_date=today,
-                check_in_time=None,
-                check_out_time=None,
-                worked_hours=0
-            )
-            db.session.add(work_log)
-
-            # Форматирование данных для отображения в интерфейсе
-        check_in_time = work_log.check_in_time.strftime('%H:%M') if work_log.check_in_time else '--:--'
-        check_out_time = work_log.check_out_time.strftime('%H:%M') if work_log.check_out_time else '--:--'
-        daily_hours = work_log.worked_hours if work_log.worked_hours else 0.0
+        # Устанавливаем значения по умолчанию для отображения, если лога нет
+        check_in_time = work_log.check_in_time.strftime('%H:%M') if work_log and work_log.check_in_time else '--:--'
+        check_out_time = work_log.check_out_time.strftime('%H:%M') if work_log and work_log.check_out_time else '--:--'
+        daily_hours = work_log.worked_hours if work_log else 0.0
 
         dashboard_data.append({
             'employee': employee,
@@ -138,10 +128,8 @@ def dashboard():
             'daily_hours': daily_hours,
             'monthly_hours': employee.monthly_hours
         })
-    db.session.commit()  # Сохранение новых записей, если они были добавлены
 
     return render_template('dashboard.html', dashboard_data=dashboard_data, current_date=today)
-
 
 
 

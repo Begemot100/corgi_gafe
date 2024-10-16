@@ -39,15 +39,15 @@
                 <div class="filter-bar">
                     <div class="left-section">
                         <div class="dropdown">
-                            <button class="filter-btn" onclick="toggleDropdown('dropdown-menu')">Hoy</button>
+                            <button id="filterButton" class="filter-btn" onclick="toggleDropdown('dropdown-menu')">Hoy</button>
                             <div id="dropdown-menu" class="dropdown-menu">
-                                <a href="javascript:void(0);" onclick="applyFilter('today')">Hoy</a>
-                                <a href="javascript:void(0);" onclick="applyFilter('yesterday')">Ayer</a>
-                                <a href="javascript:void(0);" onclick="applyFilter('last_7_days')">Últimos 7 días</a>
-                                <a href="javascript:void(0);" onclick="applyFilter('last_30_days')">Últimos 30 días</a>
-                                <a href="javascript:void(0);" onclick="applyFilter('previous_month')">Mes Anterior</a>
-                                <a href="javascript:void(0);" onclick="applyFilter('current_month')">Este mes</a>
-                                <a href="javascript:void(0);" onclick="applyFilter('custom')">Rango Personalizado</a>
+                                <a href="javascript:void(0);" onclick="applyFilter('today', 'Hoy')">Hoy</a>
+                                <a href="javascript:void(0);" onclick="applyFilter('yesterday', 'Ayer')">Ayer</a>
+                                <a href="javascript:void(0);" onclick="applyFilter('last_7_days','Últimos 7 días')">Últimos 7 días</a>
+                                <a href="javascript:void(0);" onclick="applyFilter('last_30_days', 'Últimos 30 días')">Últimos 30 días</a>
+                                <a href="javascript:void(0);" onclick="applyFilter('previous_month', 'Mes Anterior')">Mes Anterior</a>
+                                <a href="javascript:void(0);" onclick="applyFilter('current_month', 'Este mes')">Este mes</a>
+                                <a href="javascript:void(0);" onclick="applyFilter('custom', 'Rango Personalizado')">Rango Personalizado</a>
                             </div>
                         </div>
 
@@ -76,6 +76,7 @@
                                     <li><button onclick="selectAllEmployees()">Select All</button></li>
                                     <li><button onclick="getSelectedEmployeeAndOpenEditModal()">Edit</button></li>
                                     <li><button onclick="exportExcel()">Export Excel</button></li>
+                                    <button class="edit-schedule-btn" onclick="toggleCheckboxes()">Edit Schedule</button>
                                     <li><button onclick="deleteEmployee()">Delete</button></li>
                                 </ul>
                             </div>
@@ -100,6 +101,8 @@
                                             <th>Salida</th>
                                             <th>Total</th>
                                             <th>Holidays</th>
+                                            <th class="checkbox-header" style="display: none;">Select</th> <!-- Заголовок для чекбоксов -->
+
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -118,6 +121,9 @@
                                                         <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
                                                     </select>
                                                 </td>
+                                                <td class="checkbox-cell" style="display: none;text-align: center;">
+                                                    <input type="checkbox" class="date-checkbox" id="date-checkbox-{{ log.id }}">
+                                                </td>
                                             </tr>
                                         {% endfor %}
                                     </tbody>
@@ -128,7 +134,10 @@
                                     <p>Overtime: {{ employee.overtime | format_hours }}</p>
                                     <p>Paid Holidays: <span id="paid-holidays-{{ employee.id }}">{{ employee.paid_holidays }}</span></p>
                                     <p>Unpaid Holidays: <span id="unpaid-holidays-{{ employee.id }}">{{ employee.unpaid_holidays }}</span></p>
+                                    <button class="select-all-btn" onclick="selectAllEmployeeCheckboxes('{{ employee.id }}')"style="display: none;">Выбрать все</button>
+
                                 </div>
+
                             </div>
                         </div>
                     {% endfor %}
@@ -138,6 +147,55 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/work.js') }}"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const editScheduleBtn = document.querySelector('.edit-schedule-btn');
+
+    if (editScheduleBtn) {
+        editScheduleBtn.addEventListener('click', toggleCheckboxes);
+    } else {
+        console.error("Кнопка 'Edit Schedule' не найдена.");
+    }
+});
+
+function toggleCheckboxes() {
+    // Проверяем каждый чекбокс сотрудника в правом верхнем углу
+    document.querySelectorAll('.checkbox-input').forEach(function(employeeCheckbox) {
+        const employeeId = employeeCheckbox.id.split('_')[1];
+        const selectAllBtn = document.querySelector(`#employee_${employeeId} ~ .logs-container .select-all-btn`);
+        const employeeRowCheckboxes = document.querySelectorAll(`.log-row-${employeeId} .checkbox-cell`);
+        const checkboxHeader = document.querySelector(`#employee_${employeeId} ~ .logs-container .checkbox-header`);
+
+        if (employeeCheckbox.checked) {
+            // Отображаем чекбоксы для дат и кнопку "Выбрать все" только если сотрудник выбран
+            checkboxHeader.style.display = 'table-cell';
+            employeeRowCheckboxes.forEach(cell => cell.style.display = 'table-cell');
+            selectAllBtn.style.display = 'inline-block';
+        } else {
+            // Скрываем, если сотрудник не выбран
+            checkboxHeader.style.display = 'none';
+            employeeRowCheckboxes.forEach(cell => cell.style.display = 'none');
+            selectAllBtn.style.display = 'none';
+        }
+    });
+}
+
+function selectAllEmployeeCheckboxes(employeeId) {
+    const checkboxes = document.querySelectorAll(`.log-row-${employeeId} .date-checkbox`);
+    const selectAllBtn = document.querySelector(`#employee_${employeeId} ~ .logs-container .select-all-btn`);
+    const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = !allChecked;
+    });
+
+    // Обновляем текст кнопки
+    selectAllBtn.textContent = allChecked ? 'Выбрать все' : 'Снять выделение';
+}
+
+
+
+    </script>
     <script>
         function applyFilter(filterType) {
             console.log("Применение фильтра:", filterType);
