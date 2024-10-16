@@ -368,6 +368,7 @@ def register():
 # Чек-ин для сотрудника
 @app.route('/check_in/<int:id>', methods=['POST'])
 def check_in(id):
+    # Проверка, существует ли сотрудник
     employee = db.session.get(Employee, id)
     if not employee:
         return jsonify({'error': 'Сотрудник не найден'}), 404
@@ -375,15 +376,20 @@ def check_in(id):
     today = date.today()
     # Проверяем, есть ли лог за сегодняшний день
     existing_log = WorkLog.query.filter_by(employee_id=id, log_date=today).first()
-    if existing_log:
+    if existing_log and existing_log.check_in_time is not None:
         return jsonify({'error': 'Вы уже зачекинились сегодня'}), 400  # Возвращаем ошибку если чек-ин уже был
 
-    # Если логов нет, создаём новый лог
+    # Создаем новый лог только при нажатии кнопки (вызов этого маршрута)
     check_in_time = datetime.now()
-    new_work_log = WorkLog(employee_id=employee.id, check_in_time=check_in_time, log_date=today)
-    db.session.add(new_work_log)
-    db.session.commit()
+    if existing_log:
+        # Обновляем существующий лог, если он уже создан, но без времени чек-ина
+        existing_log.check_in_time = check_in_time
+    else:
+        # Если логов нет, создаём новый лог
+        new_work_log = WorkLog(employee_id=employee.id, check_in_time=check_in_time, log_date=today)
+        db.session.add(new_work_log)
 
+    db.session.commit()
     return jsonify({'message': 'Чек-ин выполнен', 'check_in_time': check_in_time.strftime('%H:%M:%S')})
 
 
@@ -734,6 +740,44 @@ def get_employee_data(employee_id):
         })
     else:
         return jsonify({'error': 'Employee not found'}), 404
+
+
+@app.route('/update_work_logs', methods=['POST'])
+def update_work_logs():
+    data = request.get_json()
+    updates = data.get('updates', [])
+    for update in updates:
+        log_id = update.get('logId')
+        check_in = update.get('checkIn')
+        check_out = update.get('checkOut')
+
+        # Обновите запись в базе данных
+        work_log = WorkLog.query.get(log_id)
+        if work_log:
+            work_log.check_in_time = check_in
+            work_log.check_out_time = check_out
+            db.session.commit()
+
+    return jsonify(success=True)
+
+
+@app.route('/update_times', methods=['POST'])
+def update_times():
+    data = request.get_json()
+    updates = data.get('updates', [])
+    for update in updates:
+        log_id = update.get('logId')
+        check_in_time = datetime.strptime(update.get('checkIn'), '%H:%M')
+        check_out_time = datetime.strptime(update.get('checkOut'), '%H:%M')
+
+        work_log = WorkLog.query.get(log_id)
+        if work_log:
+            work_log.check_in_time = datetime.combine(work_log.log_date, check_in_time.time())
+            work_log.check_out_time = datetime.combine(work_log.log_date, check_out_time.time())
+            work_log.worked_hours = work_log.calculate_worked_hours()
+            db.session.commit()
+
+    return jsonify({'success': True})
 
 
 if __name__ == '__main__':
