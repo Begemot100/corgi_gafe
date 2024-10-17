@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 82e968b81a20
+Revision ID: 1e9e800adb03
 Revises: 
-Create Date: 2024-10-05 21:49:21.039548
+Create Date: 2024-10-17 01:51:21.748420
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '82e968b81a20'
+revision = '1e9e800adb03'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -41,16 +41,14 @@ def upgrade():
     sa.Column('check_out_time', sa.DateTime(), nullable=True),
     sa.Column('daily_hours', sa.Float(), nullable=True),
     sa.Column('monthly_hours', sa.Float(), nullable=True),
-    sa.Column('lunch_start_time', sa.DateTime(), nullable=True),
-    sa.Column('lunch_end_time', sa.DateTime(), nullable=True),
+    sa.Column('work_start_time', sa.Time(), nullable=False),
+    sa.Column('work_end_time', sa.Time(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('work_log',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('employee_id', sa.Integer(), nullable=False),
     sa.Column('check_in_time', sa.DateTime(), nullable=False),
-    sa.Column('lunch_start_time', sa.DateTime(), nullable=True),
-    sa.Column('lunch_end_time', sa.DateTime(), nullable=True),
     sa.Column('check_out_time', sa.DateTime(), nullable=True),
     sa.Column('worked_hours', sa.Float(), nullable=True),
     sa.Column('log_date', sa.Date(), nullable=False),

@@ -6,6 +6,9 @@
     <title>Admin Panel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/employee_card.css') }}"> <!-- Include the custom styles here -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/export_modal_styles.css') }}">
+
+
 
 </head>
 <body>
@@ -17,7 +20,7 @@
         <nav>
             <ul>
                 <li><a href="/work"><img src="{{ url_for('static', filename='images/dash.png') }}" alt="Dashboard" style="width: 32px; height: 32px;"></a></li>
-                <li><a href="#"></a></li>
+                <li><button class="export-ellipsis-btn" onclick="openExportModal()">...</button></li>
                 <li><a href="#"></a></li>
                 <li><a href="#"></a></li>
             </ul>
@@ -69,6 +72,7 @@
                         <p>{{ employee.position }}</p>
                         <p>{{ employee.phone }}</p>
                         <p>{{ employee.nie }}</p>
+                        <p>Work Hours: {{ employee.work_start_time.strftime('%H:%M') }} - {{ employee.work_end_time.strftime('%H:%M') }}</p>
                         <p>{{ employee.start_date }}</p>
                         <p>{{ employee.end_date }}</p>
                         <p>{{ employee.email }}</p>
@@ -89,6 +93,7 @@
                         <p>{{ employee.position }}</p>
                         <p>{{ employee.phone }}</p>
                         <p>{{ employee.nie }}</p>
+                        <p>Work Hours: {{ employee.work_start_time.strftime('%H:%M') }} - {{ employee.work_end_time.strftime('%H:%M') }}</p>
                         <p>{{ employee.start_date }}</p>
                         <p>{{ employee.end_date }}</p>
                         <p>{{ employee.email }}</p>
@@ -118,8 +123,11 @@
                 <label for="end_date">Contract End Date</label>
                 <input type="date" id="end_date" name="end_date">
 
-                <label for="hours_per_week">Hours per Week</label>
-                <input type="number" id="hours_per_week" name="hours_per_week" placeholder="Type here" required>
+                <label for="work_start_time">Work Start Time</label>
+                <input type="time" id="work_start_time" name="work_start_time" required>
+
+                <label for="work_end_time">Work End Time</label>
+                <input type="time" id="work_end_time" name="work_end_time" required>
 
                 <label for="days_per_week">Days per Week</label>
                 <input type="number" id="days_per_week" name="days_per_week" placeholder="Type here" required>
@@ -166,6 +174,12 @@
         </div>
     </div>
     {% include 'modal.html' %}
+    {% include 'export_modal.html' %}
+
+
+
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/exportwork.js') }}"></script>
+
 </body>
 </html>

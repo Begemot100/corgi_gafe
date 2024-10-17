@@ -256,11 +256,15 @@ function closeEditModal() {
 function recalculateAndUpdateTotalHours() {
     let totalHours = 0;
 
-    // Перебираем все элементы с классом `daily-hours` и суммируем значения
-    document.querySelectorAll('.daily-hours').forEach(element => {
-        const timeText = element.textContent.trim();
-        const [hours, minutes] = timeText.split('h').map(part => parseInt(part.trim(), 10) || 0);
-        totalHours += hours + (minutes / 60);
+    // Перебираем все элементы с классом `daily-hours` и проверяем статус
+    document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
+        const timeText = row.querySelector('.daily-hours').textContent.trim();
+        const holidayStatus = row.querySelector('select[name="holiday_type"]').value;
+
+        if (holidayStatus !== 'Unpaid') { // Если статус не Unpaid, то добавляем в общую сумму
+            const [hours, minutes] = timeText.split('h').map(part => parseInt(part.trim(), 10) || 0);
+            totalHours += hours + (minutes / 60);
+        }
     });
 
     // Округляем до двух знаков после запятой
@@ -276,39 +280,67 @@ function recalculateAndUpdateTotalHours() {
 }
 
 // Функция для пересчета и обновления контейнера Summary
+// Функция для пересчета и обновления контейнера Summary с изменением цвета фона
 function recalculateAndUpdateSummaryContainer() {
     let totalHours = 0;
     let totalDays = 0;
     let paidHolidays = 0;
     let unpaidHolidays = 0;
+
     document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
         const dailyHoursText = row.querySelector('.daily-hours').textContent.trim();
-        const holidayStatus = row.querySelector('select[name="holiday_type"]').value;
-        if (dailyHoursText) {
+        const holidaySelect = row.querySelector('select[name="holiday_type"]');
+        const holidayStatus = holidaySelect.value;
+
+        // Учитываем только часы, если статус не "Unpaid"
+        if (holidayStatus !== 'Unpaid' && dailyHoursText) {
             const [hours, minutes] = dailyHoursText.split('h').map(part => parseInt(part.trim(), 10) || 0);
             totalHours += hours + (minutes / 60);
             totalDays += 1;
         }
+
+        // Считаем количество оплаченных и неоплаченных дней
         if (holidayStatus === 'Paid') {
             paidHolidays += 1;
+            holidaySelect.style.backgroundColor = '#FEDB5B';
+            holidaySelect.style.color = ''; // Сброс цвета текста на стандартный
         } else if (holidayStatus === 'Unpaid') {
             unpaidHolidays += 1;
+            holidaySelect.style.backgroundColor = '#DD8137';
+            holidaySelect.style.color = '#FFFFFF';
+        } else {
+            holidaySelect.style.backgroundColor = ''; // Сброс до стандартного цвета фона
+            holidaySelect.style.color = ''; // Сброс до стандартного цвета текста
         }
     });
+
+    // Округляем totalHours до двух знаков после запятой
     totalHours = parseFloat(totalHours.toFixed(2));
+
+    // Обновляем отображение на странице
     const totalHoursElement = document.querySelector('.total-hours-display');
     const totalDaysElement = document.querySelector('.total-days-display');
     const paidHolidaysElement = document.querySelector('.paid-holidays-display');
     const unpaidHolidaysElement = document.querySelector('.unpaid-holidays-display');
+
     if (totalHoursElement) {
         const displayHours = Math.floor(totalHours);
         const displayMinutes = Math.round((totalHours % 1) * 60);
         totalHoursElement.textContent = `${displayHours}h ${displayMinutes}min`;
     }
+
     if (totalDaysElement) totalDaysElement.textContent = totalDays;
     if (paidHolidaysElement) paidHolidaysElement.textContent = paidHolidays;
     if (unpaidHolidaysElement) unpaidHolidaysElement.textContent = unpaidHolidays;
 }
+
+// Добавление слушателя на изменение статуса отпуска
+document.querySelectorAll('select[name="holiday_type"]').forEach(select => {
+    select.addEventListener('change', function() {
+        recalculateAndUpdateSummaryContainer(); // Пересчитываем Total Hours и Summary и обновляем фон
+    });
+});
+
 
 function closeEditModal() {
     const editModal = document.getElementById('editTimeModal');

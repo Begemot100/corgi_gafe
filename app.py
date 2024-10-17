@@ -1,5 +1,4 @@
 from datetime import datetime, date, timedelta
-import time
 from urllib.parse import quote
 import math
 from io import BytesIO
@@ -10,6 +9,7 @@ from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import extract
 from openpyxl.utils import get_column_letter
+from datetime import time
 
 from models import Employee, WorkLog
 import logging
@@ -44,7 +44,7 @@ class Employee(db.Model):
     nie = db.Column(db.String(20), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=True)
-    hours_per_week = db.Column(db.Integer, nullable=False)
+    # hours_per_week = db.Column(db.Integer, nullable=False)
     days_per_week = db.Column(db.Integer, nullable=False)
     position = db.Column(db.String(50), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
@@ -54,6 +54,8 @@ class Employee(db.Model):
     check_out_time = db.Column(db.DateTime, nullable=True)
     daily_hours = db.Column(db.Float, default=0)
     monthly_hours = db.Column(db.Float, default=0)
+    work_start_time = db.Column(db.Time, nullable=False)
+    work_end_time = db.Column(db.Time, nullable=False)
 
     work_logs = db.relationship('WorkLog', backref='employee', cascade="all, delete-orphan", lazy=True)
 
@@ -82,6 +84,23 @@ class WorkLog(db.Model):
 def index():
     return render_template('login.html')  # Возврат формы входа
 
+
+def calculate_overtime(work_start_time, work_end_time, check_in, check_out):
+    # Рассчитываем рабочее время на день
+    scheduled_start = datetime.combine(datetime.today(), work_start_time)
+    scheduled_end = datetime.combine(datetime.today(), work_end_time)
+    scheduled_duration = scheduled_end - scheduled_start
+
+    # Рассчитываем фактическое рабочее время
+    actual_start = datetime.combine(datetime.today(), check_in)
+    actual_end = datetime.combine(datetime.today(), check_out)
+    actual_duration = actual_end - actual_start
+
+    # Если фактическое время больше запланированного, считаем разницу как овертайм
+    overtime = actual_duration - scheduled_duration if actual_duration > scheduled_duration else timedelta(0)
+
+    # Возвращаем овертайм в часах и минутах
+    return overtime
 
 @app.route('/admin', methods=['GET'])
 def admin():
@@ -230,17 +249,15 @@ def format_hours(value):
 def add_employee():
     full_name = request.form['full_name']
     nie = request.form['nie']
-    start_date_str = request.form.get('start_date')  # Получаем как строку
+    start_date_str = request.form.get('start_date')
     end_date_str = request.form.get('end_date')
-    if end_date_str:
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
-    hours_per_week = request.form['hours_per_week']
     days_per_week = request.form['days_per_week']
     position = request.form['position']
     phone = request.form['phone']
     email = request.form['email']
     section = request.form['section']
 
+    # Получаем и парсим даты
     try:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date() if start_date_str else None
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date() if end_date_str else None
@@ -248,12 +265,30 @@ def add_employee():
         logging.error(f"Ошибка при парсинге даты: {e}")
         return jsonify({'error': 'Некорректный формат даты'}), 400
 
+    # Получаем и парсим время
+    work_start_time_str = request.form.get('work_start_time')
+    work_end_time_str = request.form.get('work_end_time')
+
+    if not work_start_time_str or not work_end_time_str:
+        logging.error("Не указаны рабочие часы сотрудника.")
+        return jsonify({'error': 'Не указаны рабочие часы'}), 400
+
+    # Если значения есть, продолжаем парсить и сохранять
+    try:
+        work_start_time = datetime.strptime(work_start_time_str, '%H:%M').time()
+        work_end_time = datetime.strptime(work_end_time_str, '%H:%M').time()
+    except ValueError as e:
+        logging.error(f"Ошибка при парсинге времени: {e}")
+        return jsonify({'error': 'Некорректный формат времени'}), 400
+
+    # Создаем объект Employee с рабочим диапазоном времени
     new_employee = Employee(
         full_name=full_name,
         nie=nie,
         start_date=start_date,
         end_date=end_date,
-        hours_per_week=int(hours_per_week),
+        work_start_time=work_start_time,
+        work_end_time=work_end_time,
         days_per_week=int(days_per_week),
         position=position,
         phone=phone,
@@ -270,10 +305,7 @@ def add_employee():
         logging.error(f"Ошибка при добавлении сотрудника: {e}")
         return jsonify({'error': 'Ошибка при добавлении сотрудника'}), 500
 
-        # Возвращаем JSON-ответ для обновления страницы
-        return jsonify({'message': 'Сотрудник успешно добавлен!'}), 200
-    return redirect(url_for('admin'))
-
+    return jsonify({'message': 'Сотрудник успешно добавлен!'}), 200
 
 # Удаление сотрудника
 @app.route('/delete/<int:id>', methods=['POST'])
@@ -294,25 +326,54 @@ def delete_employee(id):
 @app.route('/edit/<int:id>', methods=['POST'])
 def edit_employee(id):
     employee = Employee.query.get(id)
-    if employee:
+    if not employee:
+        return jsonify({'error': 'Сотрудник не найден'}), 404
+
+    try:
+        # Основные данные сотрудника
         employee.full_name = request.form['full_name']
         employee.nie = request.form['nie']
         employee.phone = request.form['phone']
         employee.position = request.form['position']
-        start_date_str = request.form['start_date']
-        end_date_str = request.form['end_date']
-        employee.start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        employee.email = request.form['email']
+        employee.section = request.form['section']
+        employee.days_per_week = int(request.form['days_per_week'])
+
+        # Обработка дат начала и окончания контракта
+        start_date_str = request.form.get('start_date')
+        end_date_str = request.form.get('end_date')
+        if start_date_str:
+            employee.start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         if end_date_str:
             employee.end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         else:
             employee.end_date = None
-        employee.hours_per_week = request.form['hours_per_week']
-        employee.days_per_week = request.form['days_per_week']
-        employee.email = request.form['email']
-        employee.section = request.form['section']
-        db.session.commit()
 
-    return redirect(url_for('index'))
+        # Обработка рабочего диапазона времени
+        work_start_time_str = request.form.get('work_start_time')
+        work_end_time_str = request.form.get('work_end_time')
+
+        if not work_start_time_str or not work_end_time_str:
+            logging.error("Не указаны рабочие часы для редактирования.")
+            return jsonify({'error': 'Не указаны рабочие часы'}), 400
+
+        # Парсинг времени начала и окончания работы
+        employee.work_start_time = datetime.strptime(work_start_time_str, '%H:%M').time()
+        employee.work_end_time = datetime.strptime(work_end_time_str, '%H:%M').time()
+
+        # Сохранение изменений
+        db.session.commit()
+        logging.info(f"Сотрудник {employee.full_name} успешно обновлен.")
+        return jsonify({'message': 'Сотрудник успешно обновлен!'}), 200
+
+    except ValueError as e:
+        logging.error(f"Ошибка при парсинге данных: {e}")
+        return jsonify({'error': 'Некорректный формат данных'}), 400
+    except Exception as e:
+        logging.error(f"Ошибка при обновлении данных сотрудника: {e}")
+        db.session.rollback()
+        return jsonify({'error': 'Ошибка при обновлении сотрудника'}), 500
+
 
 # Маршрут для входа
 @app.route('/login', methods=['GET', 'POST'])
@@ -598,6 +659,18 @@ def export_excel():
             'Days Worked': decimal_hours_to_time(total_hours_worked),
         })
 
+        # Рассчитываем овертайм (при предположении, что стандартное время - 8 часов в день)
+        overtime_hours = max(0, total_hours_worked - (8 * working_days))
+        data.append({
+            'Full Name': '',
+            'Position': '',
+            'Date': '',
+            'Check In': '',
+            'Check Out': '',
+            'Holiday Type': 'Overtime',
+            'Days Worked': decimal_hours_to_time(overtime_hours),
+        })
+
         # Добавляем пустую строку для разделения сотрудников
         data.append({key: '' for key in data[0].keys()})
         data.append({key: '' for key in data[0].keys()})
@@ -725,21 +798,22 @@ def get_employee_list():
 @app.route('/get_employee_data/<int:employee_id>')
 def get_employee_data(employee_id):
     employee = Employee.query.get(employee_id)
-    if employee:
-        return jsonify({
-            'fullName': employee.full_name,
-            'nie': employee.nie,
-            'phone': employee.phone,
-            'position': employee.position,
-            'email': employee.email,
-            'startDate': employee.start_date.strftime('%Y-%m-%d') if employee.start_date else '',
-            'endDate': employee.end_date.strftime('%Y-%m-%d') if employee.end_date else '',
-            'section': employee.section,
-            'hoursPerWeek': employee.hours_per_week,
-            'daysPerWeek': employee.days_per_week
-        })
-    else:
-        return jsonify({'error': 'Employee not found'}), 404
+    if not employee:
+        return jsonify({'error': 'Сотрудник не найден'}), 404
+
+    return jsonify({
+        'fullName': employee.full_name,
+        'nie': employee.nie,
+        'phone': employee.phone,
+        'position': employee.position,
+        'email': employee.email,
+        'startDate': employee.start_date.strftime('%Y-%m-%d') if employee.start_date else '',
+        'endDate': employee.end_date.strftime('%Y-%m-%d') if employee.end_date else '',
+        'section': employee.section,
+        'workStartTime': employee.work_start_time.strftime('%H:%M') if employee.work_start_time else '',
+        'workEndTime': employee.work_end_time.strftime('%H:%M') if employee.work_end_time else '',
+        'daysPerWeek': employee.days_per_week
+    })
 
 
 @app.route('/update_work_logs', methods=['POST'])
@@ -780,5 +854,82 @@ def update_times():
     return jsonify({'success': True})
 
 
+
+
+@app.route('/export_unique_excel', methods=['GET'])
+def export_unique_excel():
+    # Получение данных сотрудников
+    employees = Employee.query.all()
+    employee_data = []
+
+    # Перебор сотрудников и добавление данных в список
+    for employee in employees:
+        employee_data.append({
+            'Full Name': employee.full_name,
+            'NIE': employee.nie,
+            'Phone': employee.phone,
+            'Position': employee.position,
+            'Email': employee.email,
+            'Start Date': employee.start_date.strftime('%Y-%m-%d') if employee.start_date else '',
+            'End Date': employee.end_date.strftime('%Y-%m-%d') if employee.end_date else '',
+            'Work Start Time': employee.work_start_time.strftime('%H:%M') if employee.work_start_time else '',
+            'Work End Time': employee.work_end_time.strftime('%H:%M') if employee.work_end_time else '',
+            'Days per Week': employee.days_per_week,
+            'Section': employee.section
+        })
+
+        # Добавляем пустую строку (None во всех полях) для разрыва
+        employee_data.append({key: None for key in employee_data[-1].keys()})
+
+    # Создание DataFrame из данных сотрудников
+    df = pd.DataFrame(employee_data)
+
+    # Создаем объект BytesIO для сохранения файла в памяти
+    output = BytesIO()
+
+    # Сохранение данных в Excel с настройками ширины
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, sheet_name='Employees', index=False)
+
+        # Получаем рабочую книгу и лист для дальнейшей настройки
+        worksheet = writer.sheets['Employees']
+
+        # Настройка ширины колонок по содержимому
+        for idx, col in enumerate(df.columns):
+            max_len = max(df[col].astype(str).map(len).max(), len(col))
+            worksheet.set_column(idx, idx, max_len + 2)  # +2 для небольшого отступа
+
+    output.seek(0)
+
+    return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                     as_attachment=True, download_name='Unique_Employee_Export.xlsx')
+
+@app.route('/add_work_log', methods=['POST'])
+def add_work_log():
+    employee_id = request.form['employee_id']
+    check_in_str = request.form['check_in']
+    check_out_str = request.form['check_out']
+
+    employee = Employee.query.get(employee_id)
+    if not employee:
+        return jsonify({'error': 'Сотрудник не найден'}), 404
+
+    try:
+        check_in = datetime.strptime(check_in_str, '%H:%M').time()
+        check_out = datetime.strptime(check_out_str, '%H:%M').time()
+    except ValueError as e:
+        logging.error(f"Ошибка при парсинге времени: {e}")
+        return jsonify({'error': 'Некорректный формат времени'}), 400
+
+    overtime = calculate_overtime(employee.work_start_time, employee.work_end_time, check_in, check_out)
+    logging.info(f"Переработка для сотрудника {employee.full_name}: {overtime}")
+
+    # Сохранить данные в таблицу лога
+    new_log = WorkLog(employee_id=employee_id, check_in=check_in, check_out=check_out, overtime=overtime)
+    db.session.add(new_log)
+    db.session.commit()
+
+    return jsonify({'message': 'Рабочий лог добавлен', 'overtime': str(overtime)})
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5000)
