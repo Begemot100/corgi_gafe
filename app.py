@@ -1,6 +1,9 @@
 from datetime import datetime, date, timedelta
 from urllib.parse import quote
 import math
+from datetime import datetime, date, timedelta, time as dt_time
+import time
+
 from io import BytesIO
 import pandas as pd
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session, send_file, make_response, current_app
@@ -9,10 +12,12 @@ from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import extract
 from openpyxl.utils import get_column_letter
-from datetime import time
-
+# import schedule
 from models import Employee, WorkLog
 import logging
+import threading
+
+
 logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
@@ -29,6 +34,17 @@ migrate = Migrate(app, db)
 class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+class DashboardUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
 
     def set_password(self, password):
@@ -66,7 +82,7 @@ class Employee(db.Model):
 class WorkLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
-    check_in_time = db.Column(db.DateTime, nullable=False)
+    check_in_time = db.Column(db.DateTime, nullable=True)
     check_out_time = db.Column(db.DateTime, nullable=True)
     worked_hours = db.Column(db.Float, default=0)
     log_date = db.Column(db.Date, nullable=False)
@@ -78,7 +94,35 @@ class WorkLog(db.Model):
             return time_diff.total_seconds() / 3600  # возвращаем количество часов
         return 0
 
+@app.route('/')
+def home():
+    return render_template('home.html')
 
+# Маршрут для логина администратора
+@app.route('/admin_login')
+def admin_login():
+    return render_template('login.html')  # Здесь должна быть страница логина для администратора
+
+# Маршрут для логина работника
+@app.route('/dashboard_login', methods=['GET', 'POST'])
+def dashboard_login():
+    if request.method == 'POST':
+        username = request.form['email']
+        password = request.form['password']
+
+        # Получаем пользователя из базы данных
+        user = DashboardUser.query.filter_by(username=username).first()
+
+        # Проверяем, существует ли пользователь и правильный ли пароль
+        if user and user.check_password(password):
+            # Сохраняем в сессии информацию о пользователе
+            session['dashboard_user_id'] = user.id
+            return redirect(url_for('dashboard'))
+        else:
+            error_message = 'Неверный логин или пароль'
+            return render_template('dashboard_login.html', error_message=error_message)
+
+    return render_template('dashboard_login.html')
 # Главная страница - Страница входа
 @app.route('/')
 def index():
@@ -123,21 +167,39 @@ def decimal_hours_to_time(decimal_hours):
     minutes = int((decimal_hours - hours) * 60)
     return f'{hours:02d}:{minutes:02d}'
 
-# Панель управления
+
 # Панель управления
 @app.route('/dashboard')
 def dashboard():
+    # Проверяем, вошел ли сотрудник в систему
+    if 'admin_id' in session:
+        pass
+    elif 'dashboard_user_id' not in session:
+        return redirect(url_for('dashboard_login'))
+
     employees = Employee.query.all()  # Получаем всех сотрудников
     dashboard_data = []
     today = date.today()
 
     for employee in employees:
-        # Ищем существующий лог, но не создаем новый автоматически
+        # Ищем существующий лог для текущего дня
         work_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
 
-        # Устанавливаем значения по умолчанию для отображения, если лога нет
-        check_in_time = work_log.check_in_time.strftime('%H:%M') if work_log and work_log.check_in_time else '--:--'
-        check_out_time = work_log.check_out_time.strftime('%H:%M') if work_log and work_log.check_out_time else '--:--'
+        if not work_log:
+            # Если лог не найден, создаем новый лог для текущего дня с пустыми значениями
+            work_log = WorkLog(
+                employee_id=employee.id,
+                log_date=today,
+                check_in_time=None,  # Чек-ин будет пустым, пока сотрудник не зачекинится
+                check_out_time=None,  # Чек-аут также будет пустым
+                worked_hours=0  # Пока сотрудник не зачекинится, часы = 0
+            )
+            db.session.add(work_log)
+            db.session.commit()
+
+        # Устанавливаем значения для отображения
+        check_in_time = work_log.check_in_time.strftime('%H:%M') if work_log.check_in_time else '--:--'
+        check_out_time = work_log.check_out_time.strftime('%H:%M') if work_log.check_out_time else '--:--'
         daily_hours = work_log.worked_hours if work_log else 0.0
 
         dashboard_data.append({
@@ -149,7 +211,6 @@ def dashboard():
         })
 
     return render_template('dashboard.html', dashboard_data=dashboard_data, current_date=today)
-
 
 
 @app.route('/work', methods=['GET'])
@@ -233,6 +294,14 @@ def work():
     app.logger.info(f"Отправленные логи на страницу: {[log.id for log in logs]}")
 
     return render_template('work.html', employees=employees, work_logs=work_logs, current_time=current_time)
+
+
+# def run_scheduler():
+#     schedule.every().day.at("23:59").do(add_missing_logs)
+#
+#     while True:
+#         schedule.run_pending()
+#         time.sleep(60)  # Проверяет каждые 60 секунд, чтобы не перегружать CPU
 
 
 @app.template_filter('format_hours')
@@ -812,7 +881,8 @@ def get_employee_data(employee_id):
         'section': employee.section,
         'workStartTime': employee.work_start_time.strftime('%H:%M') if employee.work_start_time else '',
         'workEndTime': employee.work_end_time.strftime('%H:%M') if employee.work_end_time else '',
-        'daysPerWeek': employee.days_per_week
+        'daysPerWeek': employee.days_per_week,
+
     })
 
 
@@ -931,5 +1001,85 @@ def add_work_log():
 
     return jsonify({'message': 'Рабочий лог добавлен', 'overtime': str(overtime)})
 
+from datetime import datetime, timedelta
+
+def check_missing_checkins():
+    today = datetime.now().date()
+    yesterday = today - timedelta(days=1)
+
+    employees = Employee.query.all()
+    for employee in employees:
+        # Проверяем, если запись за вчера отсутствует
+        missing_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=yesterday).first()
+        if not missing_log:
+            # Создаем запись с прочерками для вчерашнего дня
+            new_log = WorkLog(
+                employee_id=employee.id,
+                log_date=yesterday,
+                check_in_time=None,
+                check_out_time=None,
+                holidays="-"
+            )
+            db.session.add(new_log)
+    db.session.commit()
+
+
+def add_missing_logs():
+    with app.app_context():
+        logging.info("Запуск функции add_missing_logs")
+        today = datetime.now().date()
+        employees = Employee.query.all()
+
+        for employee in employees:
+            existing_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
+            if not existing_log:
+                logging.info(f"Добавление пропущенной записи для сотрудника {employee.full_name}")
+                missing_log = WorkLog(
+                    employee_id=employee.id,
+                    log_date=today,
+                    check_in_time=None,
+                    check_out_time=None,
+                    holidays='Working day'
+                )
+                db.session.add(missing_log)
+
+        db.session.commit()
+        logging.info("Функция add_missing_logs завершена")
+
+
+
+@app.route('/register_dashboard_user', methods=['GET', 'POST'])
+def register_dashboard_user():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        # Проверяем, существует ли уже пользователь с таким именем
+        existing_user = DashboardUser.query.filter_by(username=username).first()
+        if existing_user:
+            return jsonify({'error': 'Этот пользователь уже зарегистрирован!'}), 400
+
+        # Создаем нового пользователя
+        new_user = DashboardUser(username=username)
+        new_user.set_password(password)  # Хешируем пароль
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return redirect(url_for('dashboard'))  # Перенаправляем на страницу логина после успешной регистрации
+
+    return render_template('register.html')  # Страница регистрации для метода GET
+
+@app.route('/logout_employee')
+def logout_employee():
+    session.pop('employee_id', None)
+    return redirect(url_for('dashboard_login'))
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Создаем и запускаем поток для планировщика
+    # scheduler_thread = threading.Thread(target=run_scheduler)
+    # scheduler_thread.daemon = True  # Позволяет завершить поток при выходе из основного приложения
+    # scheduler_thread.start()
+
+    # Запускаем Flask сервер
+    app.run(debug=True, port=5002)

@@ -1,4 +1,4 @@
-#!/Users/germany/Desktop/Storm-Breaker/time_track/pythonProject1/venv/bin/python3
+#!/Users/germany/Desktop/Storm-Breaker/time_track/pythonProject1/venv/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys

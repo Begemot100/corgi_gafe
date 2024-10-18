@@ -271,7 +271,7 @@ button {
 .modal-content input[type="number"],
 .modal-content select {
     width: 100%;
-    padding: 12px;
+    padding: 2px;
     margin-bottom: 15px;
     font-size: 14px;
     border: 1px solid #ccc;

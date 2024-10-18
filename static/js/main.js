@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('section').value = employeeData.section || '';
         document.getElementById('hours_per_week').value = employeeData.hoursPerWeek || '';
         document.getElementById('days_per_week').value = employeeData.daysPerWeek || '';
+        document.getElementById('work_start_time').value = employeeData.workStartTime || '';
+        document.getElementById('work_end_time').value = employeeData.workEndTime || '';
     }
 
     // Function to open modal for editing an existing employee

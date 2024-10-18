@@ -1,0 +1,40 @@
+<!-- Модальное окно редактирования информации о компании -->
+<div id="editCompanyModal" class="custom-modal">
+    <div class="custom-modal-content">
+        <span class="custom-close-btn" onclick="closeEditModal()">&times;</span>
+        <div class="custom-modal-header">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Company Logo" class="custom-modal-logo">
+            <button class="edit-logo-btn">+</button>
+        </div>
+        <form id="company-edit-form">
+            <div class="custom-form-row">
+                <div class="custom-form-group">
+                    <input type="text" id="companyName" name="companyName" placeholder="Nombre anterior" required>
+                </div>
+                <div class="custom-form-group">
+                    <input type="text" id="telegram" name="telegram" placeholder="Telegram">
+                </div>
+            </div>
+            <div class="custom-form-row">
+                <div class="custom-form-group">
+                    <input type="email" id="email" name="email" placeholder="E-Mail" required>
+                </div>
+                <div class="custom-form-group">
+                    <input type="text" id="whatsapp" name="whatsapp" placeholder="WhatsApp">
+                </div>
+            </div>
+            <div class="custom-form-row">
+                <div class="custom-form-group">
+                    <input type="text" id="phone" name="phone" placeholder="Número de teléfono" required>
+                </div>
+                <div class="custom-form-group">
+                    <input type="text" id="instagram" name="instagram" placeholder="Instagram">
+                </div>
+            </div>
+            <div class="custom-form-actions">
+                <button type="button" class="custom-change-password-btn">Nueva contraseña</button>
+                <button type="submit" class="custom-save-changes-btn">Guardar cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
