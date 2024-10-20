@@ -1,9 +1,11 @@
-<div id="editTimeModal" class="modal" style="display: none;">
+<div id="editTimeModal" class="editTimeModal" style="display: none;">
     <div class="modal-content">
         <span class="close" onclick="closeEditModal()">&times;</span>
         <h2>Редактировать время</h2>
+        <button onclick="openEditModal(employeeId)">Редактировать</button>
+
         <label for="editDate">Дата</label>
-        <select id="editDate" onchange="updateSelectedLogId()">
+        <select id="editDate" onchange="updateSelectedLogData(this.value, employeeLogs)">
             <!-- Опции дат будут добавлены здесь динамически -->
         </select>
         <label for="editCheckIn">Время начала</label>
@@ -16,3 +18,44 @@
         </div>
     </div>
 </div>
+
+<!--<script>-->
+<!--function closeEditModal() {-->
+<!--    const editModal = document.getElementById('editTimeModal');-->
+<!--    if (editModal) {-->
+<!--        console.log("Закрытие модального окна"); // Добавлено для отладки-->
+<!--        editModal.style.display = 'none'; // Скрываем модальное окно-->
+<!--    } else {-->
+<!--        console.error("Модальное окно не найдено");-->
+<!--    }-->
+<!--}-->
+
+<!--function saveEditedTime() {-->
+<!--    // Пример сохранения данных-->
+<!--    const checkInTime = document.getElementById('editCheckIn').value;-->
+<!--    const checkOutTime = document.getElementById('editCheckOut').value;-->
+
+<!--    console.log("Сохраняем время:", checkInTime, checkOutTime);-->
+
+<!--    // Делаем запрос на сервер для сохранения времени (пример с fetch)-->
+<!--    fetch('/update_check_time/' + selectedLogId, {-->
+<!--        method: 'POST',-->
+<!--        headers: {-->
+<!--            'Content-Type': 'application/json'-->
+<!--        },-->
+<!--        body: JSON.stringify({ check_in_time: checkInTime, check_out_time: checkOutTime })-->
+<!--    })-->
+<!--    .then(response => response.json())-->
+<!--    .then(data => {-->
+<!--        if (data.success) {-->
+<!--            console.log("Время успешно сохранено");-->
+
+<!--            // Обновляем данные на странице без перезагрузки-->
+<!--            const dailyHoursElement = document.getElementById(`daily-hours-${selectedLogId}`);-->
+<!--            if (dailyHoursElement) {-->
+<!--                const hours = Math.floor(data.worked_hours);-->
+<!--                const minutes = Math.round((data.worked_hours % 1) * 60);-->
+<!--                dailyHoursElement.textContent = `${hours}h ${minutes}min`;-->
+<!--            }-->
+
+<!--            // Закрываем модальное окно после усп�

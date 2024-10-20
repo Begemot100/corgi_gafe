@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to open the Action Modal for Edit/Delete
     function openActionModal(employeeId) {
-        const actionModal = document.getElementById('action-modal');
+        const actionModal = document.getElementById('action-modal1');
         actionModal.style.display = 'flex';
 
         // Attach employee ID to action buttons
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function closeActionModal() {
-        const actionModal = document.getElementById('action-modal');
+        const actionModal = document.getElementById('action-modal1');
         actionModal.style.display = 'none';
     }
 
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     window.addEventListener('click', (event) => {
-        if (event.target === document.getElementById('action-modal')) {
+        if (event.target === document.getElementById('action-modal1')) {
             closeActionModal();
         }
     });

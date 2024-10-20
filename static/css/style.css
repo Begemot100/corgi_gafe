@@ -135,7 +135,10 @@ button {
     padding: 10px 20px;
     border-radius: 5px;
     border: none;
+    color: black;
     cursor: pointer;
+    background-color: transparent; /* Основной цвет */
+
     transition: background-color 0.3s ease;
 }
 
@@ -334,4 +337,37 @@ h2.section-title {
 }
 .employee-section.hidden {
     display: none; /* Скрываем, если добавлен класс hidden */
+}
+/* Родительский контейнер, который должен центрировать содержимое */
+.centered-block {
+    display: flex;
+    justify-content: center; /* Горизонтальная центровка */
+    align-items: center; /* Вертикальная центровка */
+    height: 100%; /* Растягиваем блок на всю высоту */
+    width: 100%; /* Растягиваем блок на всю ширину */
+}
+
+/* Адаптивное изображение */
+.centered-block img {
+    max-width: 100%; /* Ограничение изображения, чтобы оно не выходило за границы */
+    height: auto; /* Сохраняем пропорции */
+}
+/* Уникальные стили для кнопки экспорта Excel */
+.export-excel-btn {
+    background-color: #FC8C86; /* Зеленый цвет фона */
+    color: white; /* Белый цвет текста */
+    border: none; /* Без рамки */
+    padding: 10px 20px; /* Внутренние отступы */
+    text-align: center; /* Выравнивание текста */
+    text-decoration: none; /* Без подчеркивания */
+    display: inline-block; /* Блочный элемент */
+    font-size: 16px; /* Размер текста */
+    margin: 10px 2px; /* Внешние отступы */
+    cursor: pointer; /* Указатель курсора */
+    border-radius: 5px; /* Округленные углы */
+    transition: background-color 0.3s ease; /* Плавный переход при наведении */
+}
+
+.export-excel-btn:hover {
+    background-color: #45a049; /* Цвет при наведении */
 }

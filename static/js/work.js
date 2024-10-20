@@ -13,21 +13,49 @@ function toggleDropdown(menuId) {
     }
 }
 
-// Функция для открытия/закрытия основного модального окна
+// Функция для открытия/закрытия основного модального окна с опциями
 function toggleModal() {
-    const modal = document.getElementById('modal');
-    const dotIcon = document.querySelector('.dot-icon'); // Троеточие
+    const modal = document.getElementById('modal'); // Окно с опциями
 
-    if (!modal || !dotIcon) return;
-    // Получаем координаты троеточия
-    const rect = dotIcon.getBoundingClientRect();
+    if (!modal) return; // Проверка на существование
 
-    // Устанавливаем позицию модального окна под троеточием
-    modal.style.top = `${rect.bottom + window.scrollY - 170}px`; // смещение вниз
-    modal.style.left = `${rect.left + window.scrollX - 1000}px`; // выравнивание слева под троеточие
-    modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
-
+    // Переключаем видимость модального окна
+    modal.style.display = modal.style.display === 'none' || modal.style.display === '' ? 'block' : 'none';
 }
+
+function closeModal() {
+    const modal = document.getElementById('modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+
+// Функция для открытия модального окна редактирования времени
+function openEditModal(employeeId) {
+    const editModal = document.getElementById('editTimeModal');
+    const optionsModal = document.getElementById('modal'); // Окно с опциями
+
+    if (!editModal) return; // Проверка на существование
+
+    // Закрываем окно с опциями, если оно открыто
+    if (optionsModal && optionsModal.style.display === 'block') {
+        optionsModal.style.display = 'none';
+    }
+
+    // Открываем окно редактирования времени
+    editModal.style.display = 'block';
+}
+
+// Функция для закрытия модального окна редактирования времени
+function closeEditModal() {
+    const editModal = document.getElementById('editTimeModal');
+    if (editModal) {
+        editModal.style.display = 'none';
+    }
+}
+
+
 // Функция для закрытия модального окна
 function closeEditModal() {
     const editModal = document.getElementById('editTimeModal');
@@ -36,6 +64,14 @@ function closeEditModal() {
     }
 }
 
+function formatDate(date) {
+    if (!date) {
+        console.error('Date is undefined or null');
+        return '';  // Возвращаем пустую строку или любое значение по умолчанию
+    }
+
+    return date.toISOString().split('T')[0];  // Если дата валидна, продолжаем форматировать
+}
 
 
 function loadEditModal(employeeId) {
@@ -104,12 +140,12 @@ function updateSelectedLogData(selectedDate, logs) {
 }
 
 
-function closeEditModal() {
-    const editModal = document.getElementById('editTimeModal');
-    if (editModal) {
-        editModal.style.display = 'none';
-    }
-}
+//function closeEditModal() {
+//    const editModal = document.getElementById('editTimeModal');
+//    if (editModal) {
+//        editModal.style.display = 'none';
+//    }
+//}
 
 // Получение ID выбранного сотрудника и открытие модального окна
 function getSelectedEmployeeAndOpenEditModal() {
@@ -137,37 +173,24 @@ function getSelectedEmployeeAndOpenEditModal() {
 // Функция загрузки и отображения модального окна для редактирования
 
 
-function openEditModal(employeeId) {
-    currentEmployeeId = employeeId;
-    const editModal = document.getElementById('editTimeModal');
-    const rect = document.querySelector('.dot-icon').getBoundingClientRect(); // координаты базового элемента
 
-    // Устанавливаем окно по центру экрана
-    editModal.style.position = 'fixed';
-    editModal.style.top = '50%';
-    editModal.style.left = '50%';
-    editModal.style.transform = 'translate(-50%, -50%)';
 
-    // Отображаем окно
-    editModal.style.display = 'block';
+function updateSelectedLogData(selectedDate, logs) {
+    console.log("Доступные логи:", logs);
+    console.log("Выбранная дата:", selectedDate);
+
+    const selectedLog = logs.find(log => log.date === selectedDate);
+    if (selectedLog) {
+        console.log('Выбран лог:', selectedLog); // Отладка
+        document.getElementById('editCheckIn').value = selectedLog.check_in_time || '';
+        document.getElementById('editCheckOut').value = selectedLog.check_out_time || '';
+        selectedLogId = selectedLog.log_id; // Установка ID лога
+    } else {
+        selectedLogId = null; // Сбрасываем selectedLogId, если лог не найден
+        console.error("Log не найден для выбранной даты");
+        alert("Ошибка: выберите корректную дату для редактирования.");
+    }
 }
-
-//function updateSelectedLogData(selectedDate, logs) {
-//    console.log("Доступные логи:", logs);
-//    console.log("Выбранная дата:", selectedDate);
-//
-//    const selectedLog = logs.find(log => log.date === selectedDate);
-//    if (selectedLog) {
-//        console.log('Выбран лог:', selectedLog); // Отладка
-//        document.getElementById('editCheckIn').value = selectedLog.check_in_time || '';
-//        document.getElementById('editCheckOut').value = selectedLog.check_out_time || '';
-//        selectedLogId = selectedLog.log_id; // Установка ID лога
-//    } else {
-//        selectedLogId = null; // Сбрасываем selectedLogId, если лог не найден
-//        console.error("Log не найден для выбранной даты");
-//        alert("Ошибка: выберите корректную дату для редактирования.");
-//    }
-//}
 
 
 // Обновление статуса праздника
@@ -282,65 +305,33 @@ function recalculateAndUpdateTotalHours() {
 // Функция для пересчета и обновления контейнера Summary
 document.addEventListener('DOMContentLoaded', function () {
     // Функция для пересчета и обновления контейнера Summary
-    function recalculateAndUpdateSummaryContainer() {
-        let totalHours = 0;
-        let totalDays = 0;
-        let paidHolidays = 0;
-        let unpaidHolidays = 0;
+function recalculateAndUpdateSummary() {
+    let totalHours = 0;
+    let totalDays = 0;
+    let paidHolidays = 0;
+    let unpaidHolidays = 0;
 
-        document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
-            const dailyHoursText = row.querySelector('.daily-hours').textContent.trim();
-            const holidaySelect = row.querySelector('select[name="holiday_type"]');
-            const holidayStatus = holidaySelect.value;
+    document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
+        const hoursText = row.querySelector('.daily-hours').textContent.trim();
+        const [hours, minutes] = hoursText.split('h').map(part => parseInt(part.trim(), 10) || 0);
+        totalHours += hours + (minutes / 60);
 
-            // Учитываем только часы, если статус не "Unpaid"
-            if (holidayStatus !== 'Unpaid' && dailyHoursText) {
-                const [hours, minutes] = dailyHoursText.split('h').map(part => parseInt(part.trim(), 10) || 0);
-                totalHours += hours + (minutes / 60);
-                totalDays += 1;
-            }
-
-            // Считаем количество оплаченных и неоплаченных дней
-            if (holidayStatus === 'Paid') {
-                paidHolidays += 1;
-                holidaySelect.style.backgroundColor = '#FEDB5B';
-                holidaySelect.style.color = ''; // Сброс цвета текста на стандартный
-            } else if (holidayStatus === 'Unpaid') {
-                unpaidHolidays += 1;
-                holidaySelect.style.backgroundColor = '#DD8137';
-                holidaySelect.style.color = '#FFFFFF';
-            } else {
-                holidaySelect.style.backgroundColor = ''; // Сброс до стандартного цвета фона
-                holidaySelect.style.color = ''; // Сброс до стандартного цвета текста
-            }
-        });
-
-        // Округляем totalHours до двух знаков после запятой
-        totalHours = parseFloat(totalHours.toFixed(2));
-
-        // Обновляем отображение на странице
-        const totalHoursElement = document.querySelector('.total-hours-display');
-        const totalDaysElement = document.querySelector('.total-days-display');
-        const paidHolidaysElement = document.querySelector('.paid-holidays-display');
-        const unpaidHolidaysElement = document.querySelector('.unpaid-holidays-display');
-
-        if (totalHoursElement) {
-            const displayHours = Math.floor(totalHours);
-            const displayMinutes = Math.round((totalHours % 1) * 60);
-            totalHoursElement.textContent = `${displayHours}h ${displayMinutes}min`;
+        const holidayStatus = row.querySelector('select[name="holiday_type"]').value;
+        if (holidayStatus === 'Paid') {
+            paidHolidays++;
+        } else if (holidayStatus === 'Unpaid') {
+            unpaidHolidays++;
         }
-
-        if (totalDaysElement) totalDaysElement.textContent = totalDays;
-        if (paidHolidaysElement) paidHolidaysElement.textContent = paidHolidays;
-        if (unpaidHolidaysElement) unpaidHolidaysElement.textContent = unpaidHolidays;
-    }
-
-    // Добавление слушателя на изменение статуса отпуска
-    document.querySelectorAll('select[name="holiday_type"]').forEach(select => {
-        select.addEventListener('change', function () {
-            recalculateAndUpdateSummaryContainer(); // Пересчитываем Total Hours и Summary и обновляем фон
-        });
+        totalDays++;
     });
+
+    // Обновляем Summary в интерфейсе
+    document.querySelector('.total-hours-display').textContent = `${Math.floor(totalHours)}h ${Math.round((totalHours % 1) * 60)}min`;
+    document.querySelector('.total-days-display').textContent = totalDays;
+    document.querySelector('.paid-holidays-display').textContent = paidHolidays;
+    document.querySelector('.unpaid-holidays-display').textContent = unpaidHolidays;
+}
+
 
     // Функция для пересчета Total Hours без перезагрузки
     function saveEditedTime() {
@@ -481,6 +472,7 @@ function exportExcel() {
         console.error('Ошибка при экспорте в Excel:', error);
     });
 }
+
 document.addEventListener('DOMContentLoaded', function() {
 
     const filterButtons = document.querySelectorAll('.filter-option');
@@ -626,16 +618,22 @@ window.addEventListener('click', function(event) {
         if (groupDropdownMenu && groupDropdownMenu.classList.contains('show')) { groupDropdownMenu.classList.remove('show'); }
     }
 });
-document.querySelector('#dotButton').addEventListener('click', function(event) {
+document.querySelector('.dot-icon').addEventListener('click', function(event) {
     const modal = document.getElementById('editTimeModal');
+    const buttonRect = event.target.getBoundingClientRect(); // Получаем координаты кнопки троеточия
 
-    // Установка позиции модального окна
-    const selectLabel = document.querySelector('.select-label');
-    const labelRect = selectLabel.getBoundingClientRect();
+    // Вычисляем позицию для модального окна
+    modal.style.top = `${buttonRect.bottom + window.scrollY}px`;
+    modal.style.left = `${buttonRect.left + window.scrollX}px`;
 
-    // Расчет позиции модального окна
-    modal.style.left = `${labelRect.left}px`; // Позиция по оси X
-    modal.style.top = `${labelRect.bottom + window.scrollY}px`; // Позиция по оси Y с учетом прокрутки
+
+//    // Установка позиции модального окна
+//    const selectLabel = document.querySelector('.select-label');
+//    const labelRect = selectLabel.getBoundingClientRect();
+//
+//    // Расчет позиции модального окна
+//    modal.style.left = `${labelRect.left}px`; // Позиция по оси X
+//    modal.style.top = `${labelRect.bottom + window.scrollY}px`; // Позиция по оси Y с учетом прокрутки
 
     // Показать модальное окно и оверлей
     modal.style.display = 'block';
@@ -699,3 +697,200 @@ function toggleCheckboxes() {
         checkbox.style.display = checkbox.style.display === 'none' ? 'inline-block' : 'none';
     });
 }
+function showCustomRange() {
+    document.getElementById('customRangePicker').style.display = 'block';
+}
+
+function applyCustomRange() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    if (startDate && endDate) {
+        window.location.href = `/work?start_date=${startDate}&end_date=${endDate}`;
+    } else {
+        alert('Por favor, selecciona un rango de fechas válido.');
+    }
+}
+//function applyFilter(filterType, label) {
+//    console.log("Selected filter:", filterType); // Отладка
+//    document.getElementById('filterButton').textContent = label;
+//
+//    if (filterType === 'custom') {
+//        console.log("Displaying custom range picker"); // Отладка
+//        document.getElementById('customRangePicker').style.display = 'flex'; // Показать блок выбора диапазона
+//    } else {
+//        document.getElementById('customRangePicker').style.display = 'none'; // Скрыть блок выбора диапазона для других фильтров
+//    }
+//}
+//
+//function applyCustomRange() {
+//    const startDate = document.getElementById('startDate').value;
+//    const endDate = document.getElementById('endDate').value;
+//
+//    if (startDate && endDate) {
+//        window.location.href = `/work?start_date=${startDate}&end_date=${endDate}`;
+//    } else {
+//        alert('Por favor, selecciona un rango de fechas válido.');
+//    }
+//}
+
+function applyFilter(filterType, label = '') {
+    let today = new Date();
+    let startDate = null, endDate = null; // Инициализируем как null
+     if (label) {
+        document.getElementById('filterButton').textContent = label;
+    }
+    // Проверка, что переменная today является объектом Date
+    if (!(today instanceof Date && !isNaN(today))) {
+        console.error("today не является объектом Date");
+        return;
+    }
+
+
+
+    // Логика работы с фильтрами
+    if (filterType === 'custom') {
+        console.log("Displaying custom range picker"); // Проверка срабатывания
+        document.getElementById('customRangePicker').style.display = 'flex'; // Показать выбор диапазона
+    } else {
+        document.getElementById('customRangePicker').style.display = 'none'; // Скрыть выбор диапазона
+
+        // Определяем диапазон дат в зависимости от фильтра
+        if (filterType === 'today') {
+            startDate = today;
+            endDate = today;
+        } else if (filterType === 'yesterday') {
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 1);
+            endDate = startDate;
+        } else if (filterType === 'last_7_days') {
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 7);
+            endDate = today;
+        } else if (filterType === 'last_30_days') {
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() - 30);
+            endDate = today;
+        } else if (filterType === 'previous_month') {
+            const firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = new Date(firstDayOfCurrentMonth);
+            endDate.setDate(endDate.getDate() - 1);
+            startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+        } else if (filterType === 'current_month') {
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            endDate = today;
+        }
+
+        // Преобразуем даты в строки формата YYYY-MM-DD, если они определены
+        if (startDate && endDate) {
+            const startDateStr = startDate.toISOString().split('T')[0];
+            const endDateStr = endDate.toISOString().split('T')[0];
+            // Логируем диапазон дат
+        console.log(`Применяем фильтр: ${filterType}, от ${startDateStr} до ${endDateStr}`);
+
+        // Обновляем отображаемую информацию о диапазоне
+        document.getElementById('selectedDateDisplay').textContent = `${startDateStr} - ${endDateStr}`;
+
+        // Применение фильтра по датам
+        filterLogsByDateRange(startDateStr, endDateStr);
+        }
+    }
+}
+function filterLogsByDateRange(startDate, endDate) {
+    document.querySelectorAll('.log-row').forEach(row => {
+        const logDate = row.getAttribute('data-log-date');
+        if (logDate >= startDate && logDate <= endDate) {
+            row.style.display = '';  // Показываем лог
+        } else {
+            row.style.display = 'none';  // Скрываем лог
+        }
+    });
+}
+
+function applyCustomRange() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    if (startDate && endDate) {
+        console.log(`Применяем пользовательский диапазон: от ${startDate} до ${endDate}`);
+        filterLogsByDateRange(startDate, endDate);
+    } else {
+        alert('Пожалуйста, выберите корректный диапазон дат.');
+    }
+}
+
+function applyCustomRange() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    if (startDate && endDate) {
+        // Применяем диапазон дат, если выбран
+        window.location.href = `/work?start_date=${startDate}&end_date=${endDate}`;
+    } else {
+        alert('Por favor, selecciona un rango de fechas válido.');
+    }
+}
+
+function applyDateFilter() {
+    const selectedDate = document.getElementById("datePicker").value;
+    if (selectedDate) {
+        window.location.href = `/work?date=${selectedDate}`;
+    }
+}
+function toggleCustomRange() {
+    const customRangePicker = document.getElementById('customRangePicker');
+
+    // Проверяем текущее состояние элемента и переключаем его видимость
+    if (customRangePicker.style.display === 'none' || customRangePicker.style.display === '') {
+        customRangePicker.style.display = 'block';
+    } else {
+        customRangePicker.style.display = 'none';
+    }
+}
+
+// Пример вызова toggleCustomRange при выборе "Rango Personalizado"
+document.getElementById('filterButton').addEventListener('click', function() {
+    applyFilter('custom', 'Rango Personalizado');
+    toggleCustomRange();  // Показываем или скрываем календарь
+});
+function toggleFilter(filterType, label) {
+    const customRangePicker = document.getElementById('customRangePicker');
+    const datePicker = document.getElementById('datePicker');
+
+    // Если выбран кастомный фильтр, показываем диапазон
+    if (filterType === 'custom') {
+        customRangePicker.style.display = 'block';
+        datePicker.style.display = 'none';  // скрываем обычный календарь
+    } else {
+        customRangePicker.style.display = 'none';
+        datePicker.style.display = 'inline-block';  // показываем обычный календарь, если выбран не кастомный фильтр
+    }
+
+    // Обновляем кнопку фильтра для отображения текущего фильтра
+    document.getElementById('filterButton').textContent = label;
+}
+function filterLogsByDateRange(startDate, endDate) {
+    document.querySelectorAll('.log-row').forEach(row => {
+        const logDate = new Date(row.getAttribute('data-log-date'));
+
+        if (logDate >= new Date(startDate) && logDate <= new Date(endDate)) {
+            row.style.display = '';  // Показываем лог
+        } else {
+            row.style.display = 'none';  // Скрываем лог, если он не попадает в диапазон
+        }
+    });
+}
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('modal');
+    const editTimeModal = document.getElementById('editTimeModal');
+
+    // Закрываем окно с опциями, если клик был вне области модального окна
+    if (modal && modal.style.display === 'block' && !event.target.closest('.dot-icon') && !event.target.closest('.modal-content')) {
+        modal.style.display = 'none';
+    }
+
+    // Закрываем окно редактирования времени, если клик был вне области модального окна
+    if (editTimeModal && editTimeModal.style.display === 'block' && !event.target.closest('.modal-content')) {
+        editTimeModal.style.display = 'none';
+    }
+});

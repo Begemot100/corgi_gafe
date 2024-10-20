@@ -11,7 +11,8 @@
     flex-direction: column;
     align-items: center;
     padding: 20px 0;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(0, 0.1, 0, 0);
+    border-radius: 12px;
 }
 
 .sidebar .logo img {
@@ -29,6 +30,10 @@
     flex-grow: 1;
     padding: 20px;
     background-color: #f4f4f9;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0.1, 0, 0);
+
+
 }
 
 /* Стили для заголовка */
@@ -38,7 +43,7 @@ header {
     padding: 20px;
     background-color: #fff;
     border-radius: 10px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     margin-bottom: 20px;
 }
 
@@ -65,7 +70,7 @@ header {
     position: relative;
     background-color: #fff;
     border-radius: 14px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     margin-bottom: 20px;
     padding: 10px;
     z-index: 1;
@@ -161,7 +166,7 @@ header {
     display: none;
     position: absolute;
     bottom: 10%;
-    right: 5%;
+    right: 50%;
     width: 200px;
     padding: 20px;
     background-color: #fff;
@@ -208,22 +213,19 @@ header {
 }
 
 /* Стили кнопок фильтров */
-.filter-bar .filter-btn {
-    background-color: #FF6F61;
-    color: #fff;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-right: 10px;
-    transition: background-color 0.3s ease;
+.calendar-container {
+    margin-top: 10px;
 }
 
-.filter-bar .filter-btn:hover {
-    background-color: #E65A50;
+.calendar-input {
+    display: block;
+    margin: 5px 0;
 }
 
+.calendar-wrapper {
+    margin-top: 10px;
+    display: none; /* Скрываем по умолчанию */
+}
 .filter-bar .filter-btn.active {
     background-color: #FFA08B;
 }
@@ -262,26 +264,60 @@ header {
 }
 
 .logs-table {
-    width: 100%; /* Растягивает таблицу на всю доступную ширину */
+    width: 80%; /* Растягивает таблицу на всю доступную ширину */
     flex-grow: 1; /* Позволяет таблице занимать все доступное пространство */
     border-collapse: collapse;
     background-color: #fff;
+    border-radius: 12px;
+
 }
 
 
 .summary-container {
-    width: 20%;
-    background-color: #f4f4f9;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    font-weight: bold;
-    font-size: 14px;
-    color: #333;
-    margin-left: auto; /* Перемещает блок вправо */
+
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    max-width: 350px;
     text-align: left;
-    align-self: flex-start;
+    font-family: Arial, sans-serif;
 }
+
+.summary-container p {
+    margin: 10px 0;
+    font-size: 16px;
+    font-weight: 400;
+    font-size: 12px; /* Уменьшенный размер шрифта */
+
+}
+
+.holiday-status {
+    margin-top: 20px;
+}
+
+.paid-holidays, .unpaid-holidays {
+    border-radius: 8px;
+    padding: 4px; /* Уменьшаем внутренние отступы */
+    margin-bottom: 4px; /* Уменьшаем внешний отступ */
+    font-weight: 400;
+    color: black;
+    height: 25px; /* Задаем фиксированную высоту */
+    display: flex;
+    align-items: center; /* Вертикальное выравнивание текста */
+    font-size: 12px; /* Уменьшенный размер шрифта */
+
+}
+
+.paid-holidays {
+    background-color: #FEDB5B; /* Цвет для Paid Holidays */
+}
+
+.unpaid-holidays {
+    background-color: #DD8137; /* Цвет для Unpaid Holidays */
+    color: white;
+}
+
 
 .logs-table th,
 .logs-table td {
@@ -313,4 +349,19 @@ header {
     border: 12px;
     cursor: pointer;
     font-size: 14px;
+}
+
+
+.calendar-container {
+    margin-top: 10px;
+}
+
+.calendar-input {
+    display: block;
+    margin: 5px 0;
+}
+
+.calendar-wrapper {
+    margin-top: 10px;
+    display: none; /* Скрываем по умолчанию */
 }

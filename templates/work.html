@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/filters.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_time_modal.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bulk_schedule_modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom_range_picker.css') }}">
     <title>Work Logs</title>
 </head>
 <body>
@@ -37,20 +38,31 @@
                 <div class="filter-bar">
                     <div class="left-section">
                         <div class="dropdown">
-                            <button id="filterButton" class="filter-btn" onclick="toggleDropdown('dropdown-menu')">Hoy</button>
+                        <button id="filterButton" class="filter-btn" onclick="toggleDropdown('dropdown-menu')">Hoy</button>
                             <div id="dropdown-menu" class="dropdown-menu">
                                 <a href="javascript:void(0);" onclick="applyFilter('today', 'Hoy')">Hoy</a>
                                 <a href="javascript:void(0);" onclick="applyFilter('yesterday', 'Ayer')">Ayer</a>
-                                <a href="javascript:void(0);" onclick="applyFilter('last_7_days','Últimos 7 días')">Últimos 7 días</a>
+                                <a href="javascript:void(0);" onclick="applyFilter('last_7_days', 'Últimos 7 días')">Últimos 7 días</a>
                                 <a href="javascript:void(0);" onclick="applyFilter('last_30_days', 'Últimos 30 días')">Últimos 30 días</a>
                                 <a href="javascript:void(0);" onclick="applyFilter('previous_month', 'Mes Anterior')">Mes Anterior</a>
                                 <a href="javascript:void(0);" onclick="applyFilter('current_month', 'Este mes')">Este mes</a>
-                                <a href="javascript:void(0);" onclick="applyFilter('custom', 'Rango Personalizado')">Rango Personalizado</a>
+                                <a href="javascript:void(0);" onclick="toggleFilter('custom', 'Rango Personalizado')">Rango Personalizado</a>
                             </div>
                         </div>
 
-                        <input type="date" id="datePicker" class="filter-btn" onchange="applyFilterByDate(this.value)">
-                        <span id="selectedDateDisplay" style="margin-left: 10px; font-weight: bold; color: grey;"></span>
+                        <div id="customRangePicker" class="calendar-wrapper" style="display: none;">
+                            <label for="startDate">Desde:</label>
+                            <input type="date" id="startDate" name="startDate">
+                            <label for="endDate">Hasta:</label>
+                            <input type="date" id="endDate" name="endDate">
+                            <button onclick="applyCustomRange()">Aplicar</button>
+                        </div>
+
+                        <div class="calendar-container">
+                            <input type="date" id="datePicker" class="calendar-input" style="display: none;" onchange="applyFilterByDate(this.value)">
+                            <span id="selectedDateDisplay" style="margin-left: 10px; font-weight: bold; color: black;"></span>
+                        </div>
+
 
                         <div class="dropdown">
                             <button class="filter-btn" onclick="toggleDropdown('group-dropdown-menu')">Grupo</button>
@@ -65,15 +77,20 @@
 
                     <div class="right-section">
                         <span>Select</span>
-                        <button class="dot-icon" onclick="toggleModal()">...</button>
-                        <div id="modal" class="modal" style="display: none;">
+
+                        <button class="dot-icon" onclick="toggleModal(event)">
+                            <img src="/static/images/img_3.png" alt="icon" style="width: 20px; height: 20px;">
+                        </button>
+
+
+                        <div id="modal" class="modal">
                             <div class="modal-content">
                                 <span class="close" onclick="closeModal()">&times;</span>
                                 <ul class="modal-options">
                                     <li><button onclick="selectAllEmployees()">Select All</button></li>
-                                    <li><button onclick="getSelectedEmployeeAndOpenEditModal()">Edit</button></li>
+                                    <button onclick="getSelectedEmployeeAndOpenEditModal()">Edit</button>
                                     <li><button onclick="exportExcel()">Export Excel</button></li>
-                                    <button class="edit-schedule-btn" onclick="toggleCheckboxes()">Edit Schedule</button>
+                                    <li><button class="edit-schedule-btn" onclick="toggleCheckboxes()">Edit Schedule</button></li>
                                     <li><button onclick="deleteEmployee()">Delete</button></li>
                                 </ul>
                             </div>
@@ -100,6 +117,17 @@
                                             <th class="checkbox-header" style="display: none;">Select</th> <!-- Заголовок для чекбоксов -->
                                         </tr>
                                     </thead>
+                                    <tbody>
+                                        {% for log in logs %}
+                                            <tr>
+                                                <td>{{ log.log_date.strftime('%Y-%m-%d') }}</td>
+                                                <td>{{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}</td>
+                                                <td>{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
+                                                <td>{{ log.worked_hours }}</td>
+                                            </tr>
+
+                                        {% endfor %}
+                                    </tbody>
                                     <tbody>
                                         {% for log in employee.work_logs %}
                                             <tr class="log-row-{{ employee.id }}" data-log-id="{{ log.id }}" data-log-date="{{ log.log_date.strftime('%Y-%m-%d') }}">
@@ -134,15 +162,26 @@
                                         {% endfor %}
                                     </tbody>
                                 </table>
-                                <div class="summary-container">
+                               <div class="summary-container">
                                     <p>Total Hours: <span id="total-hours-{{ employee.id }}">{{ employee.total_hours | format_hours }}</span></p>
                                     <p>Total Days: <span id="total-days-{{ employee.id }}">{{ employee.total_days }}</span></p>
                                     <p>Overtime: {{ employee.overtime | format_hours }}</p>
-                                    <p>Paid Holidays: <span id="paid-holidays-{{ employee.id }}">{{ employee.paid_holidays }}</span></p>
-                                    <p>Unpaid Holidays: <span id="unpaid-holidays-{{ employee.id }}">{{ employee.unpaid_holidays }}</span></p>
+
+                                    <div class="holiday-status">
+                                        <div class="paid-holidays">
+                                            <span>Paid Holidays: </span>
+                                            <p id="paid-holidays-{{ employee.id }}">{{ employee.paid_holidays }}</p>
+                                        </div>
+                                        <div class="unpaid-holidays">
+                                            <span>Unpaid Holidays: </span>
+                                            <p id="unpaid-holidays-{{ employee.id }}">{{ employee.unpaid_holidays }}</p>
+                                        </div>
+                                    </div>
+
                                     <button class="select-all-btn" onclick="selectAllEmployeeCheckboxes('{{ employee.id }}')" style="display: none;">Выбрать все</button>
                                     <button class="new-schedule-btn" onclick="openNewScheduleModal()" style="display: none;">New Schedule</button>
                                 </div>
+
                             </div>
                         </div>
                     {% endfor %}
