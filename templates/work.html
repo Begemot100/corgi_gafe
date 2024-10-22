@@ -38,7 +38,7 @@
                 <div class="filter-bar">
                     <div class="left-section">
                         <div class="dropdown">
-                        <button id="filterButton" class="filter-btn" onclick="toggleDropdown('dropdown-menu')">Hoy</button>
+                            <button id="filterButton" class="filter-btn" onclick="toggleDropdown('dropdown-menu')">Hoy</button>
                             <div id="dropdown-menu" class="dropdown-menu">
                                 <a href="javascript:void(0);" onclick="applyFilter('today', 'Hoy')">Hoy</a>
                                 <a href="javascript:void(0);" onclick="applyFilter('yesterday', 'Ayer')">Ayer</a>
@@ -63,7 +63,6 @@
                             <span id="selectedDateDisplay" style="margin-left: 10px; font-weight: bold; color: black;"></span>
                         </div>
 
-
                         <div class="dropdown">
                             <button class="filter-btn" onclick="toggleDropdown('group-dropdown-menu')">Grupo</button>
                             <div id="group-dropdown-menu" class="dropdown-menu">
@@ -81,7 +80,6 @@
                         <button class="dot-icon" onclick="toggleModal(event)">
                             <img src="/static/images/img_3.png" alt="icon" style="width: 20px; height: 20px;">
                         </button>
-
 
                         <div id="modal" class="modal">
                             <div class="modal-content">
@@ -125,7 +123,6 @@
                                                 <td>{{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}</td>
                                                 <td>{{ log.worked_hours }}</td>
                                             </tr>
-
                                         {% endfor %}
                                     </tbody>
                                     <tbody>

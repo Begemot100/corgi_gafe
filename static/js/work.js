@@ -235,21 +235,24 @@ function saveEditedTime() {
         })
         .then(response => response.json())
         .then(data => {
-            console.log("Ответ от сервера:", data);
             if (data && data.success) {
-                // Обновляем часы для текущего лога
+                // Обновляем часы для текущего лога на странице без перезагрузки
                 const dailyHoursElement = document.getElementById(`daily-hours-${selectedLogId}`);
+                const checkInElement = document.getElementById(`check-in-time-${selectedLogId}`);
+                const checkOutElement = document.getElementById(`check-out-time-${selectedLogId}`);
+
+                // Обновляем отображение времени check-in и check-out
+                checkInElement.textContent = checkInTime;
+                checkOutElement.textContent = checkOutTime;
+
+                // Обновляем рабочие часы для текущего лога
                 if (dailyHoursElement) {
                     const hours = Math.floor(data.worked_hours);
                     const minutes = Math.round((data.worked_hours % 1) * 60);
                     dailyHoursElement.textContent = `${hours}h ${minutes}min`;
                 }
 
-                // Пересчитываем и обновляем Total Hours и Summary
-                recalculateAndUpdateTotalHours();
-                recalculateAndUpdateSummaryContainer();
-
-                // Принудительно закрываем модальное окно после сохранения
+                // Закрываем модальное окно после успешного обновления
                 closeEditModal();
             } else {
                 console.error('Ошибка при сохранении времени:', data ? data.message : 'Неизвестная ошибка');
@@ -263,7 +266,6 @@ function saveEditedTime() {
         alert('Не удалось сохранить изменения. Пожалуйста, выберите корректный лог.');
     }
 }
-
 
 function closeEditModal() {
     const editModal = document.getElementById('editTimeModal');

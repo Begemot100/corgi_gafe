@@ -813,28 +813,34 @@ def update_check_time(id):
     check_in_time_str = data.get('check_in_time', '')
     check_out_time_str = data.get('check_out_time', '')
 
+    app.logger.info(f"Получен запрос для обновления лога {id} с данными: {data}")
+
     try:
         check_in_time = datetime.combine(date.today(), datetime.strptime(check_in_time_str, '%H:%M').time()) if check_in_time_str else None
         check_out_time = datetime.combine(date.today(), datetime.strptime(check_out_time_str, '%H:%M').time()) if check_out_time_str else None
 
         work_log = db.session.get(WorkLog, id)
         if work_log:
+            app.logger.info(f"Найдена запись: {work_log}")
             work_log.check_in_time = check_in_time
             work_log.check_out_time = check_out_time
 
             # Пересчет рабочих часов
             work_log.worked_hours = work_log.calculate_worked_hours()
             db.session.commit()
+            app.logger.info(f"Часы обновлены для лога {id}: {work_log.worked_hours}")
             return jsonify({'success': True, 'worked_hours': work_log.worked_hours})
         else:
+            app.logger.error(f"Запись с ID {id} не найдена")
             return jsonify({'error': 'Запись не найдена'}), 404
 
-    except ValueError:
+    except ValueError as ve:
+        app.logger.error(f"Неверный формат времени: {ve}")
         return jsonify({'error': 'Неверный формат времени'}), 400
     except Exception as e:
+        app.logger.error(f"Ошибка при обновлении времени: {e}")
         db.session.rollback()
         return jsonify({'error': 'Не удалось сохранить время', 'message': str(e)}), 500
-
 
 @app.route('/get_employee_logs/<int:employee_id>', methods=['GET'])
 def get_employee_logs(employee_id):
@@ -1097,6 +1103,28 @@ def logout_employee():
     session.pop('employee_id', None)
     return redirect(url_for('dashboard_login'))
 
+# Пример в Python для добавления нового дня
+
+from datetime import datetime
+
+def add_new_day_for_employees():
+    today = datetime.today().date()
+    employees = Employee.query.all()
+    for employee in employees:
+        # Проверяем, есть ли уже лог за сегодня, чтобы не создавать дубликаты
+        log_exists = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
+        if not log_exists:
+            new_log = WorkLog(
+                employee_id=employee.id,
+                log_date=today,
+                check_in_time=None,  # Вместо времени прочерки
+                check_out_time=None,
+                worked_hours=0,
+                holidays='Working day'
+            )
+            db.session.add(new_log)
+    db.session.commit()
+
 if __name__ == '__main__':
     # Создаем и запускаем поток для планировщика
     # scheduler_thread = threading.Thread(target=run_scheduler)
@@ -1104,4 +1132,4 @@ if __name__ == '__main__':
     # scheduler_thread.start()
 
     # Запускаем Flask сервер
-    app.run(debug=True, port=5002)
+    app.run(debug=True, port=5000)
