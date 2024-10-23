@@ -559,6 +559,7 @@ function selectAllEmployees() {
 }
 
 function exportExcel() {
+    // Получаем ID выбранных сотрудников
     const selectedEmployees = Array.from(document.querySelectorAll('input.checkbox-input:checked')).map(input => input.id.split('_')[1]);
 
     if (selectedEmployees.length === 0) {
@@ -566,12 +567,28 @@ function exportExcel() {
         return;
     }
 
+    // Собираем ID видимых строк логов (работаем только с теми логами, которые отображаются)
+    const visibleLogRows = Array.from(document.querySelectorAll('.employee-log .logs-table tbody tr')).filter(row => {
+        return row.style.display !== 'none' && row.getAttribute('data-log-id');
+    });
+    const selectedWorkLogIds = visibleLogRows.map(row => row.getAttribute('data-log-id'));
+
+    if (selectedWorkLogIds.length === 0) {
+        alert("Нет видимых логов для экспорта.");
+        return;
+    }
+
+    // Проверка данных перед отправкой
+    console.log('Selected Employees:', selectedEmployees);
+    console.log('Selected Work Logs:', selectedWorkLogIds);
+
+    // Отправляем данные на сервер для экспорта
     fetch('/export_excel', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ employee_ids: selectedEmployees })
+        body: JSON.stringify({ employee_ids: selectedEmployees, work_log_ids: selectedWorkLogIds })
     })
     .then(response => {
         if (!response.ok) {
@@ -592,6 +609,7 @@ function exportExcel() {
         console.error('Ошибка при экспорте в Excel:', error);
     });
 }
+
 
 document.addEventListener('DOMContentLoaded', function() {
 

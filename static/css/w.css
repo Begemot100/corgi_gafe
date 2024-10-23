@@ -6,30 +6,50 @@
 
 }
 
+
+
 /* Левый блок (sidebar) */
 .sidebar {
     width: 100px;
     background-color: #f9f9f9;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: center; /* Центрируем элементы по горизонтали */
+    justify-content: flex-start; /* Элементы начинаются с верхней части */
     padding: 20px 0;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     border-radius: 12px;
-    position: fixed; /* Делаем блок фиксированным */
-    height: 100vh; /* Высота на всю страницу */
-    z-index: 10; /* Убедитесь, что блок будет поверх других элементов */
+    position: fixed;
+    height: 100vh;
+    z-index: 10;
 }
 
-/* Логотип внутри sidebar */
-.sidebar .logo img {
-    width: 50px;
+/* Центрирование логотипа и кнопки */
+.centered-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Центрируем по горизонтали */
+    gap: 20px; /* Пространство между элементами */
+}
+
+/* Логотип в верхней части */
+.sidebar .logo {
     margin-bottom: 20px;
 }
 
-.sidebar .sidebar-icon img {
-    width: 24px;
+.sidebar .logo img {
+    width: 50px;
+}
+
+/* Кнопка под логотипом */
+.sidebar .sidebar-icon {
     margin-top: 20px;
+}
+
+.sidebar .sidebar-icon img {
+    width: 32px;
+    display: block;
+    margin: 0 auto; /* Центрируем кнопку */
 }
 
 /* Основной контент */
@@ -87,7 +107,7 @@ header {
 
 }
 
-/* Стиль для чекбокса */
+
 /* Стиль для чекбокса */
 .checkbox-label {
     position: absolute;
@@ -127,7 +147,7 @@ header {
 
 /* Когда чекбокс выбран, отображаем внутренний круг */
 .checkbox-input:checked + .checkbox-label::after {
-    display: block;
+    display: block !important;
 }
 
 /* Удаляем любые стили наведения, которые могут скрывать чекбокс */
@@ -295,7 +315,7 @@ header {
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    max-width: 450px;
+    max-width: 550px;
     text-align: left;
     font-family: Arial, sans-serif;
 }
@@ -393,4 +413,10 @@ header {
     flex-direction: column; /* Выравниваем блоки сотрудников по вертикали */
     gap: 20px; /* Расстояние между сотрудниками */
     width: 100%; /* Устанавливаем ширину 100% */
+}
+.right-section .checkbox-label {
+    display: none !important; /* Полностью скрываем метку чекбокса (кружок) */
+    visibility: hidden !important;
+    opacity: 0 !important;
+
 }

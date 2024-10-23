@@ -19,15 +19,13 @@
                 <div class="logo">
                     <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
                 </div>
-                <nav>
-                    <ul>
-                        <li class="centered-block">
-                        <a href="/admin">
-                            <img src="{{ url_for('static', filename='images/img_1.png') }}" alt="Dashboard" style="width: 32px; height: 32px;">
-                        </a>
-                    </li>
-                </nav>
+                <div class="centered-block">
+                    <a href="/admin" class="sidebar-icon">
+                        <img src="{{ url_for('static', filename='images/img_1.png') }}" alt="Dashboard" style="width: 32px;">
+                    </a>
+                </div>
             </aside>
+
 
             <!-- Основной контент -->
             <div class="content">
@@ -160,7 +158,7 @@
                                             {% endfor %}
                                         </tbody>
                                     </table>
-                                       <div class="summary-container">
+                                       <div class="summary-container" id="summary-{{ employee.id }}">
                                             <p>Total Hours: <span id="total-hours-{{ employee.id }}">{{ employee.total_hours }}h</span></p>
                                             <p>Total Days: <span id="total-days-{{ employee.id }}">{{ employee.total_days }}</span></p>
                                             <p>Overtime: {{ employee.overtime | format_hours }}</p>

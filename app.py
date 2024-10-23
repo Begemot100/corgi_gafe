@@ -663,11 +663,15 @@ def update_holiday_status(id):
 
 @app.route('/export_excel', methods=['POST'])
 def export_excel():
-    # Получаем IDs выбранных сотрудников
+    # Получаем IDs выбранных сотрудников и логов работы
     employee_ids = request.json.get('employee_ids', [])
+    work_log_ids = request.json.get('work_log_ids', [])
 
-    if not employee_ids:
-        return jsonify({'error': 'Нет выбранных сотрудников'}), 400
+    logging.info(f"Полученные employee_ids: {employee_ids}")
+    logging.info(f"Полученные work_log_ids: {work_log_ids}")
+
+    if not employee_ids or not work_log_ids:
+        return jsonify({'error': 'Нет выбранных сотрудников или логов работы'}), 400
 
     # Получаем сотрудников по переданным ID
     employees = Employee.query.filter(Employee.id.in_(employee_ids)).all()
@@ -691,15 +695,21 @@ def export_excel():
     # Создаем DataFrame с данными сотрудников
     data = []
     for employee in employees:
+        # Фильтруем логи работы по переданным work_log_ids
+        filtered_work_logs = [log for log in employee.work_logs if str(log.id) in work_log_ids]
+
         # Подсчитываем количество дней каждого типа
         paid_holidays = sum(1 for log in employee.work_logs if log.holidays == 'Paid')
         unpaid_holidays = sum(1 for log in employee.work_logs if log.holidays == 'Unpaid')
         weekends = sum(1 for log in employee.work_logs if log.holidays == 'Weekend')
         working_days = sum(1 for log in employee.work_logs if log.holidays == 'Working day')
-        total_hours_worked = sum(log.worked_hours or 0 for log in employee.work_logs)
 
 
-        for log in employee.work_logs:
+        # Итоговое количество отработанных часов (учитывая Paid и исключая Unpaid дни)
+        total_hours_worked = sum(
+            log.worked_hours or 0 for log in employee.work_logs if log.holidays != 'Unpaid'
+        )
+        for log in filtered_work_logs:
             formatted_hours = decimal_hours_to_time(log.worked_hours)
             data.append({
                 'Full Name': employee.full_name,
@@ -712,7 +722,7 @@ def export_excel():
                 'Days Worked': ''  # Пропускаем итоговые строки до конца блока сотрудника
             })
 
-        # Итоговая строка по каждому сотруднику
+        # Добавляем итоговые строки
         data.append({
             'Full Name': '',
             'Position': '',
@@ -728,7 +738,6 @@ def export_excel():
             'Date': '',
             'Check In': '',
             'Check Out': '',
-            # 'Total Hours': '',
             'Holiday Type': 'Paid Holiday',
             'Days Worked': paid_holidays
         })
@@ -738,7 +747,6 @@ def export_excel():
             'Date': '',
             'Check In': '',
             'Check Out': '',
-            # 'Total Hours': '',
             'Holiday Type': 'Unpaid Holiday',
             'Days Worked': unpaid_holidays
         })
@@ -748,7 +756,6 @@ def export_excel():
             'Date': '',
             'Check In': '',
             'Check Out': '',
-            # 'Total Hours': '',
             'Holiday Type': 'Weekend',
             'Days Worked': weekends
         })
@@ -778,7 +785,6 @@ def export_excel():
         data.append({key: '' for key in data[0].keys()})
         data.append({key: '' for key in data[0].keys()})
 
-
     # Генерация Excel файла
     df = pd.DataFrame(data)
     output = BytesIO()
@@ -803,7 +809,6 @@ def export_excel():
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     return response
-
 
 @app.route('/edit_check_time/<int:log_id>', methods=['POST'])
 def edit_check_time(log_id):
@@ -1157,4 +1162,4 @@ if __name__ == '__main__':
     # scheduler_thread.start()
 
     # Запускаем Flask сервер
-    app.run(debug=True, port=5004)
+    app.run(debug=True, port=5000)
