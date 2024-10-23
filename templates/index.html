@@ -29,7 +29,11 @@
                         <img src="{{ url_for('static', filename='images/img_5.png') }}" alt="Export" style="width: 32px; height: 32px;">
                     </button>
                 </li>
-                <li><a href="#"></a></li>
+                <li class="centered-block">
+                    <a href="/dashboard">
+                        <img src="{{ url_for('static', filename='images/img_6.png') }}" alt='Dashboard' style="width: 32px; height: 32px;">
+                    </a>
+                </li>
                 <li><a href="#"></a></li>
             </ul>
         </nav>
@@ -203,27 +207,7 @@
     <script src="{{ url_for('static', filename='js/editHead.js') }}"></script>
 
 
-    <script>
-        function showAllEmployees() {
-            document.getElementById('section-title').textContent = ''; // Убираем заголовок секции
-            document.getElementById('all-employees').style.display = 'block';
-            document.getElementById('sala-employees').style.display = 'none';
-            document.getElementById('cocina-employees').style.display = 'none';
-        }
 
-        function showSalaEmployees() {
-            document.getElementById('section-title').textContent = 'Sala'; // Устанавливаем заголовок секции
-            document.getElementById('all-employees').style.display = 'none';
-            document.getElementById('sala-employees').style.display = 'block';
-            document.getElementById('cocina-employees').style.display = 'none';
-        }
 
-        function showCocinaEmployees() {
-            document.getElementById('section-title').textContent = 'Cocina'; // Устанавливаем заголовок секции
-            document.getElementById('all-employees').style.display = 'none';
-            document.getElementById('sala-employees').style.display = 'none';
-            document.getElementById('cocina-employees').style.display = 'block';
-        }
-    </script>
 </body>
 </html>
