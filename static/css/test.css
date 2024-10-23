@@ -1,45 +1,30 @@
+/* Стили для модального окна */
+
 .action-modal1 {
     display: none; /* Скрыто по умолчанию */
-    position: relative;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #FC8C86;
+    position: absolute; /* Модальное окно должно быть абсолютным */
+    background-color: white !important; /* Белый фон с приоритетом */
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1) !important; /* Тень с приоритетом */
+    padding: 10px !important;
+    border-radius: 5px !important;
+    z-index: 1000 !important; /* Приоритет для уровня наложения */
+    opacity: 1 !important; /* Полностью непрозрачное */
+    background-color: yellow !important;
+    border: 2px solid red;
 }
 
-.modal-content1 {
-    background-color: #fff;
-    margin: 10% auto;
-    padding: 20px;
-    border-radius: 12px;
-    width: 200px;
 
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+.action-modal ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
 }
 
-.form-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-
+.action-modal ul li {
+    padding: 8px;
+    cursor: pointer;
 }
 
-.edit-action {
+.action-modal ul li:hover {
     background-color: #f2f2f2;
-    color: #333;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.save-btn {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
 }

@@ -1,13 +1,14 @@
 /* Общий стиль для контейнера */
 .main-container {
     display: flex;
-    flex-direction: row;
+    flex-direction: column; /* Ставим основной контейнер вертикально */
     min-height: 100vh;
+
 }
 
 /* Левый блок (sidebar) */
 .sidebar {
-    width: 80px;
+    width: 100px;
     background-color: #f9f9f9;
     display: flex;
     flex-direction: column;
@@ -15,8 +16,12 @@
     padding: 20px 0;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 12px;
+    position: fixed; /* Делаем блок фиксированным */
+    height: 100vh; /* Высота на всю страницу */
+    z-index: 10; /* Убедитесь, что блок будет поверх других элементов */
 }
 
+/* Логотип внутри sidebar */
 .sidebar .logo img {
     width: 50px;
     margin-bottom: 20px;
@@ -34,8 +39,8 @@
     background-color: #f4f4f9;
     border-radius: 12px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-left: 100px; /* Делаем место для sidebar */
 }
-
 /* Стили для заголовка */
 header {
     display: flex;
@@ -68,23 +73,21 @@ header {
 
 /* Остальные стили страницы */
 .employee-log {
-    max-width: 100%; /* Убедитесь, что блоки не выходят за пределы */
-
-    position: relative;
+    width: 98%; /* Убедитесь, что блок занимает всю ширину */
     background-color: #fff;
     border-radius: 14px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     margin-bottom: 20px;
     padding: 10px;
-    z-index: 1;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
 
+}
 .employee-log:hover {
     transform: scale(1);
     box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+
 }
 
+/* Стиль для чекбокса */
 /* Стиль для чекбокса */
 .checkbox-label {
     position: absolute;
@@ -95,8 +98,10 @@ header {
     border: 2px solid #969696;
     border-radius: 50%;
     cursor: pointer;
+    display: block; /* Убедитесь, что чекбоксы всегда отображаются */
 }
 
+/* Прячем реальный чекбокс, но оставляем его для функциональности */
 .checkbox-input {
     display: none;
 }
@@ -105,6 +110,8 @@ header {
 .checkbox-input:checked + .checkbox-label {
     background-color: #969696;
 }
+
+/* Стили для внутреннего круга чекбокса (который появляется при выборе) */
 .checkbox-label::after {
     content: '';
     position: absolute;
@@ -115,13 +122,19 @@ header {
     height: 10px;
     border-radius: 50%;
     background-color: #fff;
-    display: none;
+    display: none; /* Изначально внутренний круг не виден */
 }
 
-/* Отображаем внутренний круг при выборе */
+/* Когда чекбокс выбран, отображаем внутренний круг */
 .checkbox-input:checked + .checkbox-label::after {
     display: block;
 }
+
+/* Удаляем любые стили наведения, которые могут скрывать чекбокс */
+.employee-log:hover .checkbox-label {
+    opacity: 1; /* Убедитесь, что видимость всегда полная */
+}
+
 
 /* Кнопка с троеточием */
 .dot-icon {
@@ -208,15 +221,11 @@ header {
 }
 
 /* Блок итогов */
-.summary-container {
-    align-self: flex-start; /* Убедитесь, что блок с итогами располагается корректно */
-}
 
 
 .summary-container p {
     margin: 5px 0;
     font-size: 14px;
-        align-self: flex-start; /* Убедитесь, что блок с итогами располагается корректно */
 
 }
 
@@ -272,22 +281,21 @@ header {
 }
 
 .logs-table {
-    width: 80%; /* Растягивает таблицу на всю доступную ширину */
+    width: 100%; /* Растягивает таблицу на всю доступную ширину */
     flex-grow: 1; /* Позволяет таблице занимать все доступное пространство */
     border-collapse: collapse;
     background-color: #fff;
     border-radius: 12px;
-
 }
 
 
 .summary-container {
 
     background-color: white;
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    max-width: 350px;
+    max-width: 450px;
     text-align: left;
     font-family: Arial, sans-serif;
 }
@@ -344,10 +352,6 @@ header {
     color: white;
 }
 /* Стиль для ячейки с чекбоксом */
-.checkbox-header,
-.checkbox-cell {
-    display: none;
-}
 
 .select-all-btn {
     margin-top: 10px;
@@ -360,9 +364,6 @@ header {
 }
 
 
-.calendar-container {
-    margin-top: 10px;
-}
 
 .calendar-input {
     display: block;
@@ -387,8 +388,9 @@ header {
     height: auto; /* Сохраняем пропорции */
 }
 /* Контейнер для employee-log элементов */
-.work-logs {
+ .work-logs {
     display: flex;
-    flex-direction: column; /* Устанавливаем вертикальное выравнивание */
-    gap: 20px; /* Добавляем отступы между блоками */
+    flex-direction: column; /* Выравниваем блоки сотрудников по вертикали */
+    gap: 20px; /* Расстояние между сотрудниками */
+    width: 100%; /* Устанавливаем ширину 100% */
 }

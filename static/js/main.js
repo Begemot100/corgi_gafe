@@ -53,18 +53,24 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Function to open the Action Modal for Edit/Delete
-function openActionModal(employeeId) {
+function openActionModal(event,employeeId) {
     const actionModal = document.getElementById('action-modal1');
-    actionModal.style.display = 'flex';
+//    actionModal.style.display = 'flex';
+    const buttonRect = event.target.getBoundingClientRect();
+// Устанавливаем позицию модального окна рядом с кнопкой троеточие
+    actionModal.style.top = `${buttonRect.top + window.scrollY + buttonRect.height}px`;
+    actionModal.style.left = `${buttonRect.left + window.scrollX - actionModal.offsetWidth - 100}px`; // Отступ влево на 10px
 
-    // Attach employee ID to action buttons
+    actionModal.style.display = 'block';
+
+    // Привязываем действия к кнопкам модального окна
     document.getElementById('edit-action').onclick = () => {
-        openEditEmployeeModal(employeeId); // Открываем окно редактирования сотрудника
-        closeActionModal(); // Закрываем Action Modal
+        openEditEmployeeModal(employeeId); // Открываем модальное окно для редактирования
+        closeActionModal(); // Закрываем модальное окно действий
     };
     document.getElementById('delete-action').onclick = () => {
-        triggerDelete(employeeId); // Выполняем удаление сотрудника
-        closeActionModal(); // Закрываем Action Modal
+        triggerDelete(employeeId); // Удаляем сотрудника
+        closeActionModal(); // Закрываем модальное окно действий
     };
 }
 
@@ -73,6 +79,21 @@ function closeActionModal() {
     actionModal.style.display = 'none';
 }
 
+// Привязка события открытия модального окна к кнопкам троеточия
+document.querySelectorAll('.ellipsis-btn').forEach(button => {
+    button.addEventListener('click', (event) => {
+        const employeeId = event.target.dataset.id;
+        openActionModal(event, employeeId); // Открываем модальное окно рядом с кнопкой троеточие
+    });
+});
+
+// Закрытие модального окна при клике вне его области
+window.addEventListener('click', (event) => {
+    const actionModal = document.getElementById('action-modal1');
+    if (!actionModal.contains(event.target) && !event.target.classList.contains('ellipsis-btn')) {
+        closeActionModal();
+    }
+});
 // Function to open modal for editing an existing employee
 function openEditEmployeeModal(employeeId) {
     // Fetch employee data from server or use dataset

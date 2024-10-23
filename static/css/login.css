@@ -11,8 +11,8 @@ body {
 .container {
     background-color: white;
     padding: 60px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 36px;
+    box-shadow: 0px 2px 67.4px rgba(0, 0, 0, 0.09);
     width: 500px;
     text-align: center;
 }
@@ -43,13 +43,15 @@ input {
 
 button {
     width: 50%;
-    background-color: #ff6347;
+    background-color: #FC8C86;
     color: white;
     padding: 10px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
+    box-shadow: 0px 2px 67.4px rgba(0, 0, 0, 0.09);
+
 }
 
 button:hover {

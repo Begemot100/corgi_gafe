@@ -20,7 +20,7 @@ window.addEventListener('click', (event) => {
 });
 
 // Обработчик нажатия на кнопку экспорта
-document.querySelector('.export-button').addEventListener('click', () => {
+document.querySelector('.export-ellipsis-btn').addEventListener('click', () => {
     openExportModal();
 
     // После завершения загрузки экспортного файла закрываем модальное окно
