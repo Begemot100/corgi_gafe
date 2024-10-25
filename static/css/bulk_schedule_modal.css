@@ -1,0 +1,57 @@
+.bulk-schedule-modal {
+    display: block;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Центровка по вертикали и горизонтали */
+}
+
+.bulk-schedule-modal .modal-content {
+    background-color: white;
+    padding: 60px; /* Увеличение отступов как у основного контейнера */
+    border-radius: 36px; /* Радиус скругления как у контейнера */
+    box-shadow: 0px 2px 67.4px rgba(0, 0, 0, 0.09); /* Тень как у контейнера */
+    width: 500px; /* Ширина как у контейнера */
+    text-align: center; /* Текст по центру */
+    margin: 0 auto; /* Центрирование по горизонтали */
+}
+
+.bulk-schedule-modal button {
+    background-color: #FC8C86;
+    color: white; /* Белый текст */
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold; /* Жирный текст */
+    cursor: pointer;
+    border-radius: 4px; /* Радиус как у кнопки в контейнере */
+    width: 50%; /* Ширина кнопки как у основной */
+    margin-top: 20px; /* Отступ сверху */
+    box-shadow: 0px 2px 67.4px rgba(0, 0, 0, 0.09); /* Тень как у контейнера */
+    transition: background-color 0.3s ease; /* Плавное изменение фона при наведении */
+}
+
+.bulk-schedule-modal button:hover {
+    background-color: #d45d41; /* Более темный оттенок при наведении */
+}
+
+.bulk-schedule-close {
+    font-size: 24px;
+    font-weight: bold;
+    color: #888;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    cursor: pointer;
+}
+
+.bulk-schedule-close:hover {
+    color: #FC8C86; /* Цвет иконки закрытия при наведении */
+}

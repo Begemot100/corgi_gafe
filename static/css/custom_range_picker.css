@@ -1,0 +1,79 @@
+#customRangePicker {
+    display: none;
+    flex-direction: column;
+    padding: 10px;
+    background-color: white; /* Белый фон для календаря */
+    border: 1px solid #ccc;
+    border-radius: 10px; /* Округленные углы */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Тень для календаря */
+    width: 250px; /* Ширина календаря */
+    font-family: Arial, sans-serif; /* Установим простой и читаемый шрифт */
+}
+
+/* Стили для заголовков (месяц и год) */
+#customRangePicker label {
+    font-weight: bold;
+    font-size: 18px; /* Увеличим размер шрифта */
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* Стили для полей ввода дат */
+#customRangePicker input[type="date"] {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+/* Стили для кнопки */
+#customRangePicker button {
+    background-color: #FC8C86;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%; /* Кнопка будет занимать всю ширину */
+    font-size: 14px;
+}
+
+/* Эффект при наведении */
+#customRangePicker button:hover {
+    background-color: #E57368;
+}
+
+/* Стили для дней недели */
+#customRangePicker .days-of-week {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 10px 0;
+}
+
+/* Стили для дней */
+#customRangePicker .day {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    margin: 5px;
+    cursor: pointer;
+    border-radius: 50%; /* Округлённые дни */
+    background-color: #f1f1f1;
+}
+
+#customRangePicker .day:hover {
+    background-color: #e0e0e0;
+}
+
+/* Активный день */
+#customRangePicker .day.active {
+    background-color: #4CAF50;
+    color: white;
+}

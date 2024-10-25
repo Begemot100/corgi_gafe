@@ -1,0 +1,295 @@
+/* Общий стиль для контейнера */
+.main-container {
+    display: flex;
+    flex-direction: row;
+    min-height: 100vh;
+}
+
+/* Левый блок (sidebar) */
+.sidebar {
+    width: 80px;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+}
+
+.sidebar .logo img {
+    width: 50px;
+    margin-bottom: 20px;
+}
+
+.sidebar .sidebar-icon img {
+    width: 24px;
+    margin-top: 20px;
+}
+
+/* Основной контент */
+.content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f4f4f9;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Заголовок */
+header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+}
+
+/* Кнопка Logout */
+.logout-btn {
+    color: #ff5a5f;
+    font-weight: bold;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    background-color: transparent;
+    border: 1px solid #ff5a5f;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.logout-btn:hover {
+    background-color: #ff5a5f;
+    color: #fff;
+}
+
+/* Employee Log */
+.employee-log {
+    max-width: 100%;
+    background-color: #fff;
+    border-radius: 14px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+    padding: 10px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.employee-log:hover {
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+}
+.checkbox-label {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 15px;
+    height: 15px;
+    border: 2px solid #969696;
+    border-radius: 50%;
+    cursor: pointer;
+    display: block; /* Убедиться, что чекбокс всегда отображается */
+}
+/* Чекбокс (скрыт) */
+.checkbox-label {
+    display: none;
+}
+.checkbox-input {
+    display: none; /* Это оставляем, если не нужно показывать реальный input */
+}
+
+/* Внутренний круг чекбокса при выборе */
+.checkbox-input:checked + .checkbox-label {
+    background-color: #969696;
+}
+
+.checkbox-label::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #fff;
+    display: none; /* Изначально внутренний круг не виден */
+}
+
+/* Когда чекбокс выбран, внутренний круг отображается */
+.checkbox-input:checked + .checkbox-label::after {
+    display: block !important;
+}
+/* Кнопка с троеточием */
+.dot-icon {
+    background-color: #d9d9d9;
+    border: none;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 7px;
+}
+
+.dot-icon:hover {
+    background-color: #b5b5b5;
+}
+
+/* Правый блок с Select и троеточием */
+.right-section {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: absolute;
+    bottom: 10%;
+    right: 50%;
+    width: 200px;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    z-index: 9999;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-options {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.modal-options li {
+    margin: 0;
+}
+
+.modal-options button {
+    background-color: transparent;
+    border: none;
+    font-size: 14px;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+.modal-options button:hover {
+    background-color: #f5f5f5;
+}
+
+/* Блок итогов */
+/* Блок Summary с уникальным идентификатором */
+#summary-{{ employee.id }} {
+    background-color: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    max-width: 220px;
+    text-align: left;
+    font-family: Arial, sans-serif;
+}
+
+#summary-{{ employee.id }} p {
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+#paid-holidays-{{ employee.id }}, #unpaid-holidays-{{ employee.id }} {
+    border-radius: 4px;
+    padding: 5px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    font-weight: bold;
+    display: block;
+    text-align: center;
+}
+
+#paid-holidays-{{ employee.id }} {
+    background-color: #FEDB5B;
+}
+
+#unpaid-holidays-{{ employee.id }} {
+    background-color: #DD8137;
+    color: white;
+}
+
+
+/* Таблица логов */
+.logs-table {
+    width: 50%;
+    border-collapse: collapse;
+    background-color: #fff;
+    border-radius: 12px;
+}
+
+.logs-table th, .logs-table td {
+    padding: 12px 15px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Стили для фильтров */
+.filter-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.left-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-btn.active {
+    background-color: #FFA08B;
+}
+
+.calendar-container {
+    margin-top: 10px;
+}
+
+.calendar-input {
+    display: block;
+    margin: 5px 0;
+}
+
+/* Адаптивное изображение */
+.centered-block {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+.centered-block img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Адаптивная верстка */
+@media screen and (max-width: 768px) {
+    .filter-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .right-section {
+        justify-content: flex-start;
+    }
+}

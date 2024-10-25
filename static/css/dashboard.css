@@ -1,0 +1,196 @@
+/* Общие стили */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.logo {
+    margin: 0 auto;
+}
+.logo img {
+    width: 70px; /* Устанавливаем нужную ширину */
+    height: auto; /* Высота изменяется пропорционально ширине */
+}
+
+.current-date {
+    font-size: 18px;
+    font-weight: bold;
+}
+.logout a {
+    color: #ff6347;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Контейнер дашборда */
+.dashboard-container {
+    padding: 30px;
+}
+
+.employee-card {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    padding: 15px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0px 4px 10px 2px rgba(0, 0, 0, 0.25);
+}
+
+.employee-info {
+    display: flex;
+    align-items: flex-start; /* Выровнять элементы по верхнему краю */
+    gap: 20px; /* Расстояние между элементами */
+    flex-grow: 1;
+}
+
+.employee-name,
+.employee-position,
+.employee-phone {
+    width: 250px; /* Установите одинаковую ширину для выравнивания */
+    font-size: 16px;
+}
+
+.employee-name {
+    font-weight: bold;
+}
+
+.employee-position {
+    color: #888;
+}
+
+.employee-phone {
+    color: #333;
+}
+
+/* Общие стили для кнопок */
+.check-in-out {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Обеспечивает равномерное распределение элементов */
+}
+
+/* Фиксированная ширина для кнопок и времени */
+.check-in-btn,
+.check-out-btn,
+.lunch-start-btn,
+.lunch-end-btn {
+    width: 100px; /* Задайте фиксированную ширину кнопкам */
+    margin-right: 10px; /* Промежуток между кнопками */
+    cursor: pointer;
+}
+
+.check-in-time,
+.lunch-start-time,
+.lunch-end-time,
+.check-out-time,
+.daily-hours,
+.monthly-hours {
+    width: 80px; /* Фиксированная ширина для текстовых данных */
+    text-align: center; /* Центрирование текста */
+    margin-left: 10px; /* Промежуток между текстом и кнопками */
+}
+
+.check-in-out button {
+    background-color: #ff6347; /* Цвет для Check-in */
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 15px;
+    cursor: pointer;
+    min-width: 100px; /* Минимальная ширина кнопок */
+    text-align: center; /* Центрируем текст */
+    white-space: nowrap; /* Запрет на перенос текста */
+}
+
+.check-in-out button.check-out-btn,
+.check-in-out button.lunch-end-btn {
+    background-color: #919191; /* Цвет для Check-out и Lunch End */
+}
+
+.check-in-out button:hover {
+    background-color: #919191; /* Цвет при наведении для Check-in */
+}
+
+.check-in-out button.check-out-btn:hover,
+.check-in-out button.lunch-end-btn:hover {
+    background-color: #ff6347; /* Цвет при наведении для Check-out и Lunch End */
+}
+
+.check-in-out span {
+    margin-right: 15px;
+}
+
+.daily-hours, .monthly-hours {
+    margin-left: 10px;
+    font-size: 14px;
+}
+
+/* Медиазапрос для экранов 10.9 дюйма и меньше */
+@media (max-width: 820px) {
+    .dashboard-container {
+        padding: 15px; /* Уменьшаем отступы */
+    }
+
+    .employee-card {
+        flex-direction: column; /* Перестраиваем блоки вертикально */
+        align-items: flex-start; /* Выровнять элементы по левому краю */
+        padding: 10px; /* Уменьшаем отступы */
+    }
+
+    .employee-info {
+        gap: 10px; /* Уменьшаем расстояние между элементами */
+        width: 100%; /* Растягиваем на всю ширину */
+    }
+
+    .employee-name,
+    .employee-position,
+    .employee-phone {
+        width: 100%; /* Ширина элементов теперь адаптивна */
+        font-size: 14px; /* Уменьшаем шрифты для меньшего экрана */
+    }
+
+    .check-in-out {
+        width: 100%; /* Растягиваем блок с кнопками на всю ширину */
+        flex-direction: column; /* Перестраиваем кнопки вертикально */
+        align-items: flex-start; /* Выровнять элементы по левому краю */
+    }
+
+    .check-in-btn,
+    .check-out-btn,
+    .lunch-start-btn,
+    .lunch-end-btn {
+        width: 100%; /* Растягиваем кнопки на всю ширину */
+        margin: 5px 0; /* Увеличиваем отступы сверху и снизу */
+    }
+
+    .check-in-time,
+    .lunch-start-time,
+    .lunch-end-time,
+    .check-out-time,
+    .daily-hours,
+    .monthly-hours {
+        margin-left: 0; /* Убираем лишние отступы для времени */
+        width: 100%; /* Растягиваем текстовые элементы на всю ширину */
+        text-align: left; /* Выравниваем по левому краю */
+        margin-top: 5px; /* Добавляем немного отступа сверху */
+    }
+
+    .logo img {
+        width: 50px; /* Уменьшаем размер логотипа на маленьких экранах */
+    }
+
+    .current-date {
+        font-size: 14px; /* Уменьшаем размер даты */
+    }
+}
