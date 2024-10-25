@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <title>Employee Dashboard</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+    <!-- Header with Corgi Cafe logo and current date -->
+    <div class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
+        </div>
+        <div class="current-date">
+            {{ current_date }}  <!-- Отображение текущей даты -->
+        </div>
+    </div>
+
+    <!-- Dashboard content -->
+    <div class="dashboard-container">
+        {% for employee in dashboard_data %}
+        <div class="employee-card">
+            <div class="employee-info">
+                <div class="employee-name">{{ employee.employee.full_name }}</div>
+                <div class="employee-position">{{ employee.employee.position }}</div>
+                <div class="employee-phone">{{ employee.employee.phone }}</div>
+            </div>
+            <div class="check-in-out">
+                <button class="check-in-btn" data-id="{{ employee.employee.id }}">Check-in</button>
+                <span class="check-in-time" id="check-in-time-{{ employee.employee.id }}">
+                    {{ '--:--' if employee.check_in_time == '00:00' or not employee.check_in_time else employee.check_in_time }}
+                </span>
+                <span class="check-out-time" id="check-out-time-{{ employee.employee.id }}">
+                    {{ '--:--' if employee.check_out_time == '00:00' or not employee.check_out_time else employee.check_out_time }}
+                </span>
+                <button class="check-out-btn" data-id="{{ employee.employee.id }}">Check-out</button>
+
+                <span class="daily-hours" id="daily-hours-{{ employee.employee.id }}">Daily: {{ "%.2f" | format(employee.daily_hours) }}h</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        // Check-in event
+        $('.check-in-btn').on('click', function() {
+            const id = $(this).data('id');
+            $.post('/check_in/' + id, function(response) {
+                if (response.check_in_time) {
+                    $('#check-in-time-' + id).text(response.check_in_time);
+                }
+            });
+        });
+
+        // Check-out event
+        $('.check-out-btn').on('click', function() {
+            const id = $(this).data('id');
+            $.post('/check_out/' + id, function(response) {
+                if (response.check_out_time) {
+                    $('#check-out-time-' + id).text(response.check_out_time);
+                    $('#daily-hours-' + id).text('Daily: ' + response.daily_hours.toFixed(2) + 'h');
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

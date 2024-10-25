@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/w.css') }}?v={{ current_time }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/filters.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_time_modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bulk_schedule_modal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom_range_picker.css') }}">
+    <title>Work Logs</title>
+</head>
+<body>
+    <div class="page-container"> <!-- Общий контейнер -->
+        <div class="main-container">
+            <!-- Левый блок с логотипом и иконкой -->
+            <aside class="sidebar">
+                <div class="logo">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
+                </div>
+                <div class="centered-block">
+                    <a href="/admin" class="sidebar-icon">
+                        <img src="{{ url_for('static', filename='images/img_1.png') }}" alt="Dashboard" style="width: 32px;">
+                    </a>
+                </div>
+            </aside>
+
+
+            <!-- Основной контент -->
+            <div class="content">
+                <header>
+                    <div class="header-right">
+                        <a href="/logout" class="logout-btn">Logout</a>
+                    </div>
+                </header>
+
+                <main class="work-container">
+                    <h1>Employees</h1>
+                    <!-- Модальное окно для редактирования -->
+                    <div id="editTimeModalContainer"></div>
+                    {% include 'edit_modal.html' %}
+
+                    <!-- Панель фильтров -->
+                    <div class="filter-bar">
+                        <div class="left-section">
+                            <div class="dropdown">
+                                <button id="filterButton" class="filter-btn" onclick="toggleDropdown('dropdown-menu')">Hoy</button>
+                                <div id="dropdown-menu" class="dropdown-menu">
+                                    <a href="javascript:void(0);" onclick="applyFilter('today', 'Hoy')">Hoy</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('yesterday', 'Ayer')">Ayer</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('last_7_days', 'Últimos 7 días')">Últimos 7 días</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('last_30_days', 'Últimos 30 días')">Últimos 30 días</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('previous_month', 'Mes Anterior')">Mes Anterior</a>
+                                    <a href="javascript:void(0);" onclick="applyFilter('current_month', 'Este mes')">Este mes</a>
+                                    <a href="javascript:void(0);" onclick="toggleFilter('custom', 'Rango Personalizado')">Rango Personalizado</a>
+                                </div>
+                            </div>
+
+                            <div id="customRangePicker" class="calendar-wrapper" style="display: none;">
+                                <label for="startDate">Desde:</label>
+                                <input type="date" id="startDate" name="startDate">
+                                <label for="endDate">Hasta:</label>
+                                <input type="date" id="endDate" name="endDate">
+                                <button onclick="applyCustomRange()">Aplicar</button>
+                            </div>
+
+                            <div class="calendar-container">
+                                <input type="date" id="datePicker" class="calendar-input" style="display: none;" onchange="applyFilterByDate(this.value)">
+                                <span id="selectedDateDisplay" style="margin-left: 10px; font-weight: bold; color: black;"></span>
+                            </div>
+
+                            <div class="dropdown">
+                                <button class="filter-btn" onclick="toggleDropdown('group-dropdown-menu')">Grupo</button>
+                                <div id="group-dropdown-menu" class="dropdown-menu">
+                                    <a href="javascript:void(0);" onclick="applyGroupFilter('All')">All</a>
+                                    <a href="javascript:void(0);" onclick="applyGroupFilter('cocina')">Cocina</a>
+                                    <a href="javascript:void(0);" onclick="applyGroupFilter('sala')">Sala</a>
+
+                                </div>
+                                <button class="filter-btn" onclick="resetFilter()">Сбросить фильтр</button>
+                            </div>
+                        </div>
+
+                        <div class="right-section">
+                            <span>Select</span>
+
+                            <button class="dot-icon" onclick="toggleModal(event)">
+                                <img src="/static/images/img_3.png" alt="icon" style="width: 20px; height: 20px;">
+                            </button>
+
+                            <div id="modal" class="modal">
+                                <div class="modal-content">
+                                    <span class="close" onclick="closeModal()">&times;</span>
+                                    <ul class="modal-options">
+                                        <li><button onclick="selectAllEmployees()">Select All</button></li>
+                                        <button onclick="getSelectedEmployeeAndOpenEditModal()">Edit</button>
+                                        <li><button onclick="exportExcel()">Export Excel</button></li>
+                                        <li><button class="edit-schedule-btn" onclick="toggleCheckboxes()">Edit Schedule</button></li>
+<!--                                        <li><button onclick="deleteEmployee()">Delete</button></li>-->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Таблица сотрудников -->
+                    <div class="work-logs">
+                        {% for employee in employees %}
+                            <div class="employee-log" data-employee-id="{{ employee.id}}">
+                                <input type="checkbox" class="checkbox-input" id="employee_{{ employee.id }}">
+                                <label class="checkbox-label" for="employee_{{ employee.id }}"></label>
+                                <h2>{{ employee.full_name }} - {{ employee.position }}</h2>
+                                <div class="logs-container">
+                                    <table class="logs-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Entra</th>
+                                                <th>Salida</th>
+                                                <th>Total</th>
+                                                <th>Type of the day</th>
+                                                <th class="checkbox-header" style="display: none;"></th> <!-- Заголовок для чекбоксов -->
+                                            </tr>
+                                        </thead>
+                                        <!-- Тело таблицы с логами -->
+                                        <tbody>
+                                            {% for log in employee.work_logs %}
+                                                <tr class="log-row-{{ employee.id }}" data-log-id="{{ log.id }}" data-log-date="{{ log.log_date.strftime('%Y-%m-%d') }}">
+                                                    <td class="log-date">{{ log.log_date.strftime('%Y-%m-%d') }}</td>
+
+                                                    <!-- Время check_in -->
+                                                    <td class="check-in-time" id="check-in-time-{{ log.id }}">
+                                                        {{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}
+                                                    </td>
+
+                                                    <!-- Время check_out -->
+                                                    <td class="check-out-time" id="check-out-time-{{ log.id }}">
+                                                        {{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}
+                                                    </td>
+
+                                                    <!-- Отображение отработанных часов -->
+                                                    <td class="daily-hours" id="daily-hours-{{ log.id }}">
+                                                        {{ log.worked_hours | format_hours if log.worked_hours else '0 hours' }}
+                                                    </td>
+
+                                                    <td>
+                                                        <select id="log-{{ log.id }}" name="holiday_type" onchange="updateHolidayStatus('{{ log.id }}', this.value)">
+                                                            <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Working day</option>
+                                                            <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Paid</option>
+                                                            <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>Unpaid</option>
+                                                            <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
+                                                        </select>
+                                                    </td>
+                                                    <td class="checkbox-cell" style="display: none;text-align: center;">
+                                                        <input type="checkbox" class="date-checkbox" id="date-checkbox-{{ log.id }}">
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                       <div class="summary-container" id="summary-{{ employee.id }}">
+                                            <p>Total Hours: <span id="total-hours-{{ employee.id }}">{{ employee.total_hours }}h</span></p>
+                                            <p>Total Days: <span id="total-days-{{ employee.id }}">{{ employee.total_days }}</span></p>
+                                            <p>Overtime: {{ employee.overtime | format_hours }}</p>
+
+                                            <div class="holiday-status">
+                                                <div class="paid-holidays">
+                                                    <span>Paid Holidays: </span>
+                                                    <p id="paid-holidays-{{ employee.id }}">{{ employee.paid_holidays }}</p>
+                                                </div>
+                                                <div class="unpaid-holidays">
+                                                    <span>Unpaid Holidays: </span>
+                                                    <p id="unpaid-holidays-{{ employee.id }}">{{ employee.unpaid_holidays }}</p>
+                                                </div>
+                                            </div>
+                                             <button class="select-all-btn custom-select-all" onclick="selectAllEmployeeCheckboxes('{{ employee.id }}')" style="display: none;">Выбрать все</button>
+                                             <button class="new-schedule-btn custom-new-schedule" onclick="openNewScheduleModal()" style="display: none;">New Schedule</button>
+                                        </div>
+
+
+                                    </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/work.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/bulk_schedule_edit.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/filters-selection.js') }}"></script>
+
+    <!--        <script src="/static/js/modal-handling.js"></script>-->
+    <!--        <script src="/static/js/logs-handling.js"></script>-->
+    <!--        <script src="/static/js/filters-selection.js"></script>-->
+    <!--        <script src="/static/js/export.js"></script>-->
+    <!--        <script src="/static/js/utils.js"></script>-->
+
+
+        <div id="newscheduleModal" class="modal" style="display: none;">
+            {% include 'newschedule.html' %}
+        </div>
+    </div> <!-- Закрытие общего контейнера -->
+</body>
+</html>
