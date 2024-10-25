@@ -3,7 +3,7 @@
 let selectedLogId = null;
 let employeeLogs = {}; // Сохраняем логи по датам для текущего сотрудника
 let currentEmployeeId = null; // Сохраняем текущего выбранного сотрудника
-//let allSelected = false;
+
 
 
 // Функция для открытия/закрытия выбранного меню по id
@@ -69,13 +69,6 @@ document.querySelectorAll('.ellipsis-btn').forEach(button => {
         openEditModal(event, employeeId); // Открываем модальное окно при клике на троеточие
     });
 });
-// Функция для закрытия модального окна
-//function closeEditModal() {
-//    const editModal = document.getElementById('editTimeModal');
-//    if (editModal) {
-//        editModal.style.display = 'none';
-//    }
-//}
 
 function formatDate(date) {
     if (!date) {
@@ -153,12 +146,6 @@ function updateSelectedLogData(selectedDate, logs) {
 }
 
 
-//function closeEditModal() {
-//    const editModal = document.getElementById('editTimeModal');
-//    if (editModal) {
-//        editModal.style.display = 'none';
-//    }
-//}
 
 // Получение ID выбранного сотрудника и открытие модального окна
 function getSelectedEmployeeAndOpenEditModal() {
@@ -185,7 +172,6 @@ function getSelectedEmployeeAndOpenEditModal() {
     }
 }
 
-// Функция загрузки и отображения модального окна для редактирования
 
 
 
@@ -218,7 +204,29 @@ function updateSelectedLogData(selectedDate, logs) {
 
 // Обновление статуса праздника
 function updateHolidayStatus(logId, status) {
+    // Логируем статус для отладки
+    console.log(`Статус передан в updateHolidayStatus: ${status}`);
+
+    // Если выбран статус 'unpaid', запрашиваем подтверждение
+    if (status === 'unpaid') {
+        const confirmReset = confirm("Вы уверены, что хотите изменить статус на Unpaid? Это действие обнулит данные логов.");
+
+        if (confirmReset) {
+            console.log('Пользователь подтвердил изменение статуса на Unpaid.');
+            resetLogData(logId);  // Если пользователь подтвердил, обнуляем данные
+        } else {
+            console.log('Пользователь отменил действие.');
+            // Если отменили, возвращаем статус на предыдущий
+            const selectElement = document.getElementById(`log-${logId}`);
+            selectElement.value = 'workingday'; // Меняем статус обратно на рабочий день или другой по умолчанию
+            return; // Завершаем выполнение, если отменили действие
+        }
+    }
+
+    // Продолжаем обновление статуса на сервере
     const formattedStatus = status.replace(/(^|\s)\S/g, letter => letter.toUpperCase()).replace("Workingday", "Working day");
+
+    console.log(`Отправка данных на сервер для обновления статуса: ${formattedStatus}`);
 
     fetch(`/update_holiday_status/${logId}`, {
         method: 'POST',
@@ -230,21 +238,42 @@ function updateHolidayStatus(logId, status) {
     .then(response => response.json())
     .then(data => {
         if (data.message) {
-            console.log(`Статус для ${logId} обновлен: ${formattedStatus}`);
+            console.log(`Статус для ${logId} успешно обновлен: ${formattedStatus}`);
         } else {
             console.error('Ошибка при обновлении статуса');
         }
     })
     .catch(error => console.error('Ошибка:', error));
 }
-function formatWorkedHours(worked_hours) {
-    const hours = Math.floor(worked_hours);
-    const minutes = Math.round((worked_hours - hours) * 60);
-    return `${hours}h ${minutes}min`;
+
+// Функция для подтверждения и обнуления логов, если статус Unpaid
+function confirmAndResetLogData(logId, status) {
+    // Проверка, если статус Unpaid, запрашиваем подтверждение
+    if (status === 'Unpaid') {
+        const confirmReset = confirm("Вы уверены, что хотите изменить статус на Unpaid? Это действие обнулит данные логов.");
+
+        if (confirmReset) {
+            resetLogData(logId);  // Обнуляем данные, если подтверждено
+        } else {
+            return; // Отменяем действие, если нет подтверждения
+        }
+    }
+    // Продолжаем обновлять статус, если не Unpaid
+    updateHolidayStatus(logId, status);
 }
 
-//const formattedHours = formatWorkedHours(data.worked_hours);
-//dailyHoursElement.textContent = formattedHours;
+// Функция для обнуления полей check-in, check-out и total hours
+function resetLogData(logId) {
+    // Обнуляем время check-in и check-out
+    document.getElementById(`check-in-time-${logId}`).textContent = '--:--';
+    document.getElementById(`check-out-time-${logId}`).textContent = '--:--';
+
+    // Обнуляем отработанные часы
+    document.getElementById(`daily-hours-${logId}`).textContent = '0h 0min';
+
+    console.log(`Лог ${logId} был успешно обнулен.`);
+}
+
 
 function saveEditedTime() {
     const checkInTime = document.getElementById('editCheckIn').value;
@@ -391,114 +420,6 @@ function closeEditModal() {
 }
 
 
-//function recalculateAndUpdateTotalHours() {
-//    let totalHours = 0;
-//
-//    // Перебираем все элементы с классом `daily-hours` и проверяем статус
-//    document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
-//        const timeText = row.querySelector('.daily-hours').textContent.trim();
-//        const holidayStatus = row.querySelector('select[name="holiday_type"]').value;
-//
-//        if (holidayStatus !== 'Unpaid') { // Если статус не Unpaid, то добавляем в общую сумму
-//            const [hours, minutes] = timeText.split('h').map(part => parseInt(part.trim(), 10) || 0);
-//            totalHours += hours + (minutes / 60);
-//        }
-//    });
-//
-//    // Округляем до двух знаков после запятой
-//    const roundedTotalHours = parseFloat(totalHours.toFixed(2));
-//
-//    // Обновляем общее количество часов
-//    const totalHoursElement = document.querySelector('.total-hours-display');
-//    if (totalHoursElement) {
-//        const displayHours = Math.floor(roundedTotalHours);
-//        const displayMinutes = Math.round((roundedTotalHours % 1) * 60);
-//        totalHoursElement.textContent = `${displayHours}h ${displayMinutes}min`;
-//    }
-//}
-
-//// Функция для пересчета и обновления контейнера Summary
-//document.addEventListener('DOMContentLoaded', function () {
-//    // Функция для пересчета и обновления контейнера Summary
-//function recalculateAndUpdateSummary(employeeId) {
-//    let totalHours = 0;
-//    let totalDays = 0;
-//    let paidHolidays = 0;
-//    let unpaidHolidays = 0;
-//
-//    // Перебор всех логов сотрудника
-//    document.querySelectorAll(`.log-row-${employeeId}`).forEach(row => {
-//        const hoursText = row.querySelector('.daily-hours').textContent.trim();
-//        const [hours, minutes] = hoursText.split('h').map(part => parseInt(part.trim(), 10) || 0);
-//        totalHours += hours + (minutes / 60);
-//
-//        const holidayStatus = row.querySelector('select[name="holiday_type"]').value;
-//        if (holidayStatus === 'Paid') {
-//            paidHolidays++;
-//        } else if (holidayStatus === 'Unpaid') {
-//            unpaidHolidays++;
-//        }
-//        totalDays++;
-//    });
-//
-//    // Обновляем Total Hours
-//    document.getElementById(`total-hours-${employeeId}`).textContent = `${Math.floor(totalHours)}h ${Math.round((totalHours % 1) * 60)}min`;
-//
-//    // Обновляем Total Days
-//    document.getElementById(`total-days-${employeeId}`).textContent = totalDays;
-//
-//    // Обновляем Paid и Unpaid Holidays
-//    document.getElementById(`paid-holidays-${employeeId}`).textContent = paidHolidays;
-//    document.getElementById(`unpaid-holidays-${employeeId}`).textContent = unpaidHolidays;
-//}
-//
-//
-//    // Функция для пересчета Total Hours без перезагрузки
-//    function saveEditedTime() {
-//        const checkInTime = document.getElementById('editCheckIn').value;
-//        const checkOutTime = document.getElementById('editCheckOut').value;
-//
-//        console.log("Попытка сохранить данные:", {
-//            checkInTime: checkInTime,
-//            checkOutTime: checkOutTime,
-//            selectedLogId: selectedLogId
-//        });
-//
-//        if (selectedLogId) {
-//            fetch(`/update_check_time/${selectedLogId}`, {
-//                method: 'POST',
-//                headers: {
-//                    'Content-Type': 'application/json'
-//                },
-//                body: JSON.stringify({ check_in_time: checkInTime, check_out_time: checkOutTime })
-//            })
-//                .then(response => response.json())
-//                .then(data => {
-//                    console.log("Ответ от сервера:", data);
-//                    if (data && data.success) {
-//                        // Обновляем часы для текущего лога
-//                        const dailyHoursElement = document.getElementById(`daily-hours-${selectedLogId}`);
-//                        if (dailyHoursElement) {
-//                            const hours = Math.floor(data.worked_hours);
-//                            const minutes = Math.round((data.worked_hours % 1) * 60);
-//                            dailyHoursElement.textContent = `${hours}h ${minutes}min`;
-//                        }
-//
-//                        // Пересчитываем и обновляем Total Hours и Summary
-//                        recalculateAndUpdateSummary(currentEmployeeId);
-//                    } else {
-//                        console.error('Ошибка при сохранении времени:', data ? data.message : 'Неизвестная ошибка');
-//                    }
-//                })
-//                .catch(error => {
-//                    console.error('Ошибка при отправке запроса:', error);
-//                });
-//        } else {
-//            console.error('selectedLogId не установлен');
-//            alert('Не удалось сохранить изменения. Пожалуйста, выберите корректный лог.');
-//        }
-//    }
-//});
 
 
 function closeEditModal() {
@@ -519,25 +440,6 @@ function toggleDropdown(menuId) {
         console.error(`Элемент с id ${menuId} не найден`);
     }
 }
-//
-//function applyGroupFilter() {
-//    const cocinaChecked = document.getElementById('filterCocina').checked;
-//    const salaChecked = document.getElementById('filterSala').checked;
-//
-//    let groupFilters = [];
-//
-//    // Проверяем, какие группы выбраны
-//    if (cocinaChecked) groupFilters.push('cocina');
-//    if (salaChecked) groupFilters.push('sala');
-//
-//    // Перенаправляем на страницу с выбранными группами
-//    if (groupFilters.length > 0) {
-//        window.location.href = `/work?groups=${groupFilters.join(',')}`;
-//    } else {
-//        window.location.href = '/work'; // Если не выбрано ни одной группы, показываем всех сотрудников
-//    }
-//}
-
 
 
 function applyFilter(filterType) {
@@ -765,20 +667,11 @@ document.querySelector('.dot-icon').addEventListener('click', function(event) {
     modal.style.left = `${buttonRect.left + window.scrollX}px`;
 
 
-//    // Установка позиции модального окна
-//    const selectLabel = document.querySelector('.select-label');
-//    const labelRect = selectLabel.getBoundingClientRect();
-//
-//    // Расчет позиции модального окна
-//    modal.style.left = `${labelRect.left}px`; // Позиция по оси X
-//    modal.style.top = `${labelRect.bottom + window.scrollY}px`; // Позиция по оси Y с учетом прокрутки
 
-    // Показать модальное окно и оверлей
     modal.style.display = 'block';
 
 });
 
-// Закрытие модального окна
 
 
 function resetFilter() {
@@ -1000,17 +893,21 @@ function applyCustomRange() {
     }
 }
 
-//function applyCustomRange() {
-//    const startDate = document.getElementById('startDate').value;
-//    const endDate = document.getElementById('endDate').value;
-//
-//    if (startDate && endDate) {
-//        // Применяем диапазон дат, если выбран
-//        window.location.href = `/work?start_date=${startDate}&end_date=${endDate}`;
-//    } else {
-//        alert('Por favor, selecciona un rango de fechas válido.');
-//    }
-//}
+
+function confirmAndResetLogData(logId, status) {
+    // Проверяем, если статус Unpaid, запрашиваем подтверждение
+    if (status === 'Unpaid') {
+        const confirmReset = confirm("Вы уверены, что хотите изменить статус на Unpaid? Это действие обнулит данные логов.");
+
+        if (confirmReset) {
+            resetLogData(logId);  // Обнуляем данные, если подтверждено
+        } else {
+            return; // Отменяем действие, если нет подтверждения
+        }
+    }
+    // Продолжаем обновлять статус, если не Unpaid
+    updateHolidayStatus(logId, status);
+}
 
 function applyDateFilter() {
     const selectedDate = document.getElementById("datePicker").value;
@@ -1050,17 +947,7 @@ function toggleFilter(filterType, label) {
     // Обновляем кнопку фильтра для отображения текущего фильтра
     document.getElementById('filterButton').textContent = label;
 }
-//function filterLogsByDateRange(startDate, endDate) {
-//    document.querySelectorAll('.log-row').forEach(row => {
-//        const logDate = new Date(row.getAttribute('data-log-date'));
-//
-//        if (logDate >= new Date(startDate) && logDate <= new Date(endDate)) {
-//            row.style.display = '';  // Показываем лог
-//        } else {
-//            row.style.display = 'none';  // Скрываем лог, если он не попадает в диапазон
-//        }
-//    });
-//}
+
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('modal');
     const editTimeModal = document.getElementById('editTimeModal');
@@ -1074,4 +961,17 @@ window.addEventListener('click', function(event) {
     if (editTimeModal && editTimeModal.style.display === 'block' && !event.target.closest('.modal-content')) {
         editTimeModal.style.display = 'none';
     }
+});
+// Слушатель для изменения статуса отпуска
+document.querySelectorAll('select[name="holiday_type"]').forEach(select => {
+    select.addEventListener('change', function() {
+        const logRow = this.closest('tr');  // Используем селектор строки таблицы
+        if (logRow) {
+            const logId = logRow.getAttribute('data-log-id');  // Получаем ID лога
+            const status = this.value;
+            updateHolidayStatus(logId, status);  // Обновляем статус
+        } else {
+            console.error("log_row не найден");
+        }
+    });
 });
