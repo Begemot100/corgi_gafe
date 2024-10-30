@@ -163,37 +163,41 @@ button {
     gap: 10px; /* Отступы между карточками */
 
 }
-
-/* Employee card styling */
+/* Общая стилизация карточек сотрудников */
 .employee-card {
     display: flex;
-    justify-content: space-between; /* Равномерное распределение */
-    align-items: center;
     background-color: #fff;
     border-radius: 12px;
     padding: 15px;
     box-shadow: 0px 4px 10px 2px rgba(0, 0, 0, 0.25);
-    transition: box-shadow 0.3s ease;
-}
-.employee-card:hover {
-    transform: scale(1.01); /* Увеличение карточки до 105% */
-    box-shadow: 0px 6px 15px 4px rgba(0, 0, 0, 0.1); /* Увеличенная тень при наведении */
-}
-/* Employee info styles */
-.employee-info {
-    display: flex;
-    flex-grow: 1; /* Занять оставшееся пространство */
-    gap: 20px; /* Отступы между элементами в строке */
+    margin-bottom: 10px; /* Отступы между карточками */
+        flex-direction: row;
+        justify-content: flex-start;
+
+
 }
 
-/* Устанавливаем ширину для каждого поля */
+/* Стили для информации о сотруднике */
+.employee-info {
+    display: flex;
+    flex-wrap: nowrap; /* Запрещаем перенос на новую строку */
+}
+
+/* Устанавливаем фиксированную ширину для каждого поля */
 .employee-name,
 .employee-position,
 .employee-phone,
 .employee-nie,
-.employee-email {
-    min-width: 180px; /* Увеличена ширина для выравнивания */
+.employee-email,
+.employee-working-hours {
+    width: 250px !important; /* Фиксированная ширина */
     text-align: left; /* Выравнивание текста по левому краю */
+    margin-right: 15px; /* Отступ между элементами */
+}
+
+/* Удаляем последний отступ у последнего элемента */
+.employee-info > div:last-child {
+    margin-right: 0 !important; /* Убираем правый отступ для последнего элемента */
 }
 
 /* Employee action buttons */

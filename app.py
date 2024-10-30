@@ -74,6 +74,10 @@ class Employee(db.Model):
     monthly_hours = db.Column(db.Float, default=0)
     work_start_time = db.Column(db.Time, nullable=False)
     work_end_time = db.Column(db.Time, nullable=False)
+    total_hours = db.Column(db.Float, default=0)
+    total_days = db.Column(db.Integer, default=0)
+    paid_holidays = db.Column(db.Integer, default=0)
+    unpaid_holidays = db.Column(db.Integer, default=0)
 
     work_logs = db.relationship('WorkLog', backref='employee', cascade="all, delete-orphan", lazy=True)
 
@@ -225,9 +229,9 @@ def work():
     end_date_str = request.args.get('end_date')
 
     if start_date_str and end_date_str:
-        start_date_str = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-        logs = WorkLog.query.filter(WorkLog.log_date.between(start_date_str, end_date)).all()
+        logs = WorkLog.query.filter(WorkLog.log_date.between(start_date, end_date)).all()
     else:
         logs = WorkLog.query.all()
 
@@ -262,8 +266,6 @@ def work():
     if group_type:
         group_filters_list = [g.lower() for g in group_type.split(',')]
         employees = Employee.query.filter(func.lower(Employee.section).in_(group_filters_list)).all()
-        print(employees)
-        # Фильтруем сотрудников по выбранным группам
     else:
         employees = Employee.query.all()
 
@@ -288,17 +290,22 @@ def work():
 
         # Подсчет общего времени, отпусков и переработок
         total_hours = round(sum(log.worked_hours or 0 for log in employee_logs[employee.id] if log.holidays != 'Unpaid'), 2)
-        formatted_total_hours = format_hours_to_hm(total_hours)
+        total_days = len([log for log in employee_logs[employee.id] if log.holidays != 'Unpaid'])
+        paid_holidays = sum(1 for log in employee_logs[employee.id] if log.holidays == 'Paid')
+        unpaid_holidays = sum(1 for log in employee_logs[employee.id] if log.holidays == 'Unpaid')
 
-        employee.total_hours = formatted_total_hours
-        employee.total_days = len([log for log in employee_logs[employee.id] if log.holidays != 'Unpaid'])
-        employee.overtime = max(0, total_hours - (8 * employee.total_days))
+        # Сохранение данных summary в модель Employee
+        employee.total_hours = total_hours
+        employee.total_days = total_days
+        employee.paid_holidays = paid_holidays
+        employee.unpaid_holidays = unpaid_holidays
+        employee.overtime = max(0, total_hours - (8 * total_days))
 
-        # Подсчет отпусков
-        employee.paid_holidays = sum(1 for log in employee_logs[employee.id] if log.holidays == 'Paid')
-        employee.unpaid_holidays = sum(1 for log in employee_logs[employee.id] if log.holidays == 'Unpaid')
-
+    # Сохранение изменений в базе данных
     db.session.commit()
+
+    return render_template('work.html', employees=employees, current_time=current_time)
+
 
     # Передача данных на страницу work
     return render_template('work.html', employees=employees, work_logs=logs, current_time=current_time)
@@ -646,18 +653,27 @@ def update_holiday_status(id):
         if not work_log:
             return jsonify({'error': 'Запись не найдена'}), 404
 
+        # Обновляем статус дня
         work_log.holidays = new_status
+
+        # Обнуляем check-in и check-out, если статус "Unpaid"
+        if new_status == 'Unpaid':
+            work_log.check_in_time = None
+            work_log.check_out_time = None
+            work_log.worked_hours = 0  # Обнуляем количество отработанных часов
+
         try:
-            db.session.commit()
+            db.session.commit()  # Сохраняем изменения в базе данных
+            db.session.refresh(work_log)  # Обновляем данные для проверки
+            app.logger.info(f"Сохраненные данные: check_in_time={work_log.check_in_time}, check_out_time={work_log.check_out_time}, worked_hours={work_log.worked_hours}")
             return jsonify({'message': 'Статус выходного дня обновлен'}), 200
         except Exception as e:
-            db.session.rollback()
+            db.session.rollback()  # Откат изменений в случае ошибки
             app.logger.error(f"Ошибка при обновлении статуса: {e}")
             return jsonify({'error': 'Не удалось обновить статус'}), 500
 
     app.logger.warning(f"Неверный статус: {new_status}")
     return jsonify({'error': 'Неверный статус'}), 400
-
 
 @app.route('/export_excel', methods=['POST'])
 def export_excel():
@@ -1154,6 +1170,65 @@ def add_new_day_for_employees():
     db.session.commit()
 
 
+
+# Маршрут для добавления пустого лога
+@app.route('/add_empty_log', methods=['POST'])
+def add_empty_log():
+    data = request.get_json()
+    employee_id = data.get('employee_id')
+    date_str = data.get('date')
+
+    # Проверяем, что переданы employee_id и дата
+    if not employee_id or not date_str:
+        return jsonify({'success': False, 'message': 'Необходимо указать employee_id и дату'}), 400
+
+    # Парсим дату
+    try:
+        log_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'success': False, 'message': 'Неверный формат даты'}), 400
+
+    # Проверяем, существует ли уже лог на эту дату
+    existing_log = WorkLog.query.filter_by(employee_id=employee_id, log_date=log_date).first()
+    if existing_log:
+        return jsonify({'success': False, 'message': 'Лог на эту дату уже существует'}), 409  # Код 409 для конфликта
+
+    # Создаем новый лог с прочерками
+    new_log = WorkLog(
+        employee_id=employee_id,
+        log_date=log_date,
+        check_in_time=None,
+        check_out_time=None,
+        worked_hours=0,
+        holidays='Working day'
+    )
+
+    # Сохраняем лог в базе данных
+    db.session.add(new_log)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Пустой лог успешно добавлен'})
+
+@app.route('/api/log_totals', methods=['GET'])
+def get_log_totals():
+    employees = Employee.query.all()
+    totals = {}
+
+    for employee in employees:
+        logs = employee.work_logs
+        total_hours = sum(log.worked_hours or 0 for log in logs if log.holidays != 'Unpaid')
+        total_days = len([log for log in logs if log.holidays != 'Unpaid'])
+        paid_holidays = sum(1 for log in logs if log.holidays == 'Paid')
+        unpaid_holidays = sum(1 for log in logs if log.holidays == 'Unpaid')
+
+        totals[employee.id] = {
+            'total_hours': f"{int(total_hours)}h {int((total_hours % 1) * 60)}min",
+            'total_days': total_days,
+            'paid_holidays': paid_holidays,
+            'unpaid_holidays': unpaid_holidays
+        }
+    return jsonify(totals)
+
 if __name__ == '__main__':
     # Создаем и запускаем поток для планировщика
     # scheduler_thread = threading.Thread(target=run_scheduler)
@@ -1161,4 +1236,4 @@ if __name__ == '__main__':
     # scheduler_thread.start()
 
     # Запускаем Flask сервер
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5000)

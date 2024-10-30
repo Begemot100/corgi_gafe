@@ -1,5 +1,3 @@
-
-
 let selectedLogId = null;
 let employeeLogs = {}; // Сохраняем логи по датам для текущего сотрудника
 let currentEmployeeId = null; // Сохраняем текущего выбранного сотрудника
@@ -70,6 +68,7 @@ document.querySelectorAll('.ellipsis-btn').forEach(button => {
     });
 });
 
+
 function formatDate(date) {
     if (!date) {
         console.error('Date is undefined or null');
@@ -131,6 +130,16 @@ function loadEmployeeLogs(employeeId) {
         })
         .catch(error => console.error('Ошибка загрузки логов сотрудника:', error));
 }
+function resetLogData(logId) {
+    // Обнуляем время check-in и check-out
+    document.getElementById(`check-in-time-${logId}`).textContent = '--:--';
+    document.getElementById(`check-out-time-${logId}`).textContent = '--:--';
+
+    // Обнуляем отработанные часы
+    document.getElementById(`daily-hours-${logId}`).textContent = '0h 0min';
+
+    console.log(`Лог ${logId} был успешно обнулен.`);
+}
 
 function updateSelectedLogData(selectedDate, logs) {
     const selectedLog = logs.find(log => log.date === selectedDate);
@@ -173,9 +182,6 @@ function getSelectedEmployeeAndOpenEditModal() {
 }
 
 
-
-
-
 function updateSelectedLogData(selectedDate, logs) {
     console.log("Доступные логи:", logs);
     console.log("Выбранная дата:", selectedDate);
@@ -202,7 +208,6 @@ function updateSelectedLogData(selectedDate, logs) {
 }
 
 
-// Обновление статуса праздника
 function updateHolidayStatus(logId, status) {
     // Логируем статус для отладки
     console.log(`Статус передан в updateHolidayStatus: ${status}`);
@@ -246,32 +251,11 @@ function updateHolidayStatus(logId, status) {
     .catch(error => console.error('Ошибка:', error));
 }
 
-// Функция для подтверждения и обнуления логов, если статус Unpaid
-function confirmAndResetLogData(logId, status) {
-    // Проверка, если статус Unpaid, запрашиваем подтверждение
-    if (status === 'Unpaid') {
-        const confirmReset = confirm("Вы уверены, что хотите изменить статус на Unpaid? Это действие обнулит данные логов.");
 
-        if (confirmReset) {
-            resetLogData(logId);  // Обнуляем данные, если подтверждено
-        } else {
-            return; // Отменяем действие, если нет подтверждения
-        }
-    }
-    // Продолжаем обновлять статус, если не Unpaid
-    updateHolidayStatus(logId, status);
-}
-
-// Функция для обнуления полей check-in, check-out и total hours
-function resetLogData(logId) {
-    // Обнуляем время check-in и check-out
-    document.getElementById(`check-in-time-${logId}`).textContent = '--:--';
-    document.getElementById(`check-out-time-${logId}`).textContent = '--:--';
-
-    // Обнуляем отработанные часы
-    document.getElementById(`daily-hours-${logId}`).textContent = '0h 0min';
-
-    console.log(`Лог ${logId} был успешно обнулен.`);
+function formatWorkedHours(worked_hours) {
+    const hours = Math.floor(worked_hours);
+    const minutes = Math.round((worked_hours - hours) * 60);
+    return `${hours}h ${minutes}min`;
 }
 
 
@@ -420,8 +404,6 @@ function closeEditModal() {
 }
 
 
-
-
 function closeEditModal() {
     const editModal = document.getElementById('editTimeModal');
     if (editModal) {
@@ -440,6 +422,7 @@ function toggleDropdown(menuId) {
         console.error(`Элемент с id ${menuId} не найден`);
     }
 }
+
 
 
 function applyFilter(filterType) {
@@ -672,6 +655,7 @@ document.querySelector('.dot-icon').addEventListener('click', function(event) {
 
 });
 
+// Закрытие модального окна
 
 
 function resetFilter() {
@@ -894,20 +878,6 @@ function applyCustomRange() {
 }
 
 
-function confirmAndResetLogData(logId, status) {
-    // Проверяем, если статус Unpaid, запрашиваем подтверждение
-    if (status === 'Unpaid') {
-        const confirmReset = confirm("Вы уверены, что хотите изменить статус на Unpaid? Это действие обнулит данные логов.");
-
-        if (confirmReset) {
-            resetLogData(logId);  // Обнуляем данные, если подтверждено
-        } else {
-            return; // Отменяем действие, если нет подтверждения
-        }
-    }
-    // Продолжаем обновлять статус, если не Unpaid
-    updateHolidayStatus(logId, status);
-}
 
 function applyDateFilter() {
     const selectedDate = document.getElementById("datePicker").value;
@@ -962,7 +932,68 @@ window.addEventListener('click', function(event) {
         editTimeModal.style.display = 'none';
     }
 });
-// Слушатель для изменения статуса отпуска
+
+// Функция для добавления пустого лога, если не было чек-ина
+function addEmptyLogIfNotCheckedIn(employeeId, date) {
+    fetch('/add_empty_log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id: employeeId, date: date })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log(`Лог для сотрудника ${employeeId} за ${date} добавлен с прочерками.`);
+        } else {
+            console.error('Ошибка добавления пустого лога:', data.message);
+        }
+    })
+    .catch(error => console.error('Ошибка:', error));
+}
+
+// Проверка и добавление пустого лога, если чек-ин не сделан
+function checkAndAddEmptyLog() {
+    const currentDate = new Date().toISOString().split('T')[0];
+
+    document.querySelectorAll('.employee-log').forEach(employeeLog => {
+        const employeeId = employeeLog.getAttribute('data-employee-id');
+        let logExistsWithCheckIn = false;
+
+        employeeLog.querySelectorAll('.log-row').forEach(row => {
+            const logDate = row.getAttribute('data-log-date');
+            const checkInTime = row.querySelector('.check-in-time').textContent;
+            if (logDate === currentDate && checkInTime !== '--:--') {
+                logExistsWithCheckIn = true;
+            }
+        });
+
+        // Добавляем пустой лог, если чек-ин не был выполнен
+        if (!logExistsWithCheckIn) {
+            addEmptyLogIfNotCheckedIn(employeeId, currentDate);
+        }
+    });
+}
+
+// Создаем новый пустой лог для следующего дня
+function addNewDayLog() {
+    const nextDay = new Date();
+    nextDay.setDate(nextDay.getDate() + 1);
+    const nextDayString = nextDay.toISOString().split('T')[0];
+
+    document.querySelectorAll('.employee-log').forEach(employeeLog => {
+        const employeeId = employeeLog.getAttribute('data-employee-id');
+        addEmptyLogIfNotCheckedIn(employeeId, nextDayString);
+    });
+}
+
+// Запускаем проверку и добавление нового дня при загрузке
+window.addEventListener('load', () => {
+    checkAndAddEmptyLog(); // Проверка текущего дня
+    addNewDayLog();        // Создание нового лога для следующего дня
+});
+
+
+
 document.querySelectorAll('select[name="holiday_type"]').forEach(select => {
     select.addEventListener('change', function() {
         const logRow = this.closest('tr');  // Используем селектор строки таблицы
@@ -975,3 +1006,28 @@ document.querySelectorAll('select[name="holiday_type"]').forEach(select => {
         }
     });
 });
+function fetchAndUpdateTotals() {
+    fetch('/api/log_totals')
+        .then(response => response.json())
+        .then(data => {
+            // Обходим данные для каждого сотрудника и обновляем итоги в DOM
+            for (const [employeeId, totals] of Object.entries(data)) {
+                const totalHoursElement = document.getElementById(`total-hours-${employeeId}`);
+                const totalDaysElement = document.getElementById(`total-days-${employeeId}`);
+                const paidHolidaysElement = document.getElementById(`paid-holidays-${employeeId}`);
+                const unpaidHolidaysElement = document.getElementById(`unpaid-holidays-${employeeId}`);
+
+                if (totalHoursElement) totalHoursElement.textContent = totals.total_hours;
+                if (totalDaysElement) totalDaysElement.textContent = totals.total_days;
+                if (paidHolidaysElement) paidHolidaysElement.textContent = totals.paid_holidays;
+                if (unpaidHolidaysElement) unpaidHolidaysElement.textContent = totals.unpaid_holidays;
+            }
+        })
+        .catch(error => console.error('Ошибка при получении итогов логов:', error));
+}
+
+// Автоматически обновляем итоги каждые 10 секунд
+setInterval(fetchAndUpdateTotals, 5000);
+
+// Также можно обновить итоги при загрузке страницы
+document.addEventListener('DOMContentLoaded', fetchAndUpdateTotals);
