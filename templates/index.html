@@ -10,11 +10,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mainheader.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/editarhead.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/test.css') }}">
-
-
-
-
-
 </head>
 <body>
     <!-- Sidebar -->
@@ -61,7 +56,7 @@
                 <p>@corgicafe_bcn</p>
                 <p>WhatsApp: +34 695 279 140</p>
             </div>
-                <button id="edit-profile-btn" class="edit-profile-btn">Editar perfil</button>
+            <button id="edit-profile-btn" class="edit-profile-btn">Editar perfil</button>
         </section>
 
         <!-- Employee list -->
@@ -69,18 +64,20 @@
             <div class="employees-header">
                 <h2>Employees</h2>
                 <div class="filters-container">
-                    <button class="filter-btn" id="show-all">All</button>
-                    <button class="filter-btn" id="show-hall">Sala</button>
-                    <button class="filter-btn" id="show-kitchen">Cocina</button>
+                    <button class="filter-btn" id="show-all" onclick="showAllEmployees()">All</button>
+                    <button class="filter-btn" id="show-hall" onclick="showSalaEmployees()">Sala</button>
+                    <button class="filter-btn" id="show-kitchen" onclick="showCocinaEmployees()">Cocina</button>
                     <button class="new-employee-btn" id="open-modal-btn">+ New Employee</button>
                 </div>
             </div>
 
-            <!-- Cocina Сотрудники -->
-            <h2 class="section-title">Cocina</h2>
-            <div id="cocina-employees" class="employee-section">
-                {% for employee in kitchen_employees %}
-                    <div class="employee-card" data-section="Cocina">
+            <!-- Динамический заголовок для выбранной секции -->
+            <h2 id="section-title"></h2>
+
+            <!-- Контейнеры для сотрудников -->
+            <div id="all-employees">
+                {% for employee in employees %}
+                    <div class="employee-card" data-section="{{ employee.section }}">
                         <p>{{ employee.full_name }}</p>
                         <p>{{ employee.position }}</p>
                         <p>{{ employee.phone }}</p>
@@ -90,20 +87,13 @@
                         <p>{{ employee.end_date }}</p>
                         <p>{{ employee.email }}</p>
                         <button class="ellipsis-btn" data-id="{{ employee.id }}">⋮</button>
-<!--                        <button class="ellipsis-btn" onclick="openActionModal(event)">⋮</button> &lt;!&ndash; Троеточие &ndash;&gt;-->
-
-
                     </div>
-
-            </div>
                 {% endfor %}
             </div>
 
-            <!-- Sala Сотрудники -->
-            <h2 class="section-title">Sala</h2>
-            <div id="sala-employees" class="employee-section">
+            <div id="sala-employees" style="display: none;">
                 {% for employee in hall_employees %}
-                    <div class="employee-card" data-section="Sala">
+                    <div class="employee-card">
                         <p>{{ employee.full_name }}</p>
                         <p>{{ employee.position }}</p>
                         <p>{{ employee.phone }}</p>
@@ -114,7 +104,22 @@
                         <p>{{ employee.email }}</p>
                         <button class="ellipsis-btn" data-id="{{ employee.id }}">⋮</button>
                     </div>
+                {% endfor %}
+            </div>
 
+            <div id="cocina-employees" style="display: none;">
+                {% for employee in kitchen_employees %}
+                    <div class="employee-card">
+                        <p>{{ employee.full_name }}</p>
+                        <p>{{ employee.position }}</p>
+                        <p>{{ employee.phone }}</p>
+                        <p>{{ employee.nie }}</p>
+                        <p>Working Hours: {{ employee.work_start_time.strftime('%H:%M') }} - {{ employee.work_end_time.strftime('%H:%M') }}</p>
+                        <p>{{ employee.start_date }}</p>
+                        <p>{{ employee.end_date }}</p>
+                        <p>{{ employee.email }}</p>
+                        <button class="ellipsis-btn" data-id="{{ employee.id }}">⋮</button>
+                    </div>
                 {% endfor %}
             </div>
         </section>
@@ -138,10 +143,10 @@
                 <label for="end_date">Contract End Date</label>
                 <input type="date" id="end_date" name="end_date">
 
-                <label for="work_start_time">Work Start Time:</label>
+                <label for="work_start_time">Work Start Time</label>
                 <input type="time" id="work_start_time" name="work_start_time">
 
-                <label for="work_end_time">Work End Time:</label>
+                <label for="work_end_time">Work End Time</label>
                 <input type="time" id="work_end_time" name="work_end_time">
 
                 <label for="days_per_week">Days per Week</label>
@@ -188,17 +193,37 @@
             <button class="close">Cancel</button>
         </div>
     </div>
+
     {% include 'modal.html' %}
     {% include 'export_modal.html' %}
     {% include 'Editarperfil.html' %}
-
-
-
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/exportwork.js') }}"></script>
     <script src="{{ url_for('static', filename='js/editHead.js') }}"></script>
 
 
+    <script>
+        function showAllEmployees() {
+            document.getElementById('section-title').textContent = ''; // Убираем заголовок секции
+            document.getElementById('all-employees').style.display = 'block';
+            document.getElementById('sala-employees').style.display = 'none';
+            document.getElementById('cocina-employees').style.display = 'none';
+        }
+
+        function showSalaEmployees() {
+            document.getElementById('section-title').textContent = 'Sala'; // Устанавливаем заголовок секции
+            document.getElementById('all-employees').style.display = 'none';
+            document.getElementById('sala-employees').style.display = 'block';
+            document.getElementById('cocina-employees').style.display = 'none';
+        }
+
+        function showCocinaEmployees() {
+            document.getElementById('section-title').textContent = 'Cocina'; // Устанавливаем заголовок секции
+            document.getElementById('all-employees').style.display = 'none';
+            document.getElementById('sala-employees').style.display = 'none';
+            document.getElementById('cocina-employees').style.display = 'block';
+        }
+    </script>
 </body>
 </html>

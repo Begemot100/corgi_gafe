@@ -93,6 +93,7 @@ function applyRandomSchedule() {
         if (data.success) {
             console.log("Данные сохранены на сервере");
             // Здесь можно вызвать функцию для пересчета Total и других значений
+
         } else {
             console.error("Ошибка при сохранении данных на сервере");
         }

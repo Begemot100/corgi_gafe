@@ -1,7 +1,10 @@
+
+
 let selectedLogId = null;
 let employeeLogs = {}; // Сохраняем логи по датам для текущего сотрудника
 let currentEmployeeId = null; // Сохраняем текущего выбранного сотрудника
 let allSelected = false;
+
 
 // Функция для открытия/закрытия выбранного меню по id
 function toggleDropdown(menuId) {
@@ -57,12 +60,12 @@ function closeEditModal() {
 
 
 // Функция для закрытия модального окна
-function closeEditModal() {
-    const editModal = document.getElementById('editTimeModal');
-    if (editModal) {
-        editModal.style.display = 'none';
-    }
-}
+//function closeEditModal() {
+//    const editModal = document.getElementById('editTimeModal');
+//    if (editModal) {
+//        editModal.style.display = 'none';
+//    }
+//}
 
 function formatDate(date) {
     if (!date) {
@@ -165,6 +168,8 @@ function getSelectedEmployeeAndOpenEditModal() {
         alert('Пожалуйста, выберите только одного сотрудника для редактирования');
     } else {
         const employeeId = selectedEmployeeIds[0]; // Получаем выбранного сотрудника
+        currentEmployeeId = employeeId; // Присваиваем выбранного сотрудника
+        console.log('Текущий выбранный сотрудник: ', currentEmployeeId);
 
         loadEditModal(employeeId); // Открывает и загружает модальное окно редактирования
     }
@@ -179,7 +184,15 @@ function updateSelectedLogData(selectedDate, logs) {
     console.log("Доступные логи:", logs);
     console.log("Выбранная дата:", selectedDate);
 
+    // Проверка, что logs является массивом
+    if (!Array.isArray(logs)) {
+        console.error('Logs is not an array:', logs);
+        return;
+    }
+
+    // Поиск выбранного лога
     const selectedLog = logs.find(log => log.date === selectedDate);
+
     if (selectedLog) {
         console.log('Выбран лог:', selectedLog); // Отладка
         document.getElementById('editCheckIn').value = selectedLog.check_in_time || '';
@@ -214,6 +227,14 @@ function updateHolidayStatus(logId, status) {
     })
     .catch(error => console.error('Ошибка:', error));
 }
+function formatWorkedHours(worked_hours) {
+    const hours = Math.floor(worked_hours);
+    const minutes = Math.round((worked_hours - hours) * 60);
+    return `${hours}h ${minutes}min`;
+}
+
+//const formattedHours = formatWorkedHours(data.worked_hours);
+//dailyHoursElement.textContent = formattedHours;
 
 function saveEditedTime() {
     const checkInTime = document.getElementById('editCheckIn').value;
@@ -236,26 +257,15 @@ function saveEditedTime() {
         .then(response => response.json())
         .then(data => {
             if (data && data.success) {
-                // Обновляем часы для текущего лога на странице без перезагрузки
-                const dailyHoursElement = document.getElementById(`daily-hours-${selectedLogId}`);
-                const checkInElement = document.getElementById(`check-in-time-${selectedLogId}`);
-                const checkOutElement = document.getElementById(`check-out-time-${selectedLogId}`);
+                // Обновляем интерфейс без перезагрузки страницы
+                updateLogUI(selectedLogId, checkInTime, checkOutTime, data.worked_hours);
+                recalculateAndUpdateSummary();  // Обновляем сумму дней и часов
 
-                // Обновляем отображение времени check-in и check-out
-                checkInElement.textContent = checkInTime;
-                checkOutElement.textContent = checkOutTime;
-
-                // Обновляем рабочие часы для текущего лога
-                if (dailyHoursElement) {
-                    const hours = Math.floor(data.worked_hours);
-                    const minutes = Math.round((data.worked_hours % 1) * 60);
-                    dailyHoursElement.textContent = `${hours}h ${minutes}min`;
-                }
 
                 // Закрываем модальное окно после успешного обновления
                 closeEditModal();
             } else {
-                console.error('Ошибка при сохранении времени:', data ? data.message : 'Неизвестная ошибка');
+                console.error('Ошибка при сохранении времени:', data.message || 'Неизвестная ошибка');
             }
         })
         .catch(error => {
@@ -265,6 +275,92 @@ function saveEditedTime() {
         console.error('selectedLogId не установлен');
         alert('Не удалось сохранить изменения. Пожалуйста, выберите корректный лог.');
     }
+}
+
+function updateLogUI(logId, checkInTime, checkOutTime, workedHours) {
+    const checkInElement = document.getElementById(`check-in-time-${logId}`);
+    const checkOutElement = document.getElementById(`check-out-time-${logId}`);
+    const dailyHoursElement = document.getElementById(`daily-hours-${logId}`);
+
+    checkInElement.textContent = checkInTime || '--:--';
+    checkOutElement.textContent = checkOutTime || '--:--';
+    dailyHoursElement.textContent = workedHours ? `${Math.floor(workedHours)}h ${Math.round((workedHours % 1) * 60)}min` : '--:--';
+}
+
+
+
+function recalculateAndUpdateSummary() {
+    document.querySelectorAll('.employee-log').forEach(employeeLog => {
+        const employeeId = employeeLog.getAttribute('data-employee-id');
+
+        if (employeeId) {
+            const totalHoursElement = document.getElementById(`total-hours-${employeeId}`);
+            const totalDaysElement = document.getElementById(`total-days-${employeeId}`);
+            const paidHolidaysElement = document.getElementById(`paid-holidays-${employeeId}`);
+            const unpaidHolidaysElement = document.getElementById(`unpaid-holidays-${employeeId}`);
+
+            if (totalHoursElement && totalDaysElement && paidHolidaysElement && unpaidHolidaysElement) {
+                let totalHours = 0;
+                let totalDays = 0;
+                let paidHolidays = 0;
+                let unpaidHolidays = 0;
+
+                // Суммируем часы для каждого сотрудника
+                employeeLog.querySelectorAll('.daily-hours').forEach(hourCell => {
+                    const timeText = hourCell.textContent.trim();
+                    if (timeText.includes('h')) {
+                        const [hours, minutes] = timeText.split('h').map(part => part.trim());
+
+                        // Проверка, что значения часов и минут являются числами
+                        const parsedHours = parseInt(hours, 10) || 0;
+                        const parsedMinutes = parseInt(minutes, 10) || 0;
+
+                        if (!isNaN(parsedHours) && !isNaN(parsedMinutes)) {
+                            totalHours += parsedHours + (parsedMinutes / 60);
+                        }
+                    }
+                });
+
+                // Подсчитываем количество рабочих дней и отпусков
+                employeeLog.querySelectorAll('.log-row').forEach(row => {
+                    const holidayStatus = row.querySelector('select[name="holiday_type"]').value;
+                    if (holidayStatus !== 'Unpaid') {
+                        totalDays++;
+                    }
+                    if (holidayStatus === 'Paid') {
+                        paidHolidays++;
+                    } else if (holidayStatus === 'Unpaid') {
+                        unpaidHolidays++;
+                    }
+                });
+
+                // Округляем итоговое количество часов до двух знаков
+                totalHours = parseFloat(totalHours.toFixed(2));
+
+                // Проверяем и отображаем корректно часы и минуты
+                const displayHours = Math.floor(totalHours);  // Целые часы
+                const displayMinutes = Math.round((totalHours % 1) * 60);  // Минуты
+
+                if (!isNaN(displayHours) && !isNaN(displayMinutes)) {
+                    totalHoursElement.textContent = `${displayHours}h ${displayMinutes}min`;
+                } else {
+                    totalHoursElement.textContent = '0h 0min'; // Запасной вариант, если что-то пошло не так
+                }
+
+                // Обновляем Total Days
+                totalDaysElement.textContent = totalDays;
+
+                // Обновляем Paid и Unpaid Holidays
+                paidHolidaysElement.textContent = paidHolidays;
+                unpaidHolidaysElement.textContent = unpaidHolidays;
+
+            } else {
+                console.error(`Не найдены элементы для employeeId ${employeeId}`);
+            }
+        } else {
+            console.error('employeeId не найден в data-атрибутах');
+        }
+    });
 }
 
 function closeEditModal() {
@@ -278,109 +374,114 @@ function closeEditModal() {
 }
 
 
-function recalculateAndUpdateTotalHours() {
-    let totalHours = 0;
+//function recalculateAndUpdateTotalHours() {
+//    let totalHours = 0;
+//
+//    // Перебираем все элементы с классом `daily-hours` и проверяем статус
+//    document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
+//        const timeText = row.querySelector('.daily-hours').textContent.trim();
+//        const holidayStatus = row.querySelector('select[name="holiday_type"]').value;
+//
+//        if (holidayStatus !== 'Unpaid') { // Если статус не Unpaid, то добавляем в общую сумму
+//            const [hours, minutes] = timeText.split('h').map(part => parseInt(part.trim(), 10) || 0);
+//            totalHours += hours + (minutes / 60);
+//        }
+//    });
+//
+//    // Округляем до двух знаков после запятой
+//    const roundedTotalHours = parseFloat(totalHours.toFixed(2));
+//
+//    // Обновляем общее количество часов
+//    const totalHoursElement = document.querySelector('.total-hours-display');
+//    if (totalHoursElement) {
+//        const displayHours = Math.floor(roundedTotalHours);
+//        const displayMinutes = Math.round((roundedTotalHours % 1) * 60);
+//        totalHoursElement.textContent = `${displayHours}h ${displayMinutes}min`;
+//    }
+//}
 
-    // Перебираем все элементы с классом `daily-hours` и проверяем статус
-    document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
-        const timeText = row.querySelector('.daily-hours').textContent.trim();
-        const holidayStatus = row.querySelector('select[name="holiday_type"]').value;
-
-        if (holidayStatus !== 'Unpaid') { // Если статус не Unpaid, то добавляем в общую сумму
-            const [hours, minutes] = timeText.split('h').map(part => parseInt(part.trim(), 10) || 0);
-            totalHours += hours + (minutes / 60);
-        }
-    });
-
-    // Округляем до двух знаков после запятой
-    const roundedTotalHours = parseFloat(totalHours.toFixed(2));
-
-    // Обновляем общее количество часов
-    const totalHoursElement = document.querySelector('.total-hours-display');
-    if (totalHoursElement) {
-        const displayHours = Math.floor(roundedTotalHours);
-        const displayMinutes = Math.round((roundedTotalHours % 1) * 60);
-        totalHoursElement.textContent = `${displayHours}h ${displayMinutes}min`;
-    }
-}
-
-// Функция для пересчета и обновления контейнера Summary
-document.addEventListener('DOMContentLoaded', function () {
-    // Функция для пересчета и обновления контейнера Summary
-function recalculateAndUpdateSummary() {
-    let totalHours = 0;
-    let totalDays = 0;
-    let paidHolidays = 0;
-    let unpaidHolidays = 0;
-
-    document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
-        const hoursText = row.querySelector('.daily-hours').textContent.trim();
-        const [hours, minutes] = hoursText.split('h').map(part => parseInt(part.trim(), 10) || 0);
-        totalHours += hours + (minutes / 60);
-
-        const holidayStatus = row.querySelector('select[name="holiday_type"]').value;
-        if (holidayStatus === 'Paid') {
-            paidHolidays++;
-        } else if (holidayStatus === 'Unpaid') {
-            unpaidHolidays++;
-        }
-        totalDays++;
-    });
-
-    // Обновляем Summary в интерфейсе
-    document.querySelector('.total-hours-display').textContent = `${Math.floor(totalHours)}h ${Math.round((totalHours % 1) * 60)}min`;
-    document.querySelector('.total-days-display').textContent = totalDays;
-    document.querySelector('.paid-holidays-display').textContent = paidHolidays;
-    document.querySelector('.unpaid-holidays-display').textContent = unpaidHolidays;
-}
-
-
-    // Функция для пересчета Total Hours без перезагрузки
-    function saveEditedTime() {
-        const checkInTime = document.getElementById('editCheckIn').value;
-        const checkOutTime = document.getElementById('editCheckOut').value;
-
-        console.log("Попытка сохранить данные:", {
-            checkInTime: checkInTime,
-            checkOutTime: checkOutTime,
-            selectedLogId: selectedLogId
-        });
-
-        if (selectedLogId) {
-            fetch(`/update_check_time/${selectedLogId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ check_in_time: checkInTime, check_out_time: checkOutTime })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Ответ от сервера:", data);
-                    if (data && data.success) {
-                        // Обновляем часы для текущего лога
-                        const dailyHoursElement = document.getElementById(`daily-hours-${selectedLogId}`);
-                        if (dailyHoursElement) {
-                            const hours = Math.floor(data.worked_hours);
-                            const minutes = Math.round((data.worked_hours % 1) * 60);
-                            dailyHoursElement.textContent = `${hours}h ${minutes}min`;
-                        }
-
-                        // Пересчитываем и обновляем Total Hours и Summary
-                        recalculateAndUpdateSummaryContainer();
-                    } else {
-                        console.error('Ошибка при сохранении времени:', data ? data.message : 'Неизвестная ошибка');
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка при отправке запроса:', error);
-                });
-        } else {
-            console.error('selectedLogId не установлен');
-            alert('Не удалось сохранить изменения. Пожалуйста, выберите корректный лог.');
-        }
-    }
-});
+//// Функция для пересчета и обновления контейнера Summary
+//document.addEventListener('DOMContentLoaded', function () {
+//    // Функция для пересчета и обновления контейнера Summary
+//function recalculateAndUpdateSummary(employeeId) {
+//    let totalHours = 0;
+//    let totalDays = 0;
+//    let paidHolidays = 0;
+//    let unpaidHolidays = 0;
+//
+//    // Перебор всех логов сотрудника
+//    document.querySelectorAll(`.log-row-${employeeId}`).forEach(row => {
+//        const hoursText = row.querySelector('.daily-hours').textContent.trim();
+//        const [hours, minutes] = hoursText.split('h').map(part => parseInt(part.trim(), 10) || 0);
+//        totalHours += hours + (minutes / 60);
+//
+//        const holidayStatus = row.querySelector('select[name="holiday_type"]').value;
+//        if (holidayStatus === 'Paid') {
+//            paidHolidays++;
+//        } else if (holidayStatus === 'Unpaid') {
+//            unpaidHolidays++;
+//        }
+//        totalDays++;
+//    });
+//
+//    // Обновляем Total Hours
+//    document.getElementById(`total-hours-${employeeId}`).textContent = `${Math.floor(totalHours)}h ${Math.round((totalHours % 1) * 60)}min`;
+//
+//    // Обновляем Total Days
+//    document.getElementById(`total-days-${employeeId}`).textContent = totalDays;
+//
+//    // Обновляем Paid и Unpaid Holidays
+//    document.getElementById(`paid-holidays-${employeeId}`).textContent = paidHolidays;
+//    document.getElementById(`unpaid-holidays-${employeeId}`).textContent = unpaidHolidays;
+//}
+//
+//
+//    // Функция для пересчета Total Hours без перезагрузки
+//    function saveEditedTime() {
+//        const checkInTime = document.getElementById('editCheckIn').value;
+//        const checkOutTime = document.getElementById('editCheckOut').value;
+//
+//        console.log("Попытка сохранить данные:", {
+//            checkInTime: checkInTime,
+//            checkOutTime: checkOutTime,
+//            selectedLogId: selectedLogId
+//        });
+//
+//        if (selectedLogId) {
+//            fetch(`/update_check_time/${selectedLogId}`, {
+//                method: 'POST',
+//                headers: {
+//                    'Content-Type': 'application/json'
+//                },
+//                body: JSON.stringify({ check_in_time: checkInTime, check_out_time: checkOutTime })
+//            })
+//                .then(response => response.json())
+//                .then(data => {
+//                    console.log("Ответ от сервера:", data);
+//                    if (data && data.success) {
+//                        // Обновляем часы для текущего лога
+//                        const dailyHoursElement = document.getElementById(`daily-hours-${selectedLogId}`);
+//                        if (dailyHoursElement) {
+//                            const hours = Math.floor(data.worked_hours);
+//                            const minutes = Math.round((data.worked_hours % 1) * 60);
+//                            dailyHoursElement.textContent = `${hours}h ${minutes}min`;
+//                        }
+//
+//                        // Пересчитываем и обновляем Total Hours и Summary
+//                        recalculateAndUpdateSummary(currentEmployeeId);
+//                    } else {
+//                        console.error('Ошибка при сохранении времени:', data ? data.message : 'Неизвестная ошибка');
+//                    }
+//                })
+//                .catch(error => {
+//                    console.error('Ошибка при отправке запроса:', error);
+//                });
+//        } else {
+//            console.error('selectedLogId не установлен');
+//            alert('Не удалось сохранить изменения. Пожалуйста, выберите корректный лог.');
+//        }
+//    }
+//});
 
 
 function closeEditModal() {
@@ -667,6 +768,8 @@ function calculateTotalHours() {
     // Преобразуем общее количество часов в формат "Xh Ymin"
     const hours = Math.floor(totalHours); // Целые часы
     const minutes = Math.round((totalHours - hours) * 60); // Остаток в минутах
+    totalHours = parseFloat(totalHours.toFixed(2));
+
 
     // Формируем строку для отображения
     return `${hours}h ${minutes}min`;
@@ -677,20 +780,33 @@ function updateTotalHours() {
     // Проходим по всем элементам рабочих часов для выбранного сотрудника
     document.querySelectorAll('.employee-log .logs-table tbody tr .daily-hours').forEach(hourCell => {
         const timeText = hourCell.textContent.trim();
-        const [hours, minutes] = timeText.split('h').map(part => part.trim());
 
-        // Суммируем часы и минуты
-        totalHours += parseInt(hours, 10) + (parseInt(minutes, 10) / 60);
+        if (timeText.includes('h')) {
+            const [hours, minutes] = timeText.split('h').map(part => part.trim());
+
+            // Суммируем часы и минуты, проверяем корректность значений
+            const parsedHours = parseInt(hours, 10) || 0;
+            const parsedMinutes = parseInt(minutes, 10) || 0;
+            totalHours += parsedHours + (parsedMinutes / 60);
+        }
     });
+
+    // Округляем итоговое количество часов до двух знаков
+    totalHours = Math.round(totalHours * 100) / 100;
+    totalHours = parseFloat(totalHours.toFixed(2));
 
     // Обновляем отображение на странице
     const totalHoursElement = document.getElementById(`total-hours-${currentEmployeeId}`);
     if (totalHoursElement) {
-        const displayHours = Math.floor(totalHours);
-        const displayMinutes = Math.round((totalHours % 1) * 60);
+        const displayHours = Math.floor(totalHours);  // Целые часы
+        const displayMinutes = Math.round((totalHours % 1) * 60);  // Остаток в минутах
+        totalHours = parseFloat(totalHours.toFixed(2));
+
         totalHoursElement.textContent = `${displayHours}h ${displayMinutes}min`;
     }
 }
+
+
 function toggleCheckboxes() {
     // Находим все элементы с классом .checkbox-input
     const checkboxes = document.querySelectorAll('.checkbox-input');

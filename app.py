@@ -16,7 +16,7 @@ from openpyxl.utils import get_column_letter
 from models import Employee, WorkLog
 import logging
 import threading
-
+import openpyxl
 
 logging.basicConfig(level=logging.INFO)
 
@@ -91,8 +91,9 @@ class WorkLog(db.Model):
     def calculate_worked_hours(self):
         if self.check_in_time and self.check_out_time:
             time_diff = self.check_out_time - self.check_in_time
-            return time_diff.total_seconds() / 3600  # возвращаем количество часов
+            return time_diff.total_seconds() / 3600  # Возвращаем количество часов
         return 0
+
 
 @app.route('/')
 def home():
@@ -200,10 +201,17 @@ def dashboard():
 
     return render_template('dashboard.html', dashboard_data=dashboard_data, current_date=today)
 
+def format_hours_to_hm(decimal_hours):
+    hours = int(decimal_hours)
+    minutes = int((decimal_hours - hours) * 60)
+    return f'{hours}h {minutes}min'
+
+from datetime import date, datetime
 
 @app.route('/work', methods=['GET'])
 def work():
     # Получаем фильтры из URL
+    employees = Employee.query.all()  # Получаем всех сотрудников
     selected_date_str = request.args.get('date', None)
     filter_type = request.args.get('filter', 'today')
     group_type = request.args.get('group', None)
@@ -213,9 +221,9 @@ def work():
     end_date_str = request.args.get('end_date')
 
     if start_date_str and end_date_str:
-        start_date_str=datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        start_date_str = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-        logs = WorkLog.query.filter(WorkLog.log_date.between(start_date_str,end_date)).all()
+        logs = WorkLog.query.filter(WorkLog.log_date.between(start_date_str, end_date)).all()
     else:
         logs = WorkLog.query.all()
 
@@ -254,44 +262,47 @@ def work():
     else:
         employees = Employee.query.all()
 
-    # # Проверка наличия лога за текущий день и создание его при отсутствии
-    # today = date.today()
-    # for employee in employees:
-    #     existing_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
-    #     if not existing_log:
-    #         new_log = WorkLog(
-    #             employee_id=employee.id,
-    #             log_date=today,
-    #             check_in_time=datetime.now(),  # Устанавливаем текущее время
-    #             check_out_time=None,
-    #             holidays='Working day'  # Устанавливаем по умолчанию статус
-    #         )
-    #         db.session.add(new_log)
-    # db.session.commit()
+    # Проверка наличия лога за текущий день и создание его при отсутствии
+    today = date.today()
+    for employee in employees:
+        existing_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
+        if not existing_log:
+            # Создаем новый лог с прочерками для check-in/check-out
+            new_log = WorkLog(
+                employee_id=employee.id,
+                log_date=today,
+                check_in_time=None,  # Устанавливаем None, что будет отображаться как "--:--"
+                check_out_time=None,
+                worked_hours=0  # Устанавливаем 0 часов работы
+            )
+            db.session.add(new_log)
+    db.session.commit()
 
     # Подсчет данных для каждого сотрудника
     for employee in employees:
-        employee_logs = WorkLog.query.filter_by(employee_id=employee.id).all()
+        # Извлекаем только те логи, которые не являются Unpaid
+        employee_logs = WorkLog.query.filter_by(employee_id=employee.id).filter(WorkLog.holidays != 'Unpaid').all()
 
         # Подсчет общего времени
-        total_hours = sum(log.worked_hours or 0 for log in employee_logs)
-        employee.total_hours = total_hours
-        employee.total_days = len(employee_logs)  # Количество рабочих дней
+        total_hours = round(sum(log.worked_hours or 0 for log in employee_logs), 2)
+        formatted_total_hours = format_hours_to_hm(total_hours)
+
+        employee.total_hours = formatted_total_hours
+        employee.total_days = len(employee_logs)  # Количество рабочих дней (исключая Unpaid)
         employee.overtime = max(0, total_hours - (8 * employee.total_days))  # Предполагается, что стандартное рабочее время 8 часов в день
 
         # Подсчет отпусков
         employee.paid_holidays = sum(1 for log in employee_logs if log.holidays == 'Paid')
-        employee.unpaid_holidays = sum(1 for log in employee_logs if log.holidays == 'Unpaid')
+        employee.unpaid_holidays = sum(1 for log in WorkLog.query.filter_by(employee_id=employee.id).all() if log.holidays == 'Unpaid')  # Unpaid считается отдельно
         logging.info(f"Загрузка страницы /work. Total Hours: {total_hours}")
 
     # Получаем обновленный список логов
     work_logs = WorkLog.query.all()
     app.logger.info(f"Полученные логи: {logs}")
-    # В функции, которая передает данные на страницу work
+    # Передача данных на страницу work
     app.logger.info(f"Отправленные логи на страницу: {[log.id for log in logs]}")
 
     return render_template('work.html', employees=employees, work_logs=work_logs, current_time=current_time)
-
 
 # def run_scheduler():
 #     schedule.every().day.at("23:59").do(add_missing_logs)
@@ -308,6 +319,13 @@ def format_hours(value):
     hours = int(value)
     minutes = int((value - hours) * 60)  # Получаем оставшиеся минуты
     return f'{hours}h {minutes}min' if hours > 0 else f'{minutes}min'
+
+def calculate_worked_hours(log):
+    if log.check_in_time and log.check_out_time:
+        time_diff = log.check_out_time - log.check_in_time
+        worked_hours = time_diff.total_seconds() / 3600
+        return round(worked_hours, 2)  # Округляем до двух знаков
+    return 0
 
 
 # Добавление сотрудника
@@ -495,30 +513,35 @@ def register():
 # Чек-ин для сотрудника
 @app.route('/check_in/<int:id>', methods=['POST'])
 def check_in(id):
-    # Проверка, существует ли сотрудник
     employee = db.session.get(Employee, id)
     if not employee:
         return jsonify({'error': 'Сотрудник не найден'}), 404
 
     today = date.today()
-    # Проверяем, есть ли лог за сегодняшний день
     existing_log = WorkLog.query.filter_by(employee_id=id, log_date=today).first()
+
+    # Если запись существует, проверяем, что чек-ин еще не был сделан
     if existing_log and existing_log.check_in_time is not None:
-        return jsonify({'error': 'Вы уже зачекинились сегодня'}), 400  # Возвращаем ошибку если чек-ин уже был
+        return jsonify({'error': 'Вы уже зачекинились сегодня'}), 400
 
-    # Создаем новый лог только при нажатии кнопки (вызов этого маршрута)
-    check_in_time = datetime.now()
-    if existing_log:
-        # Обновляем существующий лог, если он уже создан, но без времени чек-ина
-        existing_log.check_in_time = check_in_time
-    else:
-        # Если логов нет, создаём новый лог
-        new_work_log = WorkLog(employee_id=employee.id, check_in_time=check_in_time, log_date=today)
-        db.session.add(new_work_log)
+    # Если записи нет, создаем новую
+    if not existing_log:
+        new_log = WorkLog(
+            employee_id=employee.id,
+            log_date=today,
+            check_in_time=datetime.now(),  # Проставляем текущее время как чек-ин
+            check_out_time=None
+        )
+        db.session.add(new_log)
+        db.session.commit()
+        return jsonify({'message': 'Чек-ин выполнен', 'check_in_time': new_log.check_in_time.strftime('%H:%M:%S')})
 
-    db.session.commit()
-    return jsonify({'message': 'Чек-ин выполнен', 'check_in_time': check_in_time.strftime('%H:%M:%S')})
+    # Устанавливаем время чек-ина, если запись существует, но чек-ин еще не сделан
+    if existing_log.check_in_time is None:
+        existing_log.check_in_time = datetime.now()
+        db.session.commit()
 
+    return jsonify({'message': 'Чек-ин выполнен', 'check_in_time': existing_log.check_in_time.strftime('%H:%M:%S')})
 
 # Чек-аут для сотрудника
 @app.route('/check_out/<int:id>', methods=['POST'])
@@ -559,65 +582,56 @@ def check_out(id):
 
 @app.route('/work_logs', methods=['GET'])
 def work_logs():
-    # Получаем employee_id из запроса, если передан
+    # Получаем employee_id и даты из запроса
     employee_id = request.args.get('employee_id', None)
-
-    # Получаем start_date и end_date для фильтрации по диапазону дат
     start_date_str = request.args.get('start_date', None)
     end_date_str = request.args.get('end_date', None)
 
+    # Формируем запрос к базе данных
     work_logs_query = WorkLog.query
 
-    # Если указан сотрудник, фильтруем по нему
+    # Если указан employee_id, фильтруем по сотруднику
     if employee_id:
         employee = Employee.query.get(employee_id)
         if not employee:
             return jsonify({'error': 'Employee not found'}), 404
         work_logs_query = work_logs_query.filter_by(employee_id=employee_id)
 
-    # Если указаны даты, фильтруем по диапазону
+    # Если указаны start_date и end_date, фильтруем по диапазону дат
     if start_date_str and end_date_str:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         work_logs_query = work_logs_query.filter(WorkLog.log_date.between(start_date, end_date))
 
-    # Получаем логи после фильтрации
+    # Выполняем запрос и получаем результат
     work_logs = work_logs_query.all()
-
-    logging.info(f"Полученные work_logs: {work_logs}")
 
     if employee_id:
         total_hours = sum(log.worked_hours for log in work_logs)
+        total_hours = round(total_hours, 2)  # Округляем до двух знаков
         total_days = len(work_logs)
         overtime = max(0, total_hours - (8 * total_days))
+
 
         logs_data = [
             {
                 'date': log.log_date.strftime('%a %d/%m/%Y'),
                 'check_in': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
                 'check_out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
-                'total_hours': format_hours(log.worked_hours)  # Форматируем отработанные часы
+                'total_hours': format_hours(log.worked_hours)
             }
             for log in work_logs
         ]
-        logging.info(f"Total hours before formatting: {total_hours}")  # Логируем до форматирования
-        formatted_total_hours = format_hours(total_hours)
-        logging.info(f"Formatted total hours: {formatted_total_hours}")  # Логируем после форматирования
 
         return jsonify({
             'employee_name': employee.full_name,
             'position': employee.position,
-            'total_hours': format_hours(total_hours),  # Форматируем общее время
+            'total_hours': format_hours(total_hours),  # Общее время после округления
             'total_days': total_days,
-            'overtime': format_hours(overtime),  # Форматируем овертайм
+            'overtime': format_hours(overtime),
             'work_logs': logs_data
         })
     else:
-        # Логируем, что передаем в шаблон
-        logging.info(f"Отправляем work_logs в шаблон: {work_logs}")
-        logging.info(f"Полученные логи за диапазон: {work_logs}")
-
-        # Передаем все логи для всех сотрудников в шаблон
         return render_template('work_logs.html', logs=work_logs)
 
 # Обновление статуса отпуска для сотрудника
@@ -816,8 +830,10 @@ def update_check_time(id):
     app.logger.info(f"Получен запрос для обновления лога {id} с данными: {data}")
 
     try:
-        check_in_time = datetime.combine(date.today(), datetime.strptime(check_in_time_str, '%H:%M').time()) if check_in_time_str else None
-        check_out_time = datetime.combine(date.today(), datetime.strptime(check_out_time_str, '%H:%M').time()) if check_out_time_str else None
+        check_in_time = datetime.combine(date.today(), datetime.strptime(check_in_time_str,
+                                                                         '%H:%M').time()) if check_in_time_str else None
+        check_out_time = datetime.combine(date.today(), datetime.strptime(check_out_time_str,
+                                                                          '%H:%M').time()) if check_out_time_str else None
 
         work_log = db.session.get(WorkLog, id)
         if work_log:
@@ -828,6 +844,7 @@ def update_check_time(id):
             # Пересчет рабочих часов
             work_log.worked_hours = work_log.calculate_worked_hours()
             db.session.commit()
+            app.logger.info(f"Запись с ID {id} успешно сохранена в базу данных.")
             app.logger.info(f"Часы обновлены для лога {id}: {work_log.worked_hours}")
             return jsonify({'success': True, 'worked_hours': work_log.worked_hours})
         else:
@@ -844,42 +861,50 @@ def update_check_time(id):
 
 @app.route('/get_employee_logs/<int:employee_id>', methods=['GET'])
 def get_employee_logs(employee_id):
+    # Получаем логи сотрудника по его ID
     logs = WorkLog.query.filter_by(employee_id=employee_id).all()
+
+    # Логируем ID всех логов, которые собираемся отправить на клиент
+    app.logger.info(f"Отправляем логи на страницу: {[log.id for log in logs]}")
+
+    # Форматируем данные логов для отправки на клиент
     logs_data = [{
         "log_id": log.id,
         "date": log.log_date.strftime('%Y-%m-%d'),
         "check_in_time": log.check_in_time.strftime('%H:%M') if log.check_in_time else None,
         "check_out_time": log.check_out_time.strftime('%H:%M') if log.check_out_time else None,
-        "worked_hours": log.worked_hours
+        "worked_hours": round(log.worked_hours, 2)
     } for log in logs]
 
+    # Возвращаем данные в формате JSON
     return jsonify(success=True, logs=logs_data)
+
 @app.route('/edit_modal')
 def edit_modal():
     return render_template('edit_modal.html')
 
-@app.route('/get_logs_by_date')
-def get_logs_by_date():
-    selected_date = request.args.get('date')
-    logs = WorkLog.query.filter_by(log_date=selected_date).all()
-    employee_logs = []
-
-    for log in logs:
-        # Обновлено для использования session.get
-        employee = db.session.get(Employee, log.employee_id)  # Заменено на db.session.get
-        employee_logs.append({
-            'employeeId': employee.id,
-            'employeeName': employee.full_name,
-            'position': employee.position,
-            'logDate': log.log_date.strftime('%Y-%m-%d'),
-            'checkInTime': log.check_in_time.strftime('%H:%M') if log.check_in_time else None,
-            'checkOutTime': log.check_out_time.strftime('%H:%M') if log.check_out_time else None,
-            'totalHours': log.worked_hours,
-            'holidayId': log.id,
-            'holidays': log.holidays
-        })
-
-    return jsonify(employee_logs)
+# @app.route('/get_logs_by_date')
+# def get_logs_by_date():
+#     selected_date = request.args.get('date')
+#     logs = WorkLog.query.filter_by(log_date=selected_date).all()
+#     employee_logs = []
+#
+#     for log in logs:
+#         # Обновлено для использования session.get
+#         employee = db.session.get(Employee, log.employee_id)  # Заменено на db.session.get
+#         employee_logs.append({
+#             'employeeId': employee.id,
+#             'employeeName': employee.full_name,
+#             'position': employee.position,
+#             'logDate': log.log_date.strftime('%Y-%m-%d'),
+#             'checkInTime': log.check_in_time.strftime('%H:%M') if log.check_in_time else None,
+#             'checkOutTime': log.check_out_time.strftime('%H:%M') if log.check_out_time else None,
+#             'totalHours': log.worked_hours,
+#             'holidayId': log.id,
+#             'holidays': log.holidays
+#         })
+#
+#     return jsonify(employee_logs)
 @app.route('/get_employee_list', methods=['GET'])
 def get_employee_list():
     kitchen_employees = Employee.query.filter_by(section="Cocina").all()
@@ -1132,4 +1157,4 @@ if __name__ == '__main__':
     # scheduler_thread.start()
 
     # Запускаем Flask сервер
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5004)
