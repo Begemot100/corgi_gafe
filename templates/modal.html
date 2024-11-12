@@ -2,7 +2,7 @@
 <div id="modal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeNewEmployeeModal()">&times;</span>
-        <h2 id="modal-title">New Employee</h2>
+        <h2 id="modal-title">Nuevo empleado</h2>
         <form id="employee-form" action="{{ url_for('add_employee') }}" method="POST">
             <label for="full_name">Full Name</label>
             <input type="text" id="full_name" name="full_name" placeholder="Full Name" required>
@@ -46,7 +46,7 @@
             <input type="email" id="email" name="email" placeholder="Email" required>
 
             <div class="form-buttons">
-                <button type="button" class="cancel-btn" onclick="closeNewEmployeeModal()">Cancel</button>
+                <button type="button" class="cancel-btn" onclick="closeNewEmployeeModal()">Cancelar</button>
                 <button type="submit" class="save-btn">Save</button>
             </div>
         </form>
@@ -57,7 +57,7 @@
 <div id="action-modal1" class="modal1">
     <div class="modal-content1">
         <span class="close" onclick="closeActionModal()">&times;</span>
-        <button id="edit-action" onclick="triggerEdit()">Edit</button>
-        <button id="delete-action" onclick="triggerDelete()">Delete</button>
+        <button id="edit-action" onclick="triggerEdit()">Editar</button>
+        <button id="delete-action" onclick="triggerDelete()">Eliminar</button>
     </div>
 </div>

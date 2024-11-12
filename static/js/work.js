@@ -214,10 +214,10 @@ function updateHolidayStatus(logId, status) {
 
     // Если выбран статус 'unpaid', запрашиваем подтверждение
     if (status === 'unpaid') {
-        const confirmReset = confirm("Вы уверены, что хотите изменить статус на Unpaid? Это действие обнулит данные логов.");
+        const confirmReset = confirm("¿Está seguro de que desea cambiar el estado a No pagado? Esta acción restablecerá los datos de los registros.");
 
         if (confirmReset) {
-            console.log('Пользователь подтвердил изменение статуса на Unpaid.');
+            console.log('El usuario ha confirmado el cambio de estado No pagado.');
             resetLogData(logId);  // Если пользователь подтвердил, обнуляем данные
         } else {
             console.log('Пользователь отменил действие.');

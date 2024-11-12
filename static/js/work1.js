@@ -68,9 +68,9 @@ function getSelectedEmployeeAndOpenEditModal() {
 
     // Проверяем количество выбранных сотрудников
     if (selectedEmployeeIds.length === 0) {
-        alert('Пожалуйста, выберите хотя бы одного сотрудника');
+        alert('Por favor, seleccione al menos a un empleado.');
     } else if (selectedEmployeeIds.length > 1) {
-        alert('Пожалуйста, выберите только одного сотрудника для редактирования');
+        alert('Por favor, seleccione solo a un empleado para editar.');
     } else {
         const employeeId = selectedEmployeeIds[0]; // Получаем выбранного сотрудника
         currentEmployeeId = employeeId; // Присваиваем выбранного сотрудника

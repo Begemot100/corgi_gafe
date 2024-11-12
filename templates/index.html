@@ -26,11 +26,7 @@
                         <img src="{{ url_for('static', filename='images/Frame 1321314992.png') }}" alt="Dashboard" style="width: 32px; height: 32px;">
                     </a>
                 </li>
-                <li>
-                    <button class="export-ellipsis-btn" onclick="openExportModal()">
-                        <img src="{{ url_for('static', filename='images/img_3.png') }}" alt="Export" style="width: 32px; height: 32px;">
-                    </button>
-                </li>
+
                 <li class="centered-block">
                     <a href="/dashboard">
                         <img src="{{ url_for('static', filename='images/User Circle-01.png') }}" alt='Dashboard' style="width: 32px; height: 32px;">
@@ -68,12 +64,14 @@
         <!-- Employee list -->
         <section class="employees">
             <div class="employees-header">
-                <h2>Employees</h2>
+                <h2>Empleados</h2>
                 <div class="filters-container">
+                    <button class="export-ellipsis-btn" onclick="openExportModal()">Export Exel</button>
                     <button class="filter-btn" id="show-all" onclick="showAllEmployees()">All</button>
                     <button class="filter-btn" id="show-hall" onclick="showSalaEmployees()">Sala</button>
                     <button class="filter-btn" id="show-kitchen" onclick="showCocinaEmployees()">Cocina</button>
-                    <button class="new-employee-btn" id="open-modal-btn">+ New Employee</button>
+                    <button class="new-employee-btn" id="open-modal-btn">+ Nuevo empleado</button>
+
                 </div>
             </div>
 
@@ -84,14 +82,14 @@
             <div id="all-employees">
                 {% for employee in employees %}
                     <div class="employee-card" data-section="{{ employee.section }}">
-                        <p>{{ employee.full_name }}</p>
-                        <p>{{ employee.position }}</p>
-                        <p>{{ employee.phone }}</p>
-                        <p>{{ employee.nie }}</p>
-                        <p>Working Hours: {{ employee.work_start_time.strftime('%H:%M') }} - {{ employee.work_end_time.strftime('%H:%M') }}</p>
-                        <p>{{ employee.start_date }}</p>
-                        <p>{{ employee.end_date }}</p>
-                        <p>{{ employee.email }}</p>
+                        <p class="employee-name">{{ employee.full_name }}</p>
+                        <p class="employee-position">{{ employee.position }}</p>
+                        <p class="employee-phone">{{ employee.phone }}</p>
+                        <p class="employee-nie">{{ employee.nie }}</p>
+                        <p class="employee-working-hours">Working Hours: {{ employee.work_start_time.strftime('%H:%M') }} - {{ employee.work_end_time.strftime('%H:%M') }}</p>
+                        <p class="employee-start-date">{{ employee.start_date }}</p>
+                        <p class="employee-end-date">{{ employee.end_date }}</p>
+                        <p class="employee-email">{{ employee.email }}</p>
                         <button class="ellipsis-btn" data-id="{{ employee.id }}">⋮</button>
                     </div>
                 {% endfor %}
@@ -196,7 +194,7 @@
             <h2>Delete Employee</h2>
             <p id="delete-message"></p>
             <button id="confirm-delete-btn">Confirm Delete</button>
-            <button class="close">Cancel</button>
+            <button class="close">Cancelar</button>
         </div>
     </div>
 

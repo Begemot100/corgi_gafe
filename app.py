@@ -18,6 +18,8 @@ import threading
 import openpyxl
 from collections import defaultdict
 from sqlalchemy import func
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 
 logging.basicConfig(level=logging.INFO)
@@ -309,12 +311,6 @@ def work():
 
     # Передача данных на страницу work
     return render_template('work.html', employees=employees, work_logs=logs, current_time=current_time)
-# def run_scheduler():
-#     schedule.every().day.at("23:59").do(add_missing_logs)
-#
-#     while True:
-#         schedule.run_pending()
-#         time.sleep(60)  # Проверяет каждые 60 секунд, чтобы не перегружать CPU
 
 
 @app.template_filter('format_hours')
@@ -580,7 +576,6 @@ def check_out(id):
 
     return jsonify({'check_out_time': check_out_time.strftime('%H:%M:%S'), 'worked_hours': worked_hours})
 
- # Старт обеда для сотрудника
 
 
 
@@ -902,28 +897,7 @@ def get_employee_logs(employee_id):
 def edit_modal():
     return render_template('edit_modal.html')
 
-# @app.route('/get_logs_by_date')
-# def get_logs_by_date():
-#     selected_date = request.args.get('date')
-#     logs = WorkLog.query.filter_by(log_date=selected_date).all()
-#     employee_logs = []
-#
-#     for log in logs:
-#         # Обновлено для использования session.get
-#         employee = db.session.get(Employee, log.employee_id)  # Заменено на db.session.get
-#         employee_logs.append({
-#             'employeeId': employee.id,
-#             'employeeName': employee.full_name,
-#             'position': employee.position,
-#             'logDate': log.log_date.strftime('%Y-%m-%d'),
-#             'checkInTime': log.check_in_time.strftime('%H:%M') if log.check_in_time else None,
-#             'checkOutTime': log.check_out_time.strftime('%H:%M') if log.check_out_time else None,
-#             'totalHours': log.worked_hours,
-#             'holidayId': log.id,
-#             'holidays': log.holidays
-#         })
-#
-#     return jsonify(employee_logs)
+
 @app.route('/get_employee_list', methods=['GET'])
 def get_employee_list():
     kitchen_employees = Employee.query.filter_by(section="Cocina").all()
@@ -1229,11 +1203,31 @@ def get_log_totals():
         }
     return jsonify(totals)
 
+def create_placeholder_logs():
+    tomorrow = datetime.today().date() + timedelta(days=1)  # Установка даты на завтра
+    employees = Employee.query.all()
+    for employee in employees:
+        existing_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=tomorrow).first()
+        # Если запись есть, но без check-in/check-out, ничего не делаем
+        if existing_log and not existing_log.check_in_time:
+            continue
+        # Если записи нет, создаем её с прочерками
+        if not existing_log:
+            placeholder_log = WorkLog(
+                employee_id=employee.id,
+                log_date=tomorrow,
+                check_in_time=None,
+                check_out_time=None
+            )
+            db.session.add(placeholder_log)
+    db.session.commit()
+
+# Настройка планировщика
+scheduler = BackgroundScheduler()
+scheduler.add_job(create_placeholder_logs, 'cron', hour=23, minute=45)
+scheduler.start()
+
 if __name__ == '__main__':
-    # Создаем и запускаем поток для планировщика
-    # scheduler_thread = threading.Thread(target=run_scheduler)
-    # scheduler_thread.daemon = True  # Позволяет завершить поток при выходе из основного приложения
-    # scheduler_thread.start()
 
     # Запускаем Flask сервер
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5005)
