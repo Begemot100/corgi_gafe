@@ -27,7 +27,6 @@ logging.basicConfig(level=logging.INFO)
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///employees.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'ваш_секретный_ключ'  # Секретный ключ для сессии
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=4)
 
 db = SQLAlchemy(app)
