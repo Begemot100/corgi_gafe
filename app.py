@@ -1185,11 +1185,26 @@ def add_empty_log():
 
 @app.route('/api/log_totals', methods=['GET'])
 def get_log_totals():
-    employees = Employee.query.all()
-    totals = {}
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    group_type = request.args.get('group_type')
 
-    for employee in employees:
+    if start_date:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+    if end_date:
+        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+    employees = Employee.query
+    if group_type:
+        employees = employees.filter(Employee.section == group_type)
+
+    totals = {}
+    for employee in employees.all():
         logs = employee.work_logs
+        if start_date and end_date:
+            logs = [log for log in logs if start_date <= log.log_date <= end_date]
+
+        # Подсчеты
         total_hours = sum(log.worked_hours or 0 for log in logs if log.holidays != 'Unpaid')
         total_days = len([log for log in logs if log.holidays != 'Unpaid'])
         paid_holidays = sum(1 for log in logs if log.holidays == 'Paid')
@@ -1202,6 +1217,7 @@ def get_log_totals():
             'unpaid_holidays': unpaid_holidays
         }
     return jsonify(totals)
+
 
 def create_placeholder_logs():
     tomorrow = datetime.today().date() + timedelta(days=1)  # Установка даты на завтра

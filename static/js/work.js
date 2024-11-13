@@ -249,6 +249,7 @@ function updateHolidayStatus(logId, status) {
         }
     })
     .catch(error => console.error('Ошибка:', error));
+    updateSummaryAfterFilter();
 }
 
 
@@ -763,6 +764,44 @@ function applyCustomRange() {
         alert('Por favor, selecciona un rango de fechas válido.');
     }
 }
+function updateSummaryAfterFilter() {
+    document.querySelectorAll('.employee-log').forEach(employeeLog => {
+        const employeeId = employeeLog.getAttribute('data-employee-id');
+        let totalHours = 0;
+        let totalDays = 0;
+        let paidHolidays = 0;
+        let unpaidHolidays = 0;
+
+        // Считаем только видимые строки (после фильтра)
+        employeeLog.querySelectorAll(`.log-row-${employeeId}`).forEach(row => {
+            if (row.style.display !== 'none') {
+                const hoursText = row.querySelector('.daily-hours').textContent.trim();
+                if (hoursText.includes('h')) {
+                    const [hours, minutes] = hoursText.split('h').map(part => part.trim());
+                    totalHours += parseInt(hours, 10) || 0;
+                    totalHours += (parseInt(minutes, 10) || 0) / 60;
+                }
+
+                // Считаем рабочие дни и отпуска по типу
+                const holidayType = row.querySelector('select[name="holiday_type"]').value;
+                totalDays++;
+                if (holidayType === 'paid') paidHolidays++;
+                if (holidayType === 'unpaid') unpaidHolidays++;
+            }
+        });
+
+        // Обновляем данные в DOM для каждого сотрудника
+        const summaryContainer = document.getElementById(`summary-${employeeId}`);
+        if (summaryContainer) {
+            const hours = Math.floor(totalHours);
+            const minutes = Math.round((totalHours % 1) * 60);
+            document.getElementById(`total-hours-${employeeId}`).textContent = `${hours}h ${minutes}min`;
+            document.getElementById(`total-days-${employeeId}`).textContent = totalDays;
+            document.getElementById(`paid-holidays-${employeeId}`).textContent = paidHolidays;
+            document.getElementById(`unpaid-holidays-${employeeId}`).textContent = unpaidHolidays;
+        }
+    });
+}
 
 function applyFilter(filterType, label = '') {
     let today = new Date();
@@ -807,8 +846,12 @@ function applyFilter(filterType, label = '') {
             endDate = new Date(firstDayOfCurrentMonth);
             endDate.setDate(endDate.getDate() - 1);
             startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+            startDate.setDate(startDate.getDate() + 1); // Прибавляем 1 день к startDate
+
         } else if (filterType === 'current_month') {
             startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            startDate.setDate(startDate.getDate() + 1); // Прибавляем 1 день к startDate
+
             endDate = today;
         }
 
@@ -825,6 +868,7 @@ function applyFilter(filterType, label = '') {
 
             // Применяем фильтр по датам
             filterLogsByDateRange(startDateStr, endDateStr);
+            updateSummaryAfterFilter();
         }
     }
 }
@@ -1007,10 +1051,22 @@ document.querySelectorAll('select[name="holiday_type"]').forEach(select => {
     });
 });
 function fetchAndUpdateTotals() {
-    fetch('/api/log_totals')
+    // Получаем значения фильтров
+    const startDate = document.getElementById('startDate')?.value;
+    const endDate = document.getElementById('endDate')?.value;
+    const holidayType = document.querySelector('select[name="holiday_type"]')?.value;
+
+    // Формируем параметры запроса на основе текущих фильтров
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append("start_date", startDate);
+    if (endDate) queryParams.append("end_date", endDate);
+    if (holidayType) queryParams.append("holiday_type", holidayType);
+
+    // Запрашиваем итоги с бэкенда с применёнными фильтрами
+    fetch(`/api/log_totals?${queryParams.toString()}`)
         .then(response => response.json())
         .then(data => {
-            // Обходим данные для каждого сотрудника и обновляем итоги в DOM
+            // Обновляем элементы сводки в DOM на основе отфильтрованных данных
             for (const [employeeId, totals] of Object.entries(data)) {
                 const totalHoursElement = document.getElementById(`total-hours-${employeeId}`);
                 const totalDaysElement = document.getElementById(`total-days-${employeeId}`);
@@ -1025,6 +1081,19 @@ function fetchAndUpdateTotals() {
         })
         .catch(error => console.error('Ошибка при получении итогов логов:', error));
 }
+
+// Вызываем `fetchAndUpdateTotals` при изменении фильтров
+document.getElementById('datePicker').addEventListener('change', fetchAndUpdateTotals);
+document.getElementById('startDate').addEventListener('change', fetchAndUpdateTotals);
+document.getElementById('endDate').addEventListener('change', fetchAndUpdateTotals);
+document.querySelector('select[name="holiday_type"]').addEventListener('change', fetchAndUpdateTotals);
+
+
+// Update totals every 10 seconds based on current filters
+setInterval(applyCurrentFilter, 10000);
+
+// Call applyCurrentFilter() when filters are applied or changed to refresh totals
+
 
 // Автоматически обновляем итоги каждые 10 секунд
 setInterval(fetchAndUpdateTotals, 5000);
