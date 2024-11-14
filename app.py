@@ -22,8 +22,7 @@ logging.basicConfig(level=logging.INFO)
 # Инициализация приложения Flask
 app = Flask(__name__)
 
-# Настройка базы данных с использованием переменной среды DATABASE_URL
-# (для локального использования SQLite по умолчанию)
+# Настройка базы данных с использованием переменной среды DATABASE_URL (или SQLite по умолчанию)
 database_url = os.getenv('DATABASE_URL', 'sqlite:///instance/employees.db')
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
@@ -37,6 +36,9 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=4)
 # Инициализация базы данных и миграций
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+# Остальной код
+
 # employee = db.session.get(Employee, log.employee_id)
 
 # Модель для администратора

@@ -1,3 +1,4 @@
+# run_migrations.py
 from app import app, db
 from flask_migrate import upgrade
 
