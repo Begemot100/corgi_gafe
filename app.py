@@ -2,34 +2,38 @@ from urllib.parse import quote
 import math
 from datetime import datetime, date, timedelta, time as dt_time
 import time
-
 from io import BytesIO
 import pandas as pd
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session, send_file, make_response, current_app
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, send_file, make_response
+import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import extract
+from sqlalchemy import extract, func
 from openpyxl.utils import get_column_letter
-# import schedule
 from models import Employee, WorkLog
 import logging
-import threading
-import openpyxl
 from collections import defaultdict
-from sqlalchemy import func
 from apscheduler.schedulers.background import BackgroundScheduler
 
-
-
+# Настройка логгирования
 logging.basicConfig(level=logging.INFO)
 
+# Инициализация приложения Flask
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///employees.db'
+
+# Настройка базы данных с использованием переменной среды DATABASE_URL
+# (для локального использования SQLite по умолчанию)
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///employees.db')
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'ваш_секретный_ключ'  # Секретный ключ для сессии
+app.secret_key = '6006'  # Замените на ваш секретный ключ
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=4)
 
+# Инициализация базы данных и миграций
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 # employee = db.session.get(Employee, log.employee_id)
