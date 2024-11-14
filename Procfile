@@ -1,1 +1,2 @@
-web: flask run --host=0.0.0.0 --port=${PORT}
+web: gunicorn /Users/germany/Desktop/Storm-Breaker/time_track/pythonProject1:app
+
