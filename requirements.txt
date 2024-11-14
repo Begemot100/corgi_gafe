@@ -1,5 +1,10 @@
-flask
-flask
-flask
+Flask
 gunicorn
 pandas
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Script
+psycopg2-binary
+SQLAlchemy
+APScheduler
+openpyxl
