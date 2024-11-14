@@ -24,10 +24,11 @@ app = Flask(__name__)
 
 # Настройка базы данных с использованием переменной среды DATABASE_URL
 # (для локального использования SQLite по умолчанию)
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///employees.db')
+database_url = os.getenv('DATABASE_URL', 'sqlite:///instance/employees.db')
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
+# Настройки конфигурации для приложения Flask
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = '6006'  # Замените на ваш секретный ключ
