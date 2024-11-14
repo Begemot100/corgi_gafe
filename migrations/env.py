@@ -2,7 +2,7 @@ import logging
 from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from app import app, db  # Импортируем приложение и базу данных
+from app import app, db  # Импорт приложения и базы данных
 
 # Настройка логирования
 config = context.config
