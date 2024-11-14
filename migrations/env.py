@@ -3,14 +3,16 @@ from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 import os
 
-# Загрузка конфигурации логирования из файла alembic.ini
+# Настройка логирования из файла alembic.ini
 fileConfig(context.config.config_file_name)
 
-# Установка URL базы данных из переменной окружения
+# Настройка конфигурации базы данных
 config = context.config
-config.set_main_option('sqlalchemy.url', os.getenv('DATABASE_URL'))
+database_url = os.getenv('DATABASE_URL')
+if database_url:
+    config.set_main_option('sqlalchemy.url', database_url)
 
-# Пример задания метаданных
+# Импорт метаданных моделей для автоматической генерации миграций
 from app import db
 target_metadata = db.metadata
 
