@@ -13,6 +13,7 @@ logger = logging.getLogger('alembic.env')
 with app.app_context():
     config.set_main_option('sqlalchemy.url', app.config['SQLALCHEMY_DATABASE_URI'])
 
+# Настройка метаданных для миграций
 target_metadata = db.metadata
 
 def run_migrations_offline():
