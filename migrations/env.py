@@ -1,52 +1,30 @@
+import logging
 from alembic import context
-from sqlalchemy import engine_from_config, pool
-from logging.config import fileConfig
-import os
+from flask import current_app
+from app import app, db  # импортируйте ваше приложение и db из основного файла
 
-# Настройка логирования из файла alembic.ini
-fileConfig(context.config.config_file_name)
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('alembic.runtime.migration')
 
-# Настройка конфигурации базы данных
+# Устанавливаем URL базы данных для Alembic
 config = context.config
-database_url = os.getenv('DATABASE_URL')
-if database_url:
-    config.set_main_option('sqlalchemy.url', database_url)
-
-# Импорт метаданных моделей для автоматической генерации миграций
-from app import db
+config.set_main_option('sqlalchemy.url', app.config['SQLALCHEMY_DATABASE_URI'])
 target_metadata = db.metadata
 
-def run_migrations_offline():
-    """Запуск миграций в оффлайн-режиме."""
-    url = config.get_main_option("sqlalchemy.url")
-    context.configure(
-        url=url,
-        target_metadata=target_metadata,
-        literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
-    )
+# Устанавливаем контекст приложения для Alembic
+with app.app_context():
+    def run_migrations_online():
+        """Запуск миграций в режиме онлайн с контекстом приложения."""
+        connectable = db.engine
 
-    with context.begin_transaction():
-        context.run_migrations()
+        with connectable.connect() as connection:
+            context.configure(
+                connection=connection,
+                target_metadata=target_metadata,
+                compare_type=True  # сравнение типов для обнаружения изменений
+            )
+            with context.begin_transaction():
+                context.run_migrations()
 
-def run_migrations_online():
-    """Запуск миграций в онлайн-режиме."""
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-
-    with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-        )
-
-        with context.begin_transaction():
-            context.run_migrations()
-
-if context.is_offline_mode():
-    run_migrations_offline()
-else:
     run_migrations_online()
