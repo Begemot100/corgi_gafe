@@ -1,44 +1,49 @@
-import logging
-from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
-from app import app, db  # Импорт приложения и базы данных
+from logging.config import fileConfig
+import os
 
-# Настройка логирования
+# Загрузка конфигурации логирования из файла alembic.ini
+fileConfig(context.config.config_file_name)
+
+# Установка URL базы данных из переменной окружения
 config = context.config
-fileConfig(config.config_file_name)
-logger = logging.getLogger('alembic.env')
+config.set_main_option('sqlalchemy.url', os.getenv('DATABASE_URL'))
 
-# Установка URL базы данных напрямую из конфигурации приложения
-with app.app_context():
-    config.set_main_option('sqlalchemy.url', app.config['SQLALCHEMY_DATABASE_URI'])
-
-# Установка метаданных для Alembic
+# Пример задания метаданных
+from app import db
 target_metadata = db.metadata
 
 def run_migrations_offline():
-    """Запуск миграций в 'offline' режиме."""
+    """Запуск миграций в оффлайн-режиме."""
     url = config.get_main_option("sqlalchemy.url")
-    context.configure(url=url, target_metadata=target_metadata, literal_binds=True)
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+    )
 
     with context.begin_transaction():
         context.run_migrations()
 
 def run_migrations_online():
-    """Запуск миграций в 'online' режиме."""
+    """Запуск миграций в онлайн-режиме."""
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
-        poolclass=pool.NullPool
+        poolclass=pool.NullPool,
     )
 
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+        )
 
         with context.begin_transaction():
             context.run_migrations()
 
-# Выбор режима миграции
 if context.is_offline_mode():
     run_migrations_offline()
 else:
