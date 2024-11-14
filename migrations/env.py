@@ -1,19 +1,18 @@
 import logging
 from logging.config import fileConfig
 from alembic import context
-from app import app, db  # Импортируйте приложение и базу данных
-from flask import current_app
+from sqlalchemy import engine_from_config, pool
+from app import app, db  # Импортируем приложение и базу данных
 
 # Настройка логирования
 config = context.config
 fileConfig(config.config_file_name)
 logger = logging.getLogger('alembic.env')
 
-# Устанавливаем URL базы данных для Alembic, используя контекст приложения
+# Устанавливаем URL базы данных напрямую из конфигурации Flask
 with app.app_context():
     config.set_main_option('sqlalchemy.url', app.config['SQLALCHEMY_DATABASE_URI'])
 
-# Настройка для метаданных
 target_metadata = db.metadata
 
 def run_migrations_offline():
@@ -26,7 +25,11 @@ def run_migrations_offline():
 
 def run_migrations_online():
     """Запуск миграций в 'online' режиме."""
-    connectable = db.engine
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool
+    )
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
