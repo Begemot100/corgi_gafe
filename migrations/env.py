@@ -1,9 +1,15 @@
-import logging
 from logging.config import fileConfig
-
+import logging
+from alembic import context
+from app import app
 from flask import current_app
 
-from alembic import context
+config = context.config
+
+# Устанавливаем контекст приложения
+with app.app_context():
+    config.set_main_option('sqlalchemy.url', app.config['SQLALCHEMY_DATABASE_URI'])
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
