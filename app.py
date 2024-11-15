@@ -27,7 +27,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.getcwd(), '
 
 # Настройки конфигурации для приложения Flask
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = '6006'  # Замените на ваш секретный ключ
+app.secret_key = '6006'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=4)
 
 # Инициализация базы данных и миграций
@@ -1234,4 +1234,4 @@ scheduler.start()
 if __name__ == '__main__':
 
     # Запускаем Flask сервер
-    app.run(debug=True, port=5005)
+    app.run(debug=True, port=5000)
