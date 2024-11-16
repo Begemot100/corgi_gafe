@@ -1150,14 +1150,14 @@ def check_missing_checkins():
 
 def add_missing_logs():
     with app.app_context():
-        logging.info("Запуск функции add_missing_logs")
+        # logging.info("Запуск функции add_missing_logs")
         today = datetime.now().date()
         employees = Employee.query.all()
 
         for employee in employees:
             existing_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=today).first()
             if not existing_log:
-                logging.info(f"Добавление пропущенной записи для сотрудника {employee.full_name}")
+                # logging.info(f"Добавление пропущенной записи для сотрудника {employee.full_name}")
                 missing_log = WorkLog(
                     employee_id=employee.id,
                     log_date=today,

@@ -1,34 +1,36 @@
-/* static/css/edit_time_modal.css */
+/* Основной стиль модального окна */
 #editTimeModal {
-    display: none; /* Скрыто по умолчанию */
+    display: none; /* Изначально скрыто */
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 1000; /* Убедитесь, что окно выше других элементов */
-    width: 400px; /* Задайте подходящую ширину */
-    background-color: #fff;
+    z-index: 1000;
+    background-color: white; /* Убедитесь, что это только окно */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3); /* Возвращаем тень */
     border-radius: 8px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-    padding: 20px;
+    padding: 10px;
+    width: 350px;
 }
 
+/* Содержимое модального окна */
 #editTimeModal .modal-content {
-    background-color: #fff;
-    padding: 20px;
+    background-color: #fff; /* Белый фон только для внутреннего содержимого */
+    padding: 10px;
     border-radius: 8px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: none; /* Убираем внутреннюю тень */
     text-align: center;
-    width: 100%; /* Занимает всю ширину контейнера */
     position: relative;
 }
 
+/* Заголовок модального окна */
 #editTimeModal h2 {
-    margin-bottom: 20px;
+    margin-bottom: 5px;
     font-weight: bold;
     color: #333;
 }
 
+/* Метка и поля ввода */
 #editTimeModal label {
     display: block;
     text-align: left;
@@ -47,6 +49,7 @@
     box-sizing: border-box;
 }
 
+/* Кнопки внутри модального окна */
 #editTimeModal .form-buttons {
     display: flex;
     justify-content: space-between;
@@ -71,6 +74,7 @@
     cursor: pointer;
 }
 
+/* Кнопка закрытия */
 #editTimeModal .close {
     position: absolute;
     top: 10px;
@@ -79,6 +83,8 @@
     font-weight: bold;
     cursor: pointer;
 }
-#editTimeModal {
-    box-shadow: none; /* Убирает тень */
+
+/* Убедитесь, что фон прозрачный */
+#editTimeModalContainer {
+    background-color: transparent !important;
 }

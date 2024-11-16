@@ -1,11 +1,11 @@
-<div id="editTimeModal" class="editTimeModal" style="display: none;">
+<div id="editTimeModal" class="editTimeModal">
     <div class="modal-content">
         <span class="close" onclick="closeEditModal()">&times;</span>
         <h2>Editar hora</h2>
 
         <label for="editDate">Fecha</label>
         <select id="editDate" onchange="updateSelectedLogData(this.value, employeeLogs)">
-            <!-- Опции дат будут добавлены здесь динамически -->
+            <!-- Динамические опции -->
         </select>
         <label for="editCheckIn">Hora de inicio</label>
         <input type="time" id="editCheckIn">
@@ -17,5 +17,3 @@
         </div>
     </div>
 </div>
-
-
