@@ -31,7 +31,7 @@
             <div class="content">
                 <header>
                     <div class="header-right">
-                        <a href="/logout" class="logout-btn">Logout</a>
+                        <a href="/logout" class="logout-btn">Cerrar sesión</a>
                     </div>
                 </header>
 
@@ -73,7 +73,7 @@
                             <div class="dropdown">
                                 <button class="filter-btn" onclick="toggleDropdown('group-dropdown-menu')">Grupo</button>
                                 <div id="group-dropdown-menu" class="dropdown-menu">
-                                    <a href="javascript:void(0);" onclick="applyGroupFilter('All')">All</a>
+                                    <a href="javascript:void(0);" onclick="applyGroupFilter('All')">Todos</a>
                                     <a href="javascript:void(0);" onclick="applyGroupFilter('cocina')">Cocina</a>
                                     <a href="javascript:void(0);" onclick="applyGroupFilter('sala')">Sala</a>
 
@@ -93,10 +93,10 @@
                                 <div class="modal-content">
                                     <span class="close" onclick="closeModal()">&times;</span>
                                     <ul class="modal-options">
-                                        <li><button onclick="selectAllEmployees()">Select All</button></li>
-                                        <button onclick="getSelectedEmployeeAndOpenEditModal()">Edit</button>
-                                        <li><button onclick="exportExcel()">Export Excel</button></li>
-                                        <li><button class="edit-schedule-btn" onclick="toggleCheckboxes()">Edit Schedule</button></li>
+                                        <li><button onclick="selectAllEmployees()">Todos</button></li>
+                                        <button onclick="getSelectedEmployeeAndOpenEditModal()">Editar</button>
+                                        <li><button onclick="exportExcel()">Exportar a Excel</button></li>
+                                        <li><button class="edit-schedule-btn" onclick="toggleCheckboxes()">Editar horario</button></li>
                                     </ul>
                                 </div>
                             </div>
@@ -145,10 +145,10 @@
 
                                                     <td>
                                                         <select id="log-{{ log.id }}" name="holiday_type" onchange="updateHolidayStatus('{{ log.id }}', this.value)">
-                                                            <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Working day</option>
+                                                            <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Día laboral</option>
                                                             <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Pagado</option>
                                                             <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>No pagado</option>
-                                                            <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Weekend</option>
+                                                            <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Fin de semana</option>
                                                         </select>
                                                     </td>
                                                     <td class="checkbox-cell" style="display: none;text-align: center;">
