@@ -378,8 +378,11 @@ function recalculateAndUpdateSummary() {
                 }
 
                 // Обновляем количество рабочих дней
-                totalDaysElement.textContent = totalDays;
-
+                if (totalDays > 0) {
+                    totalDaysElement.textContent = totalDays - 1;
+                } else {
+                    totalDaysElement.textContent = 0; // Не допускаем отрицательных значений
+                }
                 // Обновляем оплачиваемые и неоплачиваемые отпуска
                 paidHolidaysElement.textContent = paidHolidays;
                 unpaidHolidaysElement.textContent = unpaidHolidays;
@@ -1018,13 +1021,20 @@ function fetchAndUpdateTotals() {
                 const unpaidHolidaysElement = document.getElementById(`unpaid-holidays-${employeeId}`);
 
                 if (totalHoursElement) totalHoursElement.textContent = totals.total_hours;
-                if (totalDaysElement) totalDaysElement.textContent = totals.total_days;
+
+                // Уменьшаем total_days на 1, если оно больше 0
+                if (totalDaysElement) {
+                    const adjustedTotalDays = Math.max(0, totals.total_days - 1); // Не допускаем отрицательных значений
+                    totalDaysElement.textContent = adjustedTotalDays;
+                }
+
                 if (paidHolidaysElement) paidHolidaysElement.textContent = totals.paid_holidays;
                 if (unpaidHolidaysElement) unpaidHolidaysElement.textContent = totals.unpaid_holidays;
             }
         })
         .catch(error => console.error('Ошибка при получении итогов логов:', error));
 }
+
 
 // Автоматически обновляем итоги каждые 10 секунд
 setInterval(fetchAndUpdateTotals, 5000);

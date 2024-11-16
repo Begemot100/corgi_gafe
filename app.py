@@ -34,9 +34,6 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=4)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-# Остальной код
-
-# employee = db.session.get(Employee, log.employee_id)
 
 # Модель для администратора
 class Admin(db.Model):
@@ -760,8 +757,7 @@ def export_excel():
         paid_holidays = sum(1 for log in employee.work_logs if log.holidays == 'Paid')
         unpaid_holidays = sum(1 for log in employee.work_logs if log.holidays == 'Unpaid')
         weekends = sum(1 for log in employee.work_logs if log.holidays == 'Weekend')
-        working_days = sum(1 for log in employee.work_logs if log.holidays == 'Working day')
-
+        working_days = max(0, sum(1 for log in employee.work_logs if log.holidays == 'Working day') - 1)
 
         # Итоговое количество отработанных часов (учитывая Paid и исключая Unpaid дни)
         total_hours_worked = sum(
