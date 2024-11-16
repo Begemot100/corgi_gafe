@@ -354,3 +354,129 @@ h2.section-title {
 }
 /* Уникальные стили для кнопки экспорта Excel */
 
+/* Для iPhone SE и аналогичных (320px) */
+@media (max-width: 320px) {
+    body {
+        font-size: 12px;
+    }
+
+    .sidebar {
+        width: 60px; /* Уменьшаем ширину сайдбара */
+        padding: 10px;
+    }
+
+    .content {
+        margin-left: 60px; /* Соответствует ширине сайдбара */
+        padding: 10px;
+    }
+
+    .company-info {
+        flex-direction: column; /* Сжимаем информацию о компании в колонку */
+        align-items: flex-start;
+    }
+
+    .filters-container {
+        flex-direction: column; /* Фильтры в один столбик */
+        gap: 5px;
+    }
+
+    .employee-card {
+        flex-direction: column; /* Карточка сотрудников в столбик */
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .employee-info {
+        gap: 10px;
+    }
+
+    .new-employee-btn {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+}
+
+/* Для iPhone 6/7/8 (375px) */
+@media (max-width: 375px) {
+    body {
+        font-size: 14px;
+    }
+
+    .sidebar {
+        width: 70px;
+        padding: 15px;
+    }
+
+    .content {
+        margin-left: 70px;
+        padding: 15px;
+    }
+
+    .company-info {
+        flex-direction: column;
+        align-items: flex-start;
+        font-size: 14px;
+    }
+
+    .filters-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .employee-card {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .employee-info {
+        gap: 15px;
+    }
+
+    .new-employee-btn {
+        padding: 8px 15px;
+        font-size: 14px;
+    }
+}
+
+/* Для iPhone 12 и выше (428px) */
+@media (max-width: 428px) {
+    body {
+        font-size: 16px;
+    }
+
+    .sidebar {
+        width: 80px;
+        padding: 20px;
+    }
+
+    .content {
+        margin-left: 80px;
+        padding: 20px;
+    }
+
+    .company-info {
+        flex-direction: column;
+        align-items: flex-start;
+        font-size: 16px;
+    }
+
+    .filters-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .employee-card {
+        padding: 15px;
+        font-size: 16px;
+    }
+
+    .employee-info {
+        gap: 20px;
+    }
+
+    .new-employee-btn {
+        padding: 10px 20px;
+        font-size: 16px;
+    }
+}

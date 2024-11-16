@@ -293,3 +293,132 @@ header {
         justify-content: flex-start;
     }
 }
+/* Адаптация под iPhone SE (320px) */
+@media screen and (max-width: 320px) {
+    .sidebar {
+        width: 60px; /* Уменьшаем ширину сайдбара */
+        padding: 10px 0;
+    }
+
+    .sidebar .logo img {
+        width: 40px; /* Уменьшаем логотип */
+    }
+
+    .content {
+        margin-left: 60px; /* Корректируем отступ для контента */
+        padding: 10px;
+    }
+
+    .employee-log {
+        padding: 8px;
+        font-size: 12px; /* Уменьшаем шрифт */
+    }
+
+    .filter-bar {
+        flex-direction: column; /* Располагаем фильтры вертикально */
+        gap: 5px;
+    }
+
+    .summary-container {
+        max-width: 150px; /* Уменьшаем ширину блока итогов */
+        font-size: 10px; /* Уменьшаем шрифт */
+        padding: 10px;
+    }
+
+    .logs-table {
+        width: 100%; /* Таблица занимает всю ширину экрана */
+    }
+}
+
+/* Адаптация под iPhone 6/7/8 (375px) */
+@media screen and (max-width: 375px) {
+    .sidebar {
+        width: 70px;
+    }
+
+    .sidebar .logo img {
+        width: 45px;
+    }
+
+    .content {
+        margin-left: 70px;
+    }
+
+    .employee-log {
+        padding: 10px;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .summary-container {
+        max-width: 200px;
+        font-size: 12px;
+    }
+
+    .logs-table {
+        width: 100%; /* Растягиваем таблицу */
+    }
+}
+
+/* Адаптация под iPhone X/12/13/14 (428px) */
+@media screen and (max-width: 428px) {
+    .sidebar {
+        width: 80px;
+    }
+
+    .sidebar .logo img {
+        width: 50px;
+    }
+
+    .content {
+        margin-left: 80px;
+    }
+
+    .employee-log {
+        padding: 12px;
+    }
+
+    .filter-bar {
+        flex-wrap: wrap; /* Фильтры в несколько строк */
+        gap: 15px;
+    }
+
+    .summary-container {
+        max-width: 250px;
+        font-size: 14px;
+    }
+
+    .logs-table {
+        width: 100%;
+    }
+}
+
+/* Общие правила для экранов до 768px */
+@media screen and (max-width: 768px) {
+    .filter-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .right-section {
+        justify-content: flex-start;
+    }
+
+    .employee-log {
+        flex-direction: column; /* Логи сотрудников располагаем вертикально */
+        align-items: flex-start;
+    }
+
+    .summary-container {
+        margin-top: 20px;
+        font-size: 12px;
+    }
+
+    .logs-table th, .logs-table td {
+        font-size: 12px; /* Уменьшаем шрифт в таблице */
+        padding: 8px; /* Уменьшаем отступы */
+    }
+}

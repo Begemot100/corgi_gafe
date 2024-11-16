@@ -429,3 +429,123 @@ header {
     opacity: 0 !important;
 
 }
+/* Адаптация под iPhone SE (320px) */
+@media screen and (max-width: 320px) {
+    .sidebar {
+        width: 60px; /* Уменьшаем ширину сайдбара */
+        padding: 10px 0;
+    }
+
+    .content {
+        margin-left: 60px; /* Корректируем отступ для контента */
+        padding: 10px;
+    }
+
+    .employee-log {
+        padding: 10px;
+        font-size: 12px; /* Уменьшаем шрифт */
+    }
+
+    .filter-bar {
+        flex-direction: column; /* Располагаем фильтры вертикально */
+        gap: 5px;
+    }
+
+    .right-section {
+        justify-content: center; /* Центрируем элементы */
+        gap: 5px;
+    }
+
+    .summary-container {
+        max-width: 150px; /* Уменьшаем ширину блока итогов */
+        font-size: 10px; /* Уменьшаем шрифт */
+        padding: 10px;
+    }
+
+    .work-logs {
+        gap: 10px; /* Уменьшаем отступы между логами */
+    }
+}
+
+/* Адаптация под iPhone 6/7/8 (375px) */
+@media screen and (max-width: 375px) {
+    .sidebar {
+        width: 70px;
+    }
+
+    .content {
+        margin-left: 70px;
+    }
+
+    .employee-log {
+        padding: 12px;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .right-section {
+        gap: 10px;
+    }
+
+    .summary-container {
+        max-width: 200px;
+        font-size: 12px;
+    }
+
+    .work-logs {
+        gap: 15px;
+    }
+}
+
+/* Адаптация под iPhone X/12/13/14 (428px) */
+@media screen and (max-width: 428px) {
+    .sidebar {
+        width: 80px;
+    }
+
+    .content {
+        margin-left: 80px;
+    }
+
+    .employee-log {
+        padding: 15px;
+    }
+
+    .filter-bar {
+        flex-wrap: wrap; /* Фильтры в несколько строк */
+        gap: 15px;
+    }
+
+    .summary-container {
+        max-width: 250px;
+        font-size: 14px;
+    }
+
+    .work-logs {
+        gap: 20px;
+    }
+}
+
+/* Общие правила для всех экранов меньше 768px */
+@media screen and (max-width: 768px) {
+    .filter-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .right-section {
+        justify-content: flex-start;
+    }
+
+    .employee-log {
+        flex-direction: column; /* Логи сотрудников располагаем вертикально */
+    }
+
+    .summary-container {
+        margin-top: 20px;
+        font-size: 12px;
+    }
+}
