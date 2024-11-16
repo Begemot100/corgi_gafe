@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,15 +11,20 @@
         <div class="logo">
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Corgi Cafe Logo">
         </div>
-        <h2>Login</h2>
+        <h2>Inicio de sesión</h2>
         <form method="POST" action="{{ url_for('login') }}">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required placeholder="E-Mail address">
+            {% if error_message %}
+            <div class="error-message" style="color: red; font-weight: bold; margin-bottom: 10px;">
+                {{ error_message }}
+            </div>
+            {% endif %}
+            <label for="email">Correo electrónico</label>
+            <input type="email" id="email" name="email" required placeholder="Dirección de correo electrónico">
             <label for="password">Contraseña</label>
-            <input type="password" id="password" name="password" required placeholder="Password">
-            <button type="submit">Login</button>
+            <input type="password" id="password" name="password" required placeholder="Contraseña">
+            <button type="submit">Inicio de sesión</button>
         </form>
-        <p>¿No tienes una cuenta? <a href="{{ url_for('register') }}">Регистрация</a></p>
+        <p>¿No tienes una cuenta? <a href="{{ url_for('register') }}">Registration</a></p>
     </div>
 </body>
 </html>

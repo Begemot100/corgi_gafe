@@ -30,14 +30,14 @@
                 <div class="employee-phone">{{ employee.employee.phone }}</div>
             </div>
             <div class="check-in-out">
-                <button class="check-in-btn" data-id="{{ employee.employee.id }}">Registro de entrada</button>
+                <button class="check-in-btn" data-id="{{ employee.employee.id }}">Entrada</button>
                 <span class="check-in-time" id="check-in-time-{{ employee.employee.id }}">
                     {{ '--:--' if employee.check_in_time == '00:00' or not employee.check_in_time else employee.check_in_time }}
                 </span>
                 <span class="check-out-time" id="check-out-time-{{ employee.employee.id }}">
                     {{ '--:--' if employee.check_out_time == '00:00' or not employee.check_out_time else employee.check_out_time }}
                 </span>
-                <button class="check-out-btn" data-id="{{ employee.employee.id }}">Registro de salida</button>
+                <button class="check-out-btn" data-id="{{ employee.employee.id }}">Salida</button>
 
                 <span class="daily-hours" id="daily-hours-{{ employee.employee.id }}">Diario: {{ "%.2f" | format(employee.daily_hours) }}h</span>
             </div>

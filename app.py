@@ -45,7 +45,8 @@ class Admin(db.Model):
     password_hash = db.Column(db.String(128), nullable=False)
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256', salt_length=16)
+
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -308,7 +309,14 @@ def work():
         employee.overtime = max(0, total_hours - (8 * total_days))
 
     # Сохранение изменений в базе данных
-    db.session.commit()
+    try:
+        logging.info("Попытка сохранения данных в базу...")
+        db.session.commit()
+        logging.info("Данные успешно сохранены в базу.")
+    except Exception as e:
+        logging.error(f"Ошибка при сохранении данных: {e}")
+        db.session.rollback()
+        logging.info("Откат транзакции выполнен.")
 
     return render_template('work.html', employees=employees, current_time=current_time)
 
@@ -387,14 +395,21 @@ def add_employee():
 
     try:
         db.session.add(new_employee)
-        db.session.commit()
+        try:
+            logging.info("Попытка сохранения данных в базу...")
+            db.session.commit()
+            logging.info("Данные успешно сохранены в базу.")
+        except Exception as e:
+            logging.error(f"Ошибка при сохранении данных: {e}")
+            db.session.rollback()
+            logging.info("Откат транзакции выполнен.")
         logging.info(f"Сотрудник {full_name} успешно добавлен в раздел {section}.")
     except Exception as e:
         db.session.rollback()
         logging.error(f"Ошибка при добавлении сотрудника: {e}")
-        return jsonify({'error': 'Ошибка при добавлении сотрудника'}), 500
+        return jsonify({'error': 'Error al añadir al empleado'}), 500
 
-    return jsonify({'message': 'Сотрудник успешно добавлен!'}), 200
+    return jsonify({'message': '¡Empleado añadido con éxito!'}), 200
 
 # Удаление сотрудника
 @app.route('/delete/<int:id>', methods=['POST'])
@@ -416,7 +431,7 @@ def delete_employee(id):
 def edit_employee(id):
     employee = Employee.query.get(id)
     if not employee:
-        return jsonify({'error': 'Сотрудник не найден'}), 404
+        return jsonify({'error': 'Empleado no encontrado'}), 404
 
     try:
         # Основные данные сотрудника
@@ -444,24 +459,31 @@ def edit_employee(id):
 
         if not work_start_time_str or not work_end_time_str:
             logging.error("Не указаны рабочие часы для редактирования.")
-            return jsonify({'error': 'Не указаны рабочие часы'}), 400
+            return jsonify({'error': 'No se han especificado las horas de trabajo'}), 400
 
         # Парсинг времени начала и окончания работы
         employee.work_start_time = datetime.strptime(work_start_time_str, '%H:%M').time()
         employee.work_end_time = datetime.strptime(work_end_time_str, '%H:%M').time()
 
         # Сохранение изменений
-        db.session.commit()
+        try:
+            logging.info("Попытка сохранения данных в базу...")
+            db.session.commit()
+            logging.info("Данные успешно сохранены в базу.")
+        except Exception as e:
+            logging.error(f"Ошибка при сохранении данных: {e}")
+            db.session.rollback()
+            logging.info("Откат транзакции выполнен.")
         logging.info(f"Сотрудник {employee.full_name} успешно обновлен.")
-        return jsonify({'message': 'Сотрудник успешно обновлен!'}), 200
+        return jsonify({'message': '¡Empleado actualizado con éxito!'}), 200
 
     except ValueError as e:
         logging.error(f"Ошибка при парсинге данных: {e}")
-        return jsonify({'error': 'Некорректный формат данных'}), 400
+        return jsonify({'error': 'Formato de datos incorrecto'}), 400
     except Exception as e:
         logging.error(f"Ошибка при обновлении данных сотрудника: {e}")
         db.session.rollback()
-        return jsonify({'error': 'Ошибка при обновлении сотрудника'}), 500
+        return jsonify({'error': 'Error al actualizar al empleado'}), 500
 
 
 # Маршрут для входа
@@ -480,15 +502,17 @@ def login():
             if admin.check_password(password):
                 session['admin_id'] = admin.id  # Сохраняем ID администратора в сессии
                 session.permanent = True  # Устанавливаем сессию как постоянную
-                app.logger.info("Вход выполнен успешно")
+                app.logger.info("Inicio de sesión exitoso")
                 return redirect(url_for('admin'))  # Перенаправление на админку
             else:
                 app.logger.warning("Неверный пароль")
+                error_message = "Contraseña incorrecta"
         else:
             app.logger.warning("Администратор с таким email не найден")
+            error_message = "Неверный email или пользователь не существует"
 
         # Если неудачная попытка входа
-        return jsonify({'error': 'Неверный email или пароль'}), 401
+        return render_template('login.html', error_message=error_message)
 
     return render_template('login.html')  # Возврат формы входа
 
@@ -503,13 +527,20 @@ def register():
 
         # Проверяем, существует ли администратор с таким email
         if Admin.query.filter_by(email=email).first():
-            return jsonify({'error': 'Этот email уже зарегистрирован!'}), 400
+            return jsonify({'error': '¡Este correo electrónico ya está registrado!'}), 400
 
         # Создаем нового администратора
         new_admin = Admin(email=email)
         new_admin.set_password(password)  # Устанавливаем хэш пароля
         db.session.add(new_admin)
-        db.session.commit()
+        try:
+            logging.info("Попытка сохранения данных в базу...")
+            db.session.commit()
+            logging.info("Данные успешно сохранены в базу.")
+        except Exception as e:
+            logging.error(f"Ошибка при сохранении данных: {e}")
+            db.session.rollback()
+            logging.info("Откат транзакции выполнен.")
 
         return redirect(url_for('admin'))  # Перенаправление на админку после успешной регистрации
 
@@ -538,7 +569,14 @@ def check_in(id):
             check_out_time=None
         )
         db.session.add(new_log)
-        db.session.commit()
+        try:
+            logging.info("Попытка сохранения данных в базу...")
+            db.session.commit()
+            logging.info("Данные успешно сохранены в базу.")
+        except Exception as e:
+            logging.error(f"Ошибка при сохранении данных: {e}")
+            db.session.rollback()
+            logging.info("Откат транзакции выполнен.")
         return jsonify({'message': 'Чек-ин выполнен', 'check_in_time': new_log.check_in_time.strftime('%H:%M:%S')})
 
     # Устанавливаем время чек-ина, если запись существует, но чек-ин еще не сделан
@@ -576,7 +614,14 @@ def check_out(id):
 
     work_log.worked_hours = worked_hours  # Сохраняем отработанные часы в лог
 
-    db.session.commit()
+    try:
+        logging.info("Попытка сохранения данных в базу...")
+        db.session.commit()
+        logging.info("Данные успешно сохранены в базу.")
+    except Exception as e:
+        logging.error(f"Ошибка при сохранении данных: {e}")
+        db.session.rollback()
+        logging.info("Откат транзакции выполнен.")
 
     return jsonify({'check_out_time': check_out_time.strftime('%H:%M:%S'), 'worked_hours': worked_hours})
 
@@ -833,7 +878,14 @@ def edit_check_time(log_id):
     if log:
         log.check_in_time = check_in_time
         log.check_out_time = check_out_time
-        db.session.commit()
+        try:
+            logging.info("Попытка сохранения данных в базу...")
+            db.session.commit()
+            logging.info("Данные успешно сохранены в базу.")
+        except Exception as e:
+            logging.error(f"Ошибка при сохранении данных: {e}")
+            db.session.rollback()
+            logging.info("Откат транзакции выполнен.")
         return jsonify({'success': True})
     else:
         return jsonify({'success': False}), 404
@@ -861,7 +913,14 @@ def update_check_time(id):
 
             # Пересчет рабочих часов
             work_log.worked_hours = work_log.calculate_worked_hours()
-            db.session.commit()
+            try:
+                logging.info("Попытка сохранения данных в базу...")
+                db.session.commit()
+                logging.info("Данные успешно сохранены в базу.")
+            except Exception as e:
+                logging.error(f"Ошибка при сохранении данных: {e}")
+                db.session.rollback()
+                logging.info("Откат транзакции выполнен.")
             app.logger.info(f"Запись с ID {id} успешно сохранена в базу данных.")
             app.logger.info(f"Часы обновлены для лога {id}: {work_log.worked_hours}")
             return jsonify({'success': True, 'worked_hours': work_log.worked_hours})
@@ -948,7 +1007,14 @@ def update_work_logs():
         if work_log:
             work_log.check_in_time = check_in
             work_log.check_out_time = check_out
-            db.session.commit()
+            try:
+                logging.info("Попытка сохранения данных в базу...")
+                db.session.commit()
+                logging.info("Данные успешно сохранены в базу.")
+            except Exception as e:
+                logging.error(f"Ошибка при сохранении данных: {e}")
+                db.session.rollback()
+                logging.info("Откат транзакции выполнен.")
 
     return jsonify(success=True)
 
@@ -967,7 +1033,14 @@ def update_times():
             work_log.check_in_time = datetime.combine(work_log.log_date, check_in_time.time())
             work_log.check_out_time = datetime.combine(work_log.log_date, check_out_time.time())
             work_log.worked_hours = work_log.calculate_worked_hours()
-            db.session.commit()
+            try:
+                logging.info("Попытка сохранения данных в базу...")
+                db.session.commit()
+                logging.info("Данные успешно сохранены в базу.")
+            except Exception as e:
+                logging.error(f"Ошибка при сохранении данных: {e}")
+                db.session.rollback()
+                logging.info("Откат транзакции выполнен.")
 
     return jsonify({'success': True})
 
@@ -1045,7 +1118,14 @@ def add_work_log():
     # Сохранить данные в таблицу лога
     new_log = WorkLog(employee_id=employee_id, check_in=check_in, check_out=check_out, overtime=overtime)
     db.session.add(new_log)
-    db.session.commit()
+    try:
+        logging.info("Попытка сохранения данных в базу...")
+        db.session.commit()
+        logging.info("Данные успешно сохранены в базу.")
+    except Exception as e:
+        logging.error(f"Ошибка при сохранении данных: {e}")
+        db.session.rollback()
+        logging.info("Откат транзакции выполнен.")
 
     return jsonify({'message': 'Рабочий лог добавлен', 'overtime': str(overtime)})
 
@@ -1091,7 +1171,14 @@ def add_missing_logs():
                 )
                 db.session.add(missing_log)
 
-        db.session.commit()
+        try:
+            logging.info("Попытка сохранения данных в базу...")
+            db.session.commit()
+            logging.info("Данные успешно сохранены в базу.")
+        except Exception as e:
+            logging.error(f"Ошибка при сохранении данных: {e}")
+            db.session.rollback()
+            logging.info("Откат транзакции выполнен.")
         logging.info("Функция add_missing_logs завершена")
 
 
@@ -1112,7 +1199,14 @@ def register_dashboard_user():
         new_user.set_password(password)  # Хешируем пароль
 
         db.session.add(new_user)
-        db.session.commit()
+        try:
+            logging.info("Попытка сохранения данных в базу...")
+            db.session.commit()
+            logging.info("Данные успешно сохранены в базу.")
+        except Exception as e:
+            logging.error(f"Ошибка при сохранении данных: {e}")
+            db.session.rollback()
+            logging.info("Откат транзакции выполнен.")
 
         return redirect(url_for('dashboard'))  # Перенаправляем на страницу логина после успешной регистрации
 
@@ -1145,8 +1239,14 @@ def add_new_day_for_employees():
                 holidays='Working day'
             )
             db.session.add(new_log)
-    db.session.commit()
-
+    try:
+        logging.info("Попытка сохранения данных в базу...")
+        db.session.commit()
+        logging.info("Данные успешно сохранены в базу.")
+    except Exception as e:
+        logging.error(f"Ошибка при сохранении данных: {e}")
+        db.session.rollback()
+        logging.info("Откат транзакции выполнен.")
 
 
 # Маршрут для добавления пустого лога
@@ -1183,7 +1283,14 @@ def add_empty_log():
 
     # Сохраняем лог в базе данных
     db.session.add(new_log)
-    db.session.commit()
+    try:
+        logging.info("Попытка сохранения данных в базу...")
+        db.session.commit()
+        logging.info("Данные успешно сохранены в базу.")
+    except Exception as e:
+        logging.error(f"Ошибка при сохранении данных: {e}")
+        db.session.rollback()
+        logging.info("Откат транзакции выполнен.")
 
     return jsonify({'success': True, 'message': 'Пустой лог успешно добавлен'})
 
@@ -1224,7 +1331,15 @@ def create_placeholder_logs():
                 check_out_time=None
             )
             db.session.add(placeholder_log)
-    db.session.commit()
+    try:
+        logging.info("Попытка сохранения данных в базу...")
+        db.session.commit()
+        logging.info("Данные успешно сохранены в базу.")
+    except Exception as e:
+        logging.error(f"Ошибка при сохранении данных: {e}")
+        db.session.rollback()
+        logging.info("Откат транзакции выполнен.")
+
 
 # Настройка планировщика
 scheduler = BackgroundScheduler()

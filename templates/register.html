@@ -1,27 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reg.css') }}">
 </head>
 <body>
     <div class="registration-modal-content">
         <h2>Registro de administrador</h2>
         <form action="{{ url_for('register') }}" method="POST">
-            <label for="full_name">Полное имя</label>
-            <input type="text" id="full_name" name="full_name" placeholder="Введите полное имя" required>
+            <label for="full_name">Nombre</label>
+            <input type="text" id="full_name" name="full_name" placeholder="Ingrese su nombre completo" required>
 
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" placeholder="Введите email" required>
+            <label for="email">Correo electrónicoil</label>
+            <input type="email" id="email" name="email" placeholder="Ingrese su correo electrónico" required>
 
-            <label for="password">Пароль</label>
-            <input type="password" id="password" name="password" placeholder="Введите пароль" required>
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" name="password" placeholder="ngrese su contraseña" required>
 
             <div class="form-buttons">
                 <button type="button" class="cancel-btn" onclick="window.location.href = '/';">Отмена</button>
-                <button type="submit" class="register-btn">Зарегистрироваться</button>
+                <button type="submit" class="register-btn">Regístrate</button>
             </div>
         </form>
     </div>
