@@ -1024,7 +1024,7 @@ function fetchAndUpdateTotals() {
 
                 // Уменьшаем total_days на 1, если оно больше 0
                 if (totalDaysElement) {
-                    const adjustedTotalDays = Math.max(0, totals.total_days - 1); // Не допускаем отрицательных значений
+                    const adjustedTotalDays = Math.max(0, totals.total_days); // Не допускаем отрицательных значений
                     totalDaysElement.textContent = adjustedTotalDays;
                 }
 
