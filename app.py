@@ -111,9 +111,20 @@ def home():
     return render_template('home.html')
 
 # Маршрут для логина администратора
-@app.route('/admin_login')
+@app.route('/admin_login', methods=['POST'])
 def admin_login():
-    return render_template('login.html')  # Здесь должна быть страница логина для администратора
+    email = request.form['email']
+    password = request.form['password']
+
+    # Проверка администратора в базе
+    admin = Admin.query.filter_by(email=email).first()
+    if admin and check_password_hash(admin.password, password):
+        session['role'] = 'admin'  # Устанавливаем роль администратора в сессии
+        session['admin_id'] = admin.id  # Сохраняем ID администратора
+        return redirect(url_for('admin'))
+    else:
+        return render_template('login.html', error="Invalid credentials")
+
 
 # Маршрут для логина работника
 @app.route('/dashboard_login', methods=['GET', 'POST'])
@@ -168,8 +179,11 @@ def calculate_overtime(work_start_time, work_end_time, check_in, check_out):
     # Возвращаем овертайм в часах и минутах
     return overtime
 
+
 @app.route('/admin', methods=['GET'])
 def admin():
+    logging.info(f"Сессия пользователя: {session}")  # Логирование сессии
+
     # Проверка, что пользователь вошел и его роль - администратор
     if 'role' not in session or session['role'] != 'admin':
         return redirect(url_for('dashboard'))  # Перенаправление для работника
@@ -1466,25 +1480,34 @@ def register_worker():
     if request.method == 'POST':
         full_name = request.form['full_name']
         email = request.form['email']
-        password = generate_password_hash(request.form['password'])
+        password = request.form['password']
+        phone = request.form['phone']
 
-        # Проверяем, есть ли такой email в базе
-        existing_user = Employee.query.filter_by(email=email).first()
-        if existing_user:
-            return render_template('register_worker.html', error="El correo electrónico ya está registrado.")
+        # Проверяем, существует ли уже работник с таким email
+        if DashboardUser.query.filter_by(username=email).first():
+            return render_template('worker_register.html', error_message="Этот email уже зарегистрирован!")
 
-        # Создаем нового работника
-        new_employee = Employee(full_name=full_name, email=email, password=password, section="Sala")
-        db.session.add(new_employee)
-        db.session.commit()
-        return redirect(url_for('dashboard_login'))
+        # Создаем нового пользователя с ролью "worker"
+        new_worker = DashboardUser(username=email)
+        new_worker.set_password(password)
+        db.session.add(new_worker)
 
-    return render_template('register_worker.html')
+        try:
+            db.session.commit()
+            logging.info(f"Новый работник зарегистрирован: {full_name}")
+            return redirect(url_for('dashboard_login'))
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Ошибка регистрации работника: {e}")
+            return render_template('worker_register.html', error_message="Ошибка при сохранении данных.")
 
+    return render_template('worker_register.html')
 
 @app.route('/worker_role', methods=['GET'])
 def worker_role():
     return render_template('worker_role.html')
+
+
 
 # Настройка планировщика
 scheduler = BackgroundScheduler()
