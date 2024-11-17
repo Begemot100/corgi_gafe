@@ -15,6 +15,7 @@ from models import Employee, WorkLog
 import logging
 from collections import defaultdict
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 # Настройка логгирования
 logging.basicConfig(level=logging.INFO)
@@ -1517,10 +1518,44 @@ def worker_role():
 
 
 
-# Настройка планировщика
+def create_placeholder_logs():
+    tomorrow = datetime.today().date() + timedelta(days=1)
+    employees = Employee.query.all()
+
+    for employee in employees:
+        # Проверяем, если запись уже существует, не создаем повторно
+        existing_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=tomorrow).first()
+        if existing_log:
+            continue
+
+        # Создаем лог с прочерками
+        placeholder_log = WorkLog(
+            employee_id=employee.id,
+            log_date=tomorrow,
+            check_in_time=None,
+            check_out_time=None,
+            holidays='Working day'
+        )
+        db.session.add(placeholder_log)
+
+    try:
+        db.session.commit()
+        logging.info("Логи успешно добавлены.")
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Ошибка при сохранении данных: {e}")
+
+# Инициализация планировщика
 scheduler = BackgroundScheduler()
-scheduler.add_job(create_placeholder_logs, 'cron', hour=23, minute=45)
+scheduler.add_job(
+    create_placeholder_logs,
+    CronTrigger(hour=23, minute=59)  # Задача запускается каждый день в 00:00
+)
 scheduler.start()
+
+# Остановка планировщика при завершении приложения
+from atexit import register
+register(lambda: scheduler.shutdown())
 
 if __name__ == '__main__':
 

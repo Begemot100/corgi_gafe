@@ -416,9 +416,9 @@ function toggleDropdown(menuId) {
 
 
 
-//function applyFilter(filterType) {
-//    window.location.href = `/work?filter=${filterType}`;
-//}
+function applyFilter(filterType) {
+    window.location.href = `/work?filter=${filterType}`;
+}
 
 function applyDateFilter() {
     const selectedDate = document.getElementById("datePicker").value;
@@ -577,20 +577,20 @@ document.addEventListener('DOMContentLoaded', function() {
         applyFilterByDate(selectedDate);
     });
 
-//    function applyFilterByDate(date) {
-//        console.log("Выбранная дата для фильтрации:", date);
-//        document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
-//            const logDate = row.getAttribute('data-log-date');
-//            console.log("Дата строки:", logDate);
-//            if (logDate === selectedDate) {
-//                row.style.display = ''; // Показать строку
-//            } else {
-//                row.style.display = 'none'; // Скрыть строку
-//            }
-//        });
-//        document.getElementById('selectedDateDisplay').textContent = `Date: ${date}`;
-//    }
-//
+    function applyFilterByDate(date) {
+        console.log("Выбранная дата для фильтрации:", date);
+        document.querySelectorAll('.employee-log .logs-table tbody tr').forEach(row => {
+            const logDate = row.getAttribute('data-log-date');
+            console.log("Дата строки:", logDate);
+            if (logDate === selectedDate) {
+                row.style.display = ''; // Показать строку
+            } else {
+                row.style.display = 'none'; // Скрыть строку
+            }
+        });
+        document.getElementById('selectedDateDisplay').textContent = `Date: ${date}`;
+    }
+
 
 
     // Логика для обновления цвета фона выбора отпуска
