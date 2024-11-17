@@ -22,10 +22,11 @@ logging.basicConfig(level=logging.INFO)
 # Инициализация приложения Flask
 app = Flask(__name__)
 
-# Настройка базы данных с использованием переменной среды DATABASE_URL (или SQLite по умолчанию)
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.getcwd(), 'instance', 'employees.db')}"
-
-# Настройки конфигурации для приложения Flask
+# Настройка базы данных: используем DATABASE_URL, если доступно, или SQLite для локальной разработки
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+    'DATABASE_URL',
+    f"sqlite:///{os.path.join(os.getcwd(), 'instance', 'employees.db')}"
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = '6006'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=4)
