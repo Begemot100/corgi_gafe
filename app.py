@@ -154,7 +154,7 @@ def dashboard_login():
 @app.route('/logout')
 def logout():
     session.clear()  # Очищаем сессию
-    return redirect(url_for('dashboard_login'))
+    return redirect(url_for('login'))
 
 
 # Главная страница - Страница входа
