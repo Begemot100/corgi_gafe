@@ -232,12 +232,16 @@ def work():
     start_date_str = request.args.get('start_date')
     end_date_str = request.args.get('end_date')
 
+    # Добавляем фильтрацию для исключения будущих дат
     if start_date_str and end_date_str:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-        logs = WorkLog.query.filter(WorkLog.log_date.between(start_date, end_date)).all()
+        logs = WorkLog.query.filter(
+            WorkLog.log_date.between(start_date, end_date),
+            WorkLog.log_date <= datetime.now().date()  # Исключаем будущие даты
+        ).all()
     else:
-        logs = WorkLog.query.all()
+        logs = WorkLog.query.filter(WorkLog.log_date <= datetime.now().date()).all()  # Исключаем будущие даты
 
     # Устанавливаем выбранную дату или текущую дату
     if selected_date_str:
@@ -316,11 +320,6 @@ def work():
         logging.info("Откат транзакции выполнен.")
 
     return render_template('work.html', employees=employees, current_time=current_time)
-
-
-    # Передача данных на страницу work
-    return render_template('work.html', employees=employees, work_logs=logs, current_time=current_time)
-
 
 @app.template_filter('format_hours')
 def format_hours(value):
@@ -1290,13 +1289,26 @@ def add_empty_log():
 
     return jsonify({'success': True, 'message': 'Пустой лог успешно добавлен'})
 
+
 @app.route('/api/log_totals', methods=['GET'])
 def get_log_totals():
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
+    # Преобразуем start_date и end_date в объекты даты, если они переданы
+    if start_date and end_date:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+
     employees = Employee.query.all()
     totals = {}
 
     for employee in employees:
+        # Фильтруем логи по дате
         logs = employee.work_logs
+        if start_date and end_date:
+            logs = [log for log in logs if start_date <= log.date <= end_date]
+
         total_hours = sum(log.worked_hours or 0 for log in logs if log.holidays != 'Unpaid')
         total_days = len([log for log in logs if log.holidays != 'Unpaid'])
         paid_holidays = sum(1 for log in logs if log.holidays == 'Paid')
@@ -1308,34 +1320,82 @@ def get_log_totals():
             'paid_holidays': paid_holidays,
             'unpaid_holidays': unpaid_holidays
         }
+
     return jsonify(totals)
 
-def create_placeholder_logs():
-    tomorrow = datetime.today().date() + timedelta(days=1)  # Установка даты на завтра
-    employees = Employee.query.all()
-    for employee in employees:
-        existing_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=tomorrow).first()
-        # Если запись есть, но без check-in/check-out, ничего не делаем
-        if existing_log and not existing_log.check_in_time:
-            continue
-        # Если записи нет, создаем её с прочерками
-        if not existing_log:
-            placeholder_log = WorkLog(
-                employee_id=employee.id,
-                log_date=tomorrow,
-                check_in_time=None,
-                check_out_time=None
-            )
-            db.session.add(placeholder_log)
-    try:
-        logging.info("Попытка сохранения данных в базу...")
-        db.session.commit()
-        logging.info("Данные успешно сохранены в базу.")
-    except Exception as e:
-        logging.error(f"Ошибка при сохранении данных: {e}")
-        db.session.rollback()
-        logging.info("Откат транзакции выполнен.")
 
+def create_placeholder_logs():
+    tomorrow = datetime.today().date() + timedelta(days=1)
+    employees = Employee.query.all()
+
+    for employee in employees:
+        # Проверяем, если запись уже существует, не создаем повторно
+        existing_log = WorkLog.query.filter_by(employee_id=employee.id, log_date=tomorrow).first()
+        if existing_log:
+            continue
+
+        # Создаем лог с прочерками
+        placeholder_log = WorkLog(
+            employee_id=employee.id,
+            log_date=tomorrow,
+            check_in_time=None,
+            check_out_time=None,
+            holidays='Working day'
+        )
+        db.session.add(placeholder_log)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Ошибка при сохранении данных: {e}")
+
+
+@app.route('/api/work_logs', methods=['GET'])
+def get_filtered_work_logs():
+    filter_type = request.args.get('filter_type', 'all')
+    start_date = None
+    end_date = datetime.now().date()
+
+    if filter_type == 'last_7_days':
+        start_date = end_date - timedelta(days=7)
+    elif filter_type == 'last_30_days':
+        start_date = end_date - timedelta(days=30)
+    elif filter_type == 'custom':
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+
+    # Query logs based on the filter
+    query = WorkLog.query
+    if start_date:
+        query = query.filter(WorkLog.log_date >= start_date)
+    if end_date:
+        query = query.filter(WorkLog.log_date <= end_date)
+
+    logs = query.all()
+
+    # Aggregate data for summary
+    summary = {}
+    for log in logs:
+        employee_id = log.employee_id
+        if employee_id not in summary:
+            summary[employee_id] = {
+                'total_hours': 0,
+                'total_days': 0,
+                'paid_holidays': 0,
+                'unpaid_holidays': 0,
+            }
+
+        if log.worked_hours:
+            summary[employee_id]['total_hours'] += log.worked_hours
+            summary[employee_id]['total_days'] += 1
+
+        if log.holidays == 'Paid':
+            summary[employee_id]['paid_holidays'] += 1
+        elif log.holidays == 'Unpaid':
+            summary[employee_id]['unpaid_holidays'] += 1
+
+    return jsonify({'logs': [log.to_dict() for log in logs], 'summary': summary})
 
 # Настройка планировщика
 scheduler = BackgroundScheduler()
