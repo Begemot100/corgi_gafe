@@ -722,27 +722,27 @@ function showCustomRange() {
     document.getElementById('customRangePicker').style.display = 'block';
 }
 
-//function applyCustomRange() {
-//    const startDate = document.getElementById('startDate').value;
-//    const endDate = document.getElementById('endDate').value;
-//
-//    if (startDate && endDate) {
-//        window.location.href = `/work?start_date=${startDate}&end_date=${endDate}`;
-//    } else {
-//        alert('Por favor, selecciona un rango de fechas válido.');
-//    }
-//}
-//function applyFilter(filterType, label) {
-//    console.log("Selected filter:", filterType); // Отладка
-//    document.getElementById('filterButton').textContent = label;
-//
-//    if (filterType === 'custom') {
-//        console.log("Displaying custom range picker"); // Отладка
-//        document.getElementById('customRangePicker').style.display = 'flex'; // Показать блок выбора диапазона
-//    } else {
-//        document.getElementById('customRangePicker').style.display = 'none'; // Скрыть блок выбора диапазона для других фильтров
-//    }
-//}
+function applyCustomRange() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    if (startDate && endDate) {
+        window.location.href = `/work?start_date=${startDate}&end_date=${endDate}`;
+    } else {
+        alert('Por favor, selecciona un rango de fechas válido.');
+    }
+}
+function applyFilter(filterType, label) {
+    console.log("Selected filter:", filterType); // Отладка
+    document.getElementById('filterButton').textContent = label;
+
+    if (filterType === 'custom') {
+        console.log("Displaying custom range picker"); // Отладка
+        document.getElementById('customRangePicker').style.display = 'flex'; // Показать блок выбора диапазона
+    } else {
+        document.getElementById('customRangePicker').style.display = 'none'; // Скрыть блок выбора диапазона для других фильтров
+    }
+}
 
 function applyCustomRange() {
     const startDate = document.getElementById('startDate').value;
@@ -1039,30 +1039,27 @@ function fetchAndUpdateTotals() {
     fetch('/api/log_totals')
         .then(response => response.json())
         .then(data => {
-            for (const [employeeId, totals] of Object.entries(data)) {
-                const totalHoursElement = document.getElementById(`total-hours-${employeeId}`);
-                const totalDaysElement = document.getElementById(`total-days-${employeeId}`);
+            Object.entries(data).forEach(([employeeId, totals]) => {
+                // Универсальная функция для обновления элемента
+                const updateElement = (id, value) => {
+                    const element = document.getElementById(id);
+                    if (element && value !== undefined) {
+                        element.textContent = value;
+                    }
+                };
 
-                // Проверяем корректность данных перед обновлением
-                if (totals.total_hours !== undefined) {
-                    totalHoursElement.textContent = totals.total_hours;
-                }
-                if (totals.total_days !== undefined) {
-                    totalDaysElement.textContent = totals.total_days;
-                }
+                // Обновляем данные для каждого сотрудника
+                updateElement(`total-hours-${employeeId}`, totals.total_hours);
+                updateElement(`total-days-${employeeId}`, totals.total_days);
+                updateElement(`paid-holidays-${employeeId}`, totals.paid_holidays);
+                updateElement(`unpaid-holidays-${employeeId}`, totals.unpaid_holidays);
 
-                console.log(`Обновлено для сотрудника ${employeeId}:`, totals);
-
-            }
+                console.log(`Данные обновлены для сотрудника ${employeeId}:`, totals);
+            });
         })
         .catch(error => console.error('Ошибка при получении итогов логов:', error));
 }
 
-
-setInterval(() => {
-    const today = new Date().toISOString().split('T')[0];
-    applyDateFilter(today, today);
-}, 10000); // Каждые 10 секунд
 
 // Автоматически обновляем итоги каждые 10 секунд
 setInterval(fetchAndUpdateTotals, 5000);

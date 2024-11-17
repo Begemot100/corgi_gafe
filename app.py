@@ -1397,6 +1397,52 @@ def get_filtered_work_logs():
 
     return jsonify({'logs': [log.to_dict() for log in logs], 'summary': summary})
 
+
+from openpyxl import load_workbook
+
+@app.route('/import_employees', methods=['POST'])
+def import_employees():
+    file = request.files.get('file')
+
+    if not file:
+        return jsonify({'error': 'Файл не выбран'}), 400
+
+    try:
+        # Загружаем файл Excel
+        workbook = load_workbook(file)
+        sheet = workbook.active  # Получаем первый лист
+
+        # Считываем строки
+        for row in sheet.iter_rows(min_row=2, values_only=True):  # Пропускаем заголовок
+            full_name, nie, start_date, end_date, days_per_week, position, phone, email, section = row
+
+            # Преобразуем даты
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date() if start_date else None
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date() if end_date else None
+
+            # Создаём нового сотрудника
+            new_employee = Employee(
+                full_name=full_name,
+                nie=nie,
+                start_date=start_date,
+                end_date=end_date,
+                days_per_week=int(days_per_week),
+                position=position,
+                phone=phone,
+                email=email,
+                section=section
+            )
+            db.session.add(new_employee)
+
+        # Сохраняем изменения в базе данных
+        db.session.commit()
+        return redirect('/admin')  # Перенаправляем обратно в админку
+
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Ошибка импорта сотрудников: {e}")
+        return jsonify({'error': 'Не удалось загрузить файл сотрудников'}), 500
+
 # Настройка планировщика
 scheduler = BackgroundScheduler()
 scheduler.add_job(create_placeholder_logs, 'cron', hour=23, minute=45)
@@ -1405,4 +1451,4 @@ scheduler.start()
 if __name__ == '__main__':
 
     # Запускаем Flask сервер
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5005)
