@@ -129,12 +129,22 @@ def dashboard_login():
         if user and user.check_password(password):
             # Сохраняем в сессии информацию о пользователе
             session['dashboard_user_id'] = user.id
-            return redirect(url_for('dashboard'))
+            session['role'] = user.role  # Сохраняем роль
+            if user.role == 'admin':
+                return redirect(url_for('admin'))
+            elif user.role == 'worker':
+                return redirect(url_for('dashboard'))
         else:
             error_message = 'Неверный логин или пароль'
             return render_template('dashboard_login.html', error_message=error_message)
 
     return render_template('dashboard_login.html')
+@app.route('/logout')
+def logout():
+    session.clear()  # Очищаем сессию
+    return redirect(url_for('dashboard_login'))
+
+
 # Главная страница - Страница входа
 @app.route('/')
 def index():
@@ -160,9 +170,11 @@ def calculate_overtime(work_start_time, work_end_time, check_in, check_out):
 
 @app.route('/admin', methods=['GET'])
 def admin():
-    if 'admin_id' not in session:
-        return redirect(url_for('index'))
+    # Проверка, что пользователь вошел и его роль - администратор
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('dashboard'))  # Перенаправление для работника
 
+    # Получение данных сотрудников
     kitchen_employees = Employee.query.filter_by(section="Cocina").all()
     hall_employees = Employee.query.filter_by(section="Sala").all()
 
@@ -170,6 +182,7 @@ def admin():
     logging.info(f"Сотрудники Cocina: {[e.full_name for e in kitchen_employees]}")
     logging.info(f"Сотрудники Sala: {[e.full_name for e in hall_employees]}")
 
+    # Отображение страницы админки
     return render_template('index.html', kitchen_employees=kitchen_employees, hall_employees=hall_employees)
 
 
@@ -221,6 +234,9 @@ from datetime import date, datetime
 
 @app.route('/work', methods=['GET'])
 def work():
+    if 'role' not in session or session['role'] != 'admin':
+        return redirect(url_for('dashboard'))  # Работник перенаправляется в дашборд
+
     # Получаем фильтры из URL
     employees = Employee.query.all()  # Получаем всех сотрудников
     selected_date_str = request.args.get('date', None)
@@ -1443,6 +1459,32 @@ def import_employees():
         db.session.rollback()
         app.logger.error(f"Ошибка импорта сотрудников: {e}")
         return jsonify({'error': 'Не удалось загрузить файл сотрудников'}), 500
+
+
+@app.route('/register_worker', methods=['GET', 'POST'])
+def register_worker():
+    if request.method == 'POST':
+        full_name = request.form['full_name']
+        email = request.form['email']
+        password = generate_password_hash(request.form['password'])
+
+        # Проверяем, есть ли такой email в базе
+        existing_user = Employee.query.filter_by(email=email).first()
+        if existing_user:
+            return render_template('register_worker.html', error="El correo electrónico ya está registrado.")
+
+        # Создаем нового работника
+        new_employee = Employee(full_name=full_name, email=email, password=password, section="Sala")
+        db.session.add(new_employee)
+        db.session.commit()
+        return redirect(url_for('dashboard_login'))
+
+    return render_template('register_worker.html')
+
+
+@app.route('/worker_role', methods=['GET'])
+def worker_role():
+    return render_template('worker_role.html')
 
 # Настройка планировщика
 scheduler = BackgroundScheduler()
