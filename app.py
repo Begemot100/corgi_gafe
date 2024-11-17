@@ -111,19 +111,20 @@ def home():
     return render_template('home.html')
 
 # Маршрут для логина администратора
-@app.route('/admin_login', methods=['POST'])
+@app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
-    email = request.form['email']
-    password = request.form['password']
+    if request.method == 'GET':
+        return render_template('login.html')  # Возврат формы логина
 
-    # Проверка администратора в базе
-    admin = Admin.query.filter_by(email=email).first()
-    if admin and check_password_hash(admin.password, password):
-        session['role'] = 'admin'  # Устанавливаем роль администратора в сессии
-        session['admin_id'] = admin.id  # Сохраняем ID администратора
-        return redirect(url_for('admin'))
-    else:
-        return render_template('login.html', error="Invalid credentials")
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        admin = Admin.query.filter_by(email=email).first()
+        if admin and check_password_hash(admin.password, password):
+            session['role'] = 'admin'
+            session['admin_id'] = admin.id
+            return redirect(url_for('admin'))
+        return render_template('index.html', error="Invalid credentials")
 
 
 # Маршрут для логина работника
@@ -517,61 +518,68 @@ def edit_employee(id):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+        email = request.form.get('email')
+        password = request.form.get('password')
 
-        # Добавляем логирование для отслеживания логина
+        # Логирование попытки входа
         app.logger.info(f"Попытка входа с email: {email}")
 
         admin = Admin.query.filter_by(email=email).first()
+
         if admin:
-            # Проверка пароля
             if admin.check_password(password):
-                session['admin_id'] = admin.id  # Сохраняем ID администратора в сессии
-                session.permanent = True  # Устанавливаем сессию как постоянную
-                app.logger.info("Inicio de sesión exitoso")
+                # Установка данных сессии
+                session['admin_id'] = admin.id
+                session['role'] = 'admin'
+                session.permanent = True
+                app.logger.info("Успешный вход администратора")
                 return redirect(url_for('admin'))  # Перенаправление на админку
             else:
                 app.logger.warning("Неверный пароль")
-                error_message = "Contraseña incorrecta"
+                error_message = "Неверный пароль. Попробуйте еще раз."
         else:
             app.logger.warning("Администратор с таким email не найден")
             error_message = "Неверный email или пользователь не существует"
 
-        # Если неудачная попытка входа
+        # Если вход не удался, вернуть сообщение об ошибке
         return render_template('login.html', error_message=error_message)
 
-    return render_template('login.html')  # Возврат формы входа
+    # Если метод GET, возвращаем форму логина
+    return render_template('login.html')
 
 
-# Маршрут для регистрации
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        full_name = request.form['full_name']  # Добавлено поле полного имени
+        email = request.form.get('email')
+        password = request.form.get('password')
+        full_name = request.form.get('full_name')
 
         # Проверяем, существует ли администратор с таким email
         if Admin.query.filter_by(email=email).first():
-            return jsonify({'error': '¡Este correo electrónico ya está registrado!'}), 400
+            app.logger.warning(f"Попытка регистрации с существующим email: {email}")
+            error_message = "Этот email уже зарегистрирован!"
+            return render_template('register.html', error_message=error_message)
 
         # Создаем нового администратора
         new_admin = Admin(email=email)
-        new_admin.set_password(password)  # Устанавливаем хэш пароля
-        db.session.add(new_admin)
+        new_admin.set_password(password)
+
         try:
-            logging.info("Попытка сохранения данных в базу...")
+            db.session.add(new_admin)
             db.session.commit()
-            logging.info("Данные успешно сохранены в базу.")
+            app.logger.info("Регистрация прошла успешно, данные сохранены.")
+            session['admin_id'] = new_admin.id
+            session['role'] = 'admin'
+            return redirect(url_for('admin'))  # Перенаправление на админку
         except Exception as e:
-            logging.error(f"Ошибка при сохранении данных: {e}")
             db.session.rollback()
-            logging.info("Откат транзакции выполнен.")
+            app.logger.error(f"Ошибка при сохранении администратора: {e}")
+            error_message = "Ошибка при регистрации. Попробуйте еще раз."
+            return render_template('register.html', error_message=error_message)
 
-        return redirect(url_for('admin'))  # Перенаправление на админку после успешной регистрации
-
-    return render_template('register.html')  # Возврат формы регистрации
+    # Если метод GET, возвращаем форму регистрации
+    return render_template('register.html')
 
 # Чек-ин для сотрудника
 @app.route('/check_in/<int:id>', methods=['POST'])
