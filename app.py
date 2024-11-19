@@ -757,151 +757,81 @@ def update_holiday_status(id):
 
 @app.route('/export_excel', methods=['POST'])
 def export_excel():
-    # Получаем IDs выбранных сотрудников и логов работы
     employee_ids = request.json.get('employee_ids', [])
     work_log_ids = request.json.get('work_log_ids', [])
-
-    logging.info(f"Полученные employee_ids: {employee_ids}")
-    logging.info(f"Полученные work_log_ids: {work_log_ids}")
 
     if not employee_ids or not work_log_ids:
         return jsonify({'error': 'Нет выбранных сотрудников или логов работы'}), 400
 
-    # Получаем сотрудников по переданным ID
     employees = Employee.query.filter(Employee.id.in_(employee_ids)).all()
-
-    # Собираем имена сотрудников для названия файла
-    employee_names = [employee.full_name for employee in employees]
-    employee_names_str = ', '.join(employee_names[:3])  # Ограничим до 3 сотрудников для краткости
-    if len(employee_names) > 3:
-        employee_names_str += ' и др.'
-
-    # Получаем текущую дату в формате DD-MM-YYYY
     current_date = datetime.now().strftime('%d-%m-%Y')
-
-    # Формируем название файла
-    filename = f"work_logs_{employee_names_str}_{current_date}.xlsx".replace(" ", "_").replace(",", "_").replace("__", "_")
+    filename = f"work_logs_{current_date}.xlsx".replace(" ", "_")
     encoded_filename = quote(filename)
-    logging.info("Получены IDs для экспорта: %s", employee_ids)
-    logging.info("Количество сотрудников для экспорта: %d", len(employees))
-    logging.info("Функция экспортирования в Excel запущена.")
 
-    # Создаем DataFrame с данными сотрудников
     data = []
     for employee in employees:
-        # Фильтруем логи работы по переданным work_log_ids
-        filtered_work_logs = [log for log in employee.work_logs if str(log.id) in work_log_ids]
+        data.append({  # Заголовок для каждого сотрудника
+            'Full Name': f"{employee.full_name} - {employee.position} {employee.nie or ''}",
+            'Date': '',
+            'Entrada': '',
+            'Comida Entrada': '',
+            'Salida Comida': '',
+            'Salida': '',
+            'Total Day Hours': '',
+            'Holiday Type': '',
+            'Days Worked': ''
+        })
 
-        # Подсчитываем количество дней каждого типа
+        filtered_work_logs = [log for log in employee.work_logs if str(log.id) in work_log_ids]
+        for log in filtered_work_logs:
+            data.append({
+                'Full Name': '',
+                'Date': log.log_date.strftime('%Y-%m-%d'),
+                'Entrada': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
+                'Comida Entrada': '--:--',  # Пример значения для обеда
+                'Salida Comida': '--:--',  # Пример значения для обеда
+                'Salida': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
+                'Total Day Hours': decimal_hours_to_time(log.worked_hours),
+                'Holiday Type': log.holidays,
+                'Days Worked': ''
+            })
+
+        # Итоги
+        working_days = sum(1 for log in employee.work_logs if log.holidays == 'Working day')
         paid_holidays = sum(1 for log in employee.work_logs if log.holidays == 'Paid')
         unpaid_holidays = sum(1 for log in employee.work_logs if log.holidays == 'Unpaid')
         weekends = sum(1 for log in employee.work_logs if log.holidays == 'Weekend')
-        working_days = max(0, sum(1 for log in employee.work_logs if log.holidays == 'Working day') - 1)
+        total_hours = sum(log.worked_hours or 0 for log in employee.work_logs if log.holidays != 'Unpaid')
 
-        # Итоговое количество отработанных часов (учитывая Paid и исключая Unpaid дни)
-        total_hours_worked = sum(
-            log.worked_hours or 0 for log in employee.work_logs if log.holidays != 'Unpaid'
-        )
-        for log in filtered_work_logs:
-            formatted_hours = decimal_hours_to_time(log.worked_hours)
-            data.append({
-                'Full Name': employee.full_name,
-                'Position': employee.position,
-                'Date': log.log_date.strftime('%Y-%m-%d'),
-                'Check In': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
-                'Check Out': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
-                'Total Day Hours': formatted_hours,
-                'Holiday Type': log.holidays,
-                'Days Worked': ''  # Пропускаем итоговые строки до конца блока сотрудника
-            })
+        data.append({'Full Name': '', 'Date': '', 'Holiday Type': 'Total Worked Days', 'Days Worked': working_days})
+        data.append({'Full Name': '', 'Date': '', 'Holiday Type': 'Paid Holiday', 'Days Worked': paid_holidays})
+        data.append({'Full Name': '', 'Date': '', 'Holiday Type': 'Unpaid Holiday', 'Days Worked': unpaid_holidays})
+        data.append({'Full Name': '', 'Date': '', 'Holiday Type': 'Weekend', 'Days Worked': weekends})
+        data.append({'Full Name': '', 'Date': '', 'Holiday Type': 'Total Hours', 'Days Worked': decimal_hours_to_time(total_hours)})
 
-        # Добавляем итоговые строки
-        data.append({
-            'Full Name': '',
-            'Position': '',
-            'Date': '',
-            'Check In': '',
-            'Check Out': '',
-            'Holiday Type': 'Total Worked Days',
-            'Days Worked': working_days
-        })
-        data.append({
-            'Full Name': '',
-            'Position': '',
-            'Date': '',
-            'Check In': '',
-            'Check Out': '',
-            'Holiday Type': 'Paid Holiday',
-            'Days Worked': paid_holidays
-        })
-        data.append({
-            'Full Name': '',
-            'Position': '',
-            'Date': '',
-            'Check In': '',
-            'Check Out': '',
-            'Holiday Type': 'Unpaid Holiday',
-            'Days Worked': unpaid_holidays
-        })
-        data.append({
-            'Full Name': '',
-            'Position': '',
-            'Date': '',
-            'Check In': '',
-            'Check Out': '',
-            'Holiday Type': 'Weekend',
-            'Days Worked': weekends
-        })
-        data.append({
-            'Full Name': '',
-            'Position': '',
-            'Date': '',
-            'Check In': '',
-            'Check Out': '',
-            'Holiday Type': 'Total Hours',
-            'Days Worked': decimal_hours_to_time(total_hours_worked),
-        })
+        data.append({})  # Пустая строка между сотрудниками
 
-        # Рассчитываем овертайм (при предположении, что стандартное время - 8 часов в день)
-        overtime_hours = max(0, total_hours_worked - (8 * working_days))
-        data.append({
-            'Full Name': '',
-            'Position': '',
-            'Date': '',
-            'Check In': '',
-            'Check Out': '',
-            'Holiday Type': 'Overtime',
-            'Days Worked': decimal_hours_to_time(overtime_hours),
-        })
-
-        # Добавляем пустую строку для разделения сотрудников
-        data.append({key: '' for key in data[0].keys()})
-        data.append({key: '' for key in data[0].keys()})
-
-    # Генерация Excel файла
     df = pd.DataFrame(data)
     output = BytesIO()
 
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Work Logs')
-
-        # Получаем рабочий лист
         worksheet = writer.sheets['Work Logs']
 
-        # Подстраиваем ширину колонок
-        for idx, col in enumerate(df.columns, 1):  # Считаем колонки с 1
+        # Настройка ширины колонок
+        for idx, col in enumerate(df.columns, 1):
             max_length = max(df[col].astype(str).map(len).max(), len(col))
             col_letter = get_column_letter(idx)
-            worksheet.column_dimensions[col_letter].width = (max_length + 2) * 1.2  # Коррекция ширины
+            worksheet.column_dimensions[col_letter].width = max_length + 2
 
     output.seek(0)
 
-    # Создание ответа с явной установкой заголовков
     response = make_response(output.read())
     response.headers['Content-Disposition'] = f'attachment; filename="{encoded_filename}"; filename*=UTF-8\'\'{encoded_filename}'
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     return response
+
 
 @app.route('/edit_check_time/<int:log_id>', methods=['POST'])
 def edit_check_time(log_id):
