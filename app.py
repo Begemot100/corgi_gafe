@@ -769,10 +769,11 @@ def export_excel():
     encoded_filename = quote(filename)
 
     data = []
+
     for employee in employees:
-        data.append({  # Заголовок для каждого сотрудника
-            'Full Name': f"{employee.full_name} - {employee.position} {employee.nie or ''}",
-            'Date': '',
+        # Строка с именем сотрудника и его данными
+        data.append({
+            'Date': f"{employee.full_name} - {employee.position} {employee.nie or ''}",
             'Entrada': '',
             'Comida Entrada': '',
             'Salida Comida': '',
@@ -782,35 +783,50 @@ def export_excel():
             'Days Worked': ''
         })
 
+        # Заголовок таблицы
+        data.append({
+            'Date': 'Date',
+            'Entrada': 'Entrada',
+            'Comida Entrada': 'Comida Entrada',
+            'Salida Comida': 'Salida Comida',
+            'Salida': 'Salida',
+            'Total Day Hours': 'Total Day Hours',
+            'Holiday Type': 'Holiday Type',
+            'Days Worked': 'Days Worked'
+        })
+
+        # Рабочие логи
         filtered_work_logs = [log for log in employee.work_logs if str(log.id) in work_log_ids]
         for log in filtered_work_logs:
             data.append({
-                'Full Name': '',
                 'Date': log.log_date.strftime('%Y-%m-%d'),
                 'Entrada': log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--',
-                'Comida Entrada': '--:--',  # Пример значения для обеда
-                'Salida Comida': '--:--',  # Пример значения для обеда
+                'Comida Entrada': '--:--',
+                'Salida Comida': '--:--',
                 'Salida': log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--',
                 'Total Day Hours': decimal_hours_to_time(log.worked_hours),
                 'Holiday Type': log.holidays,
                 'Days Worked': ''
             })
 
-        # Итоги
+        # Итоговый блок для сотрудника
         working_days = sum(1 for log in employee.work_logs if log.holidays == 'Working day')
         paid_holidays = sum(1 for log in employee.work_logs if log.holidays == 'Paid')
         unpaid_holidays = sum(1 for log in employee.work_logs if log.holidays == 'Unpaid')
         weekends = sum(1 for log in employee.work_logs if log.holidays == 'Weekend')
         total_hours = sum(log.worked_hours or 0 for log in employee.work_logs if log.holidays != 'Unpaid')
 
-        data.append({'Full Name': '', 'Date': '', 'Holiday Type': 'Total Worked Days', 'Days Worked': working_days})
-        data.append({'Full Name': '', 'Date': '', 'Holiday Type': 'Paid Holiday', 'Days Worked': paid_holidays})
-        data.append({'Full Name': '', 'Date': '', 'Holiday Type': 'Unpaid Holiday', 'Days Worked': unpaid_holidays})
-        data.append({'Full Name': '', 'Date': '', 'Holiday Type': 'Weekend', 'Days Worked': weekends})
-        data.append({'Full Name': '', 'Date': '', 'Holiday Type': 'Total Hours', 'Days Worked': decimal_hours_to_time(total_hours)})
+        data.append({'Date': '', 'Holiday Type': 'Total Worked Days', 'Days Worked': working_days})
+        data.append({'Date': '', 'Holiday Type': 'Paid Holiday', 'Days Worked': paid_holidays})
+        data.append({'Date': '', 'Holiday Type': 'Unpaid Holiday', 'Days Worked': unpaid_holidays})
+        data.append({'Date': '', 'Holiday Type': 'Weekend', 'Days Worked': weekends})
+        data.append({'Date': '', 'Holiday Type': 'Total Hours', 'Days Worked': decimal_hours_to_time(total_hours)})
 
-        data.append({})  # Пустая строка между сотрудниками
+        # Добавляем пустую строку для разделения сотрудников
+        data.append({})
+        data.append({})
 
+    # Генерация Excel файла
     df = pd.DataFrame(data)
     output = BytesIO()
 
@@ -831,6 +847,7 @@ def export_excel():
     response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
     return response
+
 
 
 @app.route('/edit_check_time/<int:log_id>', methods=['POST'])

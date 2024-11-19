@@ -209,21 +209,24 @@ function updateSelectedLogData(selectedDate, logs) {
 
 
 function updateHolidayStatus(logId, status) {
-    // Логируем статус для отладки
     console.log(`Статус передан в updateHolidayStatus: ${status}`);
 
-    // Если выбран статус 'unpaid', запрашиваем подтверждение
-    if (status === 'unpaid') {
-        const confirmReset = confirm("¿Está seguro de que desea cambiar el estado a No pagado? Esta acción restablecerá los datos de los registros.");
+    // Обработка статуса 'unpaid' или 'paid'
+    if (status === 'unpaid' || status === 'paid') {
+        const confirmationMessage = status === 'unpaid'
+            ? "¿Está seguro de que desea cambiar el estado a No pagado? Esta acción restablecerá los datos de los registros."
+            : "¿Está seguro de que desea cambiar el estado a Pagado? Esta acción restablecerá los datos de los registros.";
+
+        const confirmReset = confirm(confirmationMessage);
 
         if (confirmReset) {
-            console.log('El usuario ha confirmado el cambio de estado No pagado.');
-            resetLogData(logId);  // Если пользователь подтвердил, обнуляем данные
+            console.log(`El usuario ha confirmado el cambio de estado ${status}.`);
+            resetLogData(logId); // Если пользователь подтвердил, обнуляем данные
         } else {
             console.log('Пользователь отменил действие.');
             // Если отменили, возвращаем статус на предыдущий
             const selectElement = document.getElementById(`log-${logId}`);
-            selectElement.value = 'workingday'; // Меняем статус обратно на рабочий день или другой по умолчанию
+            selectElement.value = 'workingday'; // Меняем статус обратно на "Working day" или другой по умолчанию
             return; // Завершаем выполнение, если отменили действие
         }
     }
@@ -250,7 +253,6 @@ function updateHolidayStatus(logId, status) {
     })
     .catch(error => console.error('Ошибка:', error));
 }
-
 
 function formatWorkedHours(worked_hours) {
     const hours = Math.floor(worked_hours);
