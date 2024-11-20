@@ -124,39 +124,41 @@
                                         </thead>
                                         <!-- Тело таблицы с логами -->
                                         <tbody>
-                                            {% for log in employee.work_logs %}
-                                                <tr class="log-row-{{ employee.id }}" data-log-id="{{ log.id }}" data-log-date="{{ log.log_date.strftime('%Y-%m-%d') }}">
-                                                    <td class="log-date">{{ log.log_date.strftime('%Y-%m-%d') }}</td>
+                                        <!-- Сортировка логов по дате в порядке убывания -->
+                                        {% for log in employee.work_logs | sort(attribute='log_date', reverse=True) %}
+                                            <tr class="log-row-{{ employee.id }}" data-log-id="{{ log.id }}" data-log-date="{{ log.log_date.strftime('%Y-%m-%d') }}">
+                                                <td class="log-date">{{ log.log_date.strftime('%Y-%m-%d') }}</td>
 
-                                                    <!-- Время check_in -->
-                                                    <td class="check-in-time" id="check-in-time-{{ log.id }}">
-                                                        {{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}
-                                                    </td>
+                                                <!-- Время check_in -->
+                                                <td class="check-in-time" id="check-in-time-{{ log.id }}">
+                                                    {{ log.check_in_time.strftime('%H:%M') if log.check_in_time else '--:--' }}
+                                                </td>
 
-                                                    <!-- Время check_out -->
-                                                    <td class="check-out-time" id="check-out-time-{{ log.id }}">
-                                                        {{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}
-                                                    </td>
+                                                <!-- Время check_out -->
+                                                <td class="check-out-time" id="check-out-time-{{ log.id }}">
+                                                    {{ log.check_out_time.strftime('%H:%M') if log.check_out_time else '--:--' }}
+                                                </td>
 
-                                                    <!-- Отображение отработанных часов -->
-                                                    <td class="daily-hours" id="daily-hours-{{ log.id }}">
-                                                        {{ log.worked_hours | format_hours if log.worked_hours else '0 hours' }}
-                                                    </td>
+                                                <!-- Отображение отработанных часов -->
+                                                <td class="daily-hours" id="daily-hours-{{ log.id }}">
+                                                    {{ log.worked_hours | format_hours if log.worked_hours else '0 hours' }}
+                                                </td>
 
-                                                    <td>
-                                                        <select id="log-{{ log.id }}" name="holiday_type" onchange="updateHolidayStatus('{{ log.id }}', this.value)">
-                                                            <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Día laboral</option>
-                                                            <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Pagado</option>
-                                                            <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>No pagado</option>
-                                                            <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Fin de semana</option>
-                                                        </select>
-                                                    </td>
-                                                    <td class="checkbox-cell" style="display: none;text-align: center;">
-                                                        <input type="checkbox" class="date-checkbox" id="date-checkbox-{{ log.id }}">
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
+                                                <td>
+                                                    <select id="log-{{ log.id }}" name="holiday_type" onchange="updateHolidayStatus('{{ log.id }}', this.value)">
+                                                        <option value="workingday" {% if log.holidays == 'Working day' %} selected {% endif %}>Día laboral</option>
+                                                        <option value="paid" {% if log.holidays == 'Paid' %} selected {% endif %}>Pagado</option>
+                                                        <option value="unpaid" {% if log.holidays == 'Unpaid' %} selected {% endif %}>No pagado</option>
+                                                        <option value="weekend" {% if log.holidays == 'Weekend' %} selected {% endif %}>Fin de semana</option>
+                                                    </select>
+                                                </td>
+                                                <td class="checkbox-cell" style="display: none; text-align: center;">
+                                                    <input type="checkbox" class="date-checkbox" id="date-checkbox-{{ log.id }}">
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+
                                     </table>
                                        <div class="summary-container" id="summary-{{ employee.id }}">
                                             <p>Horas totales: <span id="total-hours-{{ employee.id }}">{{ employee.total_hours }}h</span></p>

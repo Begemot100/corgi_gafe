@@ -272,9 +272,9 @@ def work():
         logs = WorkLog.query.filter(
             WorkLog.log_date.between(start_date, end_date),
             WorkLog.log_date <= datetime.now().date()  # Исключаем будущие даты
-        ).all()
+        ).order_by(WorkLog.log_date.asc()).all()  # Сортировка по возрастанию даты
     else:
-        logs = WorkLog.query.filter(WorkLog.log_date <= datetime.now().date()).all()  # Исключаем будущие даты
+        logs = WorkLog.query.filter(WorkLog.log_date <= datetime.now().date()).order_by(WorkLog.log_date.asc()).all()  # Исключаем будущие даты и сортируем по возрастанию
 
     # Устанавливаем выбранную дату или текущую дату
     if selected_date_str:
@@ -284,24 +284,24 @@ def work():
 
     # Фильтрация по дате
     if filter_type == 'today':
-        logs = WorkLog.query.filter(WorkLog.log_date == current_date.date()).all()
+        logs = WorkLog.query.filter(WorkLog.log_date == current_date.date()).order_by(WorkLog.log_date.asc()).all()
     elif filter_type == 'yesterday':
         yesterday = current_date - timedelta(days=1)
-        logs = WorkLog.query.filter(WorkLog.log_date == yesterday.date()).all()
+        logs = WorkLog.query.filter(WorkLog.log_date == yesterday.date()).order_by(WorkLog.log_date.asc()).all()
     elif filter_type == 'last_7_days':
         last_7_days = current_date - timedelta(days=7)
-        logs = WorkLog.query.filter(WorkLog.log_date >= last_7_days.date()).all()
+        logs = WorkLog.query.filter(WorkLog.log_date >= last_7_days.date()).order_by(WorkLog.log_date.asc()).all()
     elif filter_type == 'last_30_days':
         last_30_days = current_date - timedelta(days=30)
-        logs = WorkLog.query.filter(WorkLog.log_date >= last_30_days.date()).all()
+        logs = WorkLog.query.filter(WorkLog.log_date >= last_30_days.date()).order_by(WorkLog.log_date.asc()).all()
     elif filter_type == 'previous_month':
         first_day_of_current_month = current_date.replace(day=1)
         last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
-        logs = WorkLog.query.filter(extract('month', WorkLog.log_date) == last_day_of_previous_month.month).all()
+        logs = WorkLog.query.filter(extract('month', WorkLog.log_date) == last_day_of_previous_month.month).order_by(WorkLog.log_date.asc()).all()
     elif filter_type == 'current_month':
-        logs = WorkLog.query.filter(extract('month', WorkLog.log_date) == current_date.month).all()
+        logs = WorkLog.query.filter(extract('month', WorkLog.log_date) == current_date.month).order_by(WorkLog.log_date.asc()).all()
     else:
-        logs = WorkLog.query.all()
+        logs = WorkLog.query.order_by(WorkLog.log_date.asc()).all()
 
     # Фильтр по группам "Sala" и "Cocina"
     if group_type:
@@ -353,6 +353,7 @@ def work():
         logging.info("Откат транзакции выполнен.")
 
     return render_template('work.html', employees=employees, current_time=current_time)
+
 
 @app.template_filter('format_hours')
 def format_hours(value):
