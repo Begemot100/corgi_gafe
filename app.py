@@ -738,7 +738,7 @@ def update_holiday_status(id):
         work_log.holidays = new_status
 
         # Обнуляем check-in и check-out, если статус "Unpaid"
-        if new_status == 'Unpaid':
+        if new_status == 'Unpaid' or 'Paid':
             work_log.check_in_time = None
             work_log.check_out_time = None
             work_log.worked_hours = 0  # Обнуляем количество отработанных часов
@@ -1464,6 +1464,24 @@ def register_worker():
 def worker_role():
     return render_template('worker_role.html')
 
+@app.route('/reset_log/<int:log_id>', methods=['POST'])
+def reset_log(log_id):
+    """
+    Обнуляет данные логов (check-in, check-out, worked hours) при статусе Paid или Unpaid.
+    """
+    try:
+        log = WorkLog.query.get(log_id)
+        if log:
+            log.check_in_time = None
+            log.check_out_time = None
+            log.worked_hours = 0
+            db.session.commit()
+            return jsonify({"success": True, "message": f"Log {log_id} has been reset."})
+        else:
+            return jsonify({"success": False, "message": "Log not found."}), 404
+    except Exception as e:
+        app.logger.error(f"Ошибка при сбросе данных лога ID {log_id}: {e}")
+        return jsonify({"success": False, "message": "Ошибка при сбросе данных."}), 500
 
 
 def create_placeholder_logs():
@@ -1508,4 +1526,4 @@ register(lambda: scheduler.shutdown())
 if __name__ == '__main__':
 
     # Запускаем Flask сервер
-    app.run(debug=True, port=5005)
+    app.run(debug=True, port=5004)

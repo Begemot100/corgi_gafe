@@ -211,7 +211,7 @@ function updateSelectedLogData(selectedDate, logs) {
 function updateHolidayStatus(logId, status) {
     console.log(`Статус передан в updateHolidayStatus: ${status}`);
 
-    // Обработка статуса 'unpaid' или 'paid'
+    // Обработка статусов 'unpaid' и 'paid'
     if (status === 'unpaid' || status === 'paid') {
         const confirmationMessage = status === 'unpaid'
             ? "¿Está seguro de que desea cambiar el estado a No pagado? Esta acción restablecerá los datos de los registros."
@@ -221,7 +221,7 @@ function updateHolidayStatus(logId, status) {
 
         if (confirmReset) {
             console.log(`El usuario ha confirmado el cambio de estado ${status}.`);
-            resetLogData(logId); // Если пользователь подтвердил, обнуляем данные
+            resetLogData(logId); // Обнуление данных лога
         } else {
             console.log('Пользователь отменил действие.');
             // Если отменили, возвращаем статус на предыдущий
@@ -253,6 +253,7 @@ function updateHolidayStatus(logId, status) {
     })
     .catch(error => console.error('Ошибка:', error));
 }
+
 
 function formatWorkedHours(worked_hours) {
     const hours = Math.floor(worked_hours);
@@ -1036,6 +1037,51 @@ document.querySelectorAll('select[name="holiday_type"]').forEach(select => {
     });
 });
 
+function updateHolidayStatus(logId, status) {
+    console.log(`Статус передан в updateHolidayStatus: ${status}`);
+
+    // Обработка статусов 'unpaid' и 'paid'
+    if (status === 'unpaid' || status === 'paid') {
+        const confirmationMessage = status === 'unpaid'
+            ? "¿Está seguro de que desea cambiar el estado a No pagado? Esta acción restablecerá los datos de los registros."
+            : "¿Está seguro de que desea cambiar el estado a Pagado? Esta acción restablecerá los datos de los registros.";
+
+        const confirmReset = confirm(confirmationMessage);
+
+        if (confirmReset) {
+            console.log(`El usuario ha confirmado el cambio de estado ${status}.`);
+            resetLogData(logId); // Обнуление данных лога
+        } else {
+            console.log('Пользователь отменил действие.');
+            // Если отменили, возвращаем статус на предыдущий
+            const selectElement = document.getElementById(`log-${logId}`);
+            selectElement.value = 'workingday'; // Меняем статус обратно на "Working day" или другой по умолчанию
+            return; // Завершаем выполнение, если отменили действие
+        }
+    }
+
+    // Продолжаем обновление статуса на сервере
+    const formattedStatus = status.replace(/(^|\s)\S/g, letter => letter.toUpperCase()).replace("Workingday", "Working day");
+
+    console.log(`Отправка данных на сервер для обновления статуса: ${formattedStatus}`);
+
+    fetch(`/update_holiday_status/${logId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ holiday_status: formattedStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            console.log(`Статус для ${logId} успешно обновлен: ${formattedStatus}`);
+        } else {
+            console.error('Ошибка при обновлении статуса');
+        }
+    })
+    .catch(error => console.error('Ошибка:', error));
+}
 
 function fetchAndUpdateTotals() {
     fetch('/api/log_totals')
