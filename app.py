@@ -84,6 +84,8 @@ class Employee(db.Model):
     total_days = db.Column(db.Integer, default=0)
     paid_holidays = db.Column(db.Integer, default=0)
     unpaid_holidays = db.Column(db.Integer, default=0)
+    overtime = db.Column(db.Float, default=0)  # Добавьте это поле
+
 
     work_logs = db.relationship('WorkLog', backref='employee', cascade="all, delete-orphan", lazy=True)
 
@@ -164,22 +166,35 @@ def index():
     return render_template('login.html')  # Возврат формы входа
 
 
+# from datetime import datetime, timedelta
+
 def calculate_overtime(work_start_time, work_end_time, check_in, check_out):
-    # Рассчитываем рабочее время на день
-    scheduled_start = datetime.combine(datetime.today(), work_start_time)
-    scheduled_end = datetime.combine(datetime.today(), work_end_time)
-    scheduled_duration = scheduled_end - scheduled_start
+    try:
+        # Проверяем, что все входные значения заданы
+        if not all([work_start_time, work_end_time, check_in, check_out]):
+            return timedelta(0)  # Возвращаем 0 переработки, если данные неполные
 
-    # Рассчитываем фактическое рабочее время
-    actual_start = datetime.combine(datetime.today(), check_in)
-    actual_end = datetime.combine(datetime.today(), check_out)
-    actual_duration = actual_end - actual_start
+        # Рассчитываем рабочее время на день
+        scheduled_start = datetime.combine(datetime.today(), work_start_time)
+        scheduled_end = datetime.combine(datetime.today(), work_end_time)
+        scheduled_duration = scheduled_end - scheduled_start
 
-    # Если фактическое время больше запланированного, считаем разницу как овертайм
-    overtime = actual_duration - scheduled_duration if actual_duration > scheduled_duration else timedelta(0)
+        # Рассчитываем фактическое рабочее время
+        actual_start = datetime.combine(datetime.today(), check_in)
+        actual_end = datetime.combine(datetime.today(), check_out)
+        actual_duration = actual_end - actual_start
 
-    # Возвращаем овертайм в часах и минутах
-    return overtime
+        # Если фактическое время больше запланированного, считаем разницу как овертайм
+        overtime = actual_duration - scheduled_duration if actual_duration > scheduled_duration else timedelta(0)
+
+        # Возвращаем овертайм в часах и минутах
+        return overtime
+
+    except Exception as e:
+        # Логирование ошибки (можно заменить на logging.error)
+        print(f"Ошибка в calculate_overtime: {e}")
+        return timedelta(0)  # Возвращаем 0 переработки в случае ошибки
+
 
 
 @app.route('/admin', methods=['GET'])
@@ -250,109 +265,50 @@ from datetime import date, datetime
 
 @app.route('/work', methods=['GET'])
 def work():
-    if 'role' not in session or session['role'] != 'admin':
-        return redirect(url_for('dashboard'))  # Работник перенаправляется в дашборд
-
     # Получаем фильтры из URL
-    employees = Employee.query.all()  # Получаем всех сотрудников
-    selected_date_str = request.args.get('date', None)
     filter_type = request.args.get('filter', 'today')
-    group_type = request.args.get('groups', None)
-    app.logger.info(f"Применен фильтр группы: {group_type}")
-
-    current_date = datetime.now()
-    current_time = datetime.now().timestamp()  # Используем timestamp для текущего времени
     start_date_str = request.args.get('start_date')
     end_date_str = request.args.get('end_date')
 
-    # Добавляем фильтрацию для исключения будущих дат
-    if start_date_str and end_date_str:
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-        logs = WorkLog.query.filter(
-            WorkLog.log_date.between(start_date, end_date),
-            WorkLog.log_date <= datetime.now().date()  # Исключаем будущие даты
-        ).order_by(WorkLog.log_date.asc()).all()  # Сортировка по возрастанию даты
-    else:
-        logs = WorkLog.query.filter(WorkLog.log_date <= datetime.now().date()).order_by(WorkLog.log_date.asc()).all()  # Исключаем будущие даты и сортируем по возрастанию
-
-    # Устанавливаем выбранную дату или текущую дату
-    if selected_date_str:
-        selected_date = datetime.strptime(selected_date_str, '%Y-%m-%d').date()
-    else:
-        selected_date = current_date.date()
-
-    # Фильтрация по дате
+    # Устанавливаем даты для фильтра
+    today = datetime.now().date()
     if filter_type == 'today':
-        logs = WorkLog.query.filter(WorkLog.log_date == current_date.date()).order_by(WorkLog.log_date.asc()).all()
+        start_date, end_date = today, today
     elif filter_type == 'yesterday':
-        yesterday = current_date - timedelta(days=1)
-        logs = WorkLog.query.filter(WorkLog.log_date == yesterday.date()).order_by(WorkLog.log_date.asc()).all()
+        yesterday = today - timedelta(days=1)
+        start_date, end_date = yesterday, yesterday
     elif filter_type == 'last_7_days':
-        last_7_days = current_date - timedelta(days=7)
-        logs = WorkLog.query.filter(WorkLog.log_date >= last_7_days.date()).order_by(WorkLog.log_date.asc()).all()
+        start_date, end_date = today - timedelta(days=7), today
     elif filter_type == 'last_30_days':
-        last_30_days = current_date - timedelta(days=30)
-        logs = WorkLog.query.filter(WorkLog.log_date >= last_30_days.date()).order_by(WorkLog.log_date.asc()).all()
-    elif filter_type == 'previous_month':
-        first_day_of_current_month = current_date.replace(day=1)
-        last_day_of_previous_month = first_day_of_current_month - timedelta(days=1)
-        logs = WorkLog.query.filter(extract('month', WorkLog.log_date) == last_day_of_previous_month.month).order_by(WorkLog.log_date.asc()).all()
-    elif filter_type == 'current_month':
-        logs = WorkLog.query.filter(extract('month', WorkLog.log_date) == current_date.month).order_by(WorkLog.log_date.asc()).all()
+        start_date, end_date = today - timedelta(days=30), today
+    elif filter_type == 'custom':
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date() if start_date_str else None
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date() if end_date_str else None
     else:
-        logs = WorkLog.query.order_by(WorkLog.log_date.asc()).all()
+        start_date, end_date = None, None
 
-    # Фильтр по группам "Sala" и "Cocina"
-    if group_type:
-        group_filters_list = [g.lower() for g in group_type.split(',')]
-        employees = Employee.query.filter(func.lower(Employee.section).in_(group_filters_list)).all()
-    else:
-        employees = Employee.query.all()
+    # Фильтруем данные логов
+    logs_query = WorkLog.query
+    if start_date and end_date:
+        logs_query = logs_query.filter(WorkLog.log_date.between(start_date, end_date))
+    logs = logs_query.all()
 
-    # Подсчет данных для каждого сотрудника с группировкой логов
-    employee_logs = defaultdict(list)
+    # Подсчёт summary
+    summary = defaultdict(lambda: {'total_hours': 0, 'total_days': 0, 'paid_holidays': 0, 'unpaid_holidays': 0})
     for log in logs:
-        employee_logs[log.employee_id].append(log)
+        summary[log.employee_id]['total_hours'] += log.worked_hours or 0
+        summary[log.employee_id]['total_days'] += 1 if log.holidays not in ['Unpaid', 'Weekend'] else 0
+        summary[log.employee_id]['paid_holidays'] += 1 if log.holidays == 'Paid' else 0
+        summary[log.employee_id]['unpaid_holidays'] += 1 if log.holidays == 'Unpaid' else 0
 
-    today = date.today()
-    for employee in employees:
-        if employee.id not in employee_logs:
-            # Создаем новый лог для текущего дня, если его нет
-            new_log = WorkLog(
-                employee_id=employee.id,
-                log_date=today,
-                check_in_time=None,
-                check_out_time=None,
-                worked_hours=0
-            )
-            db.session.add(new_log)
-            employee_logs[employee.id].append(new_log)
+    employees = Employee.query.all()
 
-        # Подсчет общего времени, отпусков и переработок
-        total_hours = round(sum(log.worked_hours or 0 for log in employee_logs[employee.id] if log.holidays != 'Unpaid'), 2)
-        total_days = len([log for log in employee_logs[employee.id] if log.holidays != 'Unpaid'])
-        paid_holidays = sum(1 for log in employee_logs[employee.id] if log.holidays == 'Paid')
-        unpaid_holidays = sum(1 for log in employee_logs[employee.id] if log.holidays == 'Unpaid')
-
-        # Сохранение данных summary в модель Employee
-        employee.total_hours = total_hours
-        employee.total_days = total_days
-        employee.paid_holidays = paid_holidays
-        employee.unpaid_holidays = unpaid_holidays
-        employee.overtime = max(0, total_hours - (8 * total_days))
-
-    # Сохранение изменений в базе данных
-    try:
-        logging.info("Попытка сохранения данных в базу...")
-        db.session.commit()
-        logging.info("Данные успешно сохранены в базу.")
-    except Exception as e:
-        logging.error(f"Ошибка при сохранении данных: {e}")
-        db.session.rollback()
-        logging.info("Откат транзакции выполнен.")
-
-    return render_template('work.html', employees=employees, current_time=current_time)
+    return render_template(
+        'work.html',
+        employees=employees,
+        summary=summary,
+        filter_type=filter_type
+    )
 
 
 @app.template_filter('format_hours')
@@ -738,7 +694,7 @@ def update_holiday_status(id):
         work_log.holidays = new_status
 
         # Обнуляем check-in и check-out, если статус "Unpaid"
-        if new_status == 'Unpaid':
+        if new_status == 'Unpaid' or 'Paid':
             work_log.check_in_time = None
             work_log.check_out_time = None
             work_log.worked_hours = 0  # Обнуляем количество отработанных часов
@@ -1508,4 +1464,4 @@ register(lambda: scheduler.shutdown())
 if __name__ == '__main__':
 
     # Запускаем Flask сервер
-    app.run(debug=True, port=5005)
+    app.run(debug=True, port=5004)
