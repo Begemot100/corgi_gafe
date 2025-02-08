@@ -4,7 +4,6 @@ const closeModalBtn = document.querySelector('.close');
 const employeeForm = document.getElementById('employee-form');
 
 openModalBtn.addEventListener('click', () => {
-    // Очищаем поля формы перед открытием
     document.getElementById('full_name').value = '';
     document.getElementById('nie').value = '';
     document.getElementById('phone').value = '';
