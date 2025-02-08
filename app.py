@@ -155,7 +155,7 @@ def edit_employee(id):
 # Route for checking in
 @app.route('/check-in/<int:employee_id>', methods=['POST'])
 def check_in(employee_id):
-    employee = Employee.query.get_or_404(employee_id)  # Only target the specific employee
+    employee = Employee.query.get_or_404(employee_id)  
     current_date = datetime.utcnow().date()
 
     # If the employee already checked in but it was on a previous day, reset check-in and check-out
@@ -167,7 +167,7 @@ def check_in(employee_id):
 
     # Allow check-in if the employee hasn't checked in today
     if not employee.check_in:
-        employee.check_in = datetime.utcnow()  # Set the current time as check-in time
+        employee.check_in = datetime.utcnow()  
         db.session.commit()
 
     return redirect(url_for('dashboard'))
@@ -175,17 +175,15 @@ def check_in(employee_id):
 # Route for checking out
 @app.route('/check-out/<int:employee_id>', methods=['POST'])
 def check_out(employee_id):
-    employee = Employee.query.get_or_404(employee_id)  # Only target the specific employee
+    employee = Employee.query.get_or_404(employee_id)  
     if employee.check_in and not employee.check_out:
         employee.check_out = datetime.utcnow()
 
-        # Calculate daily work time
         work_time = employee.check_out - employee.check_in
         employee.daily_work_time = work_time
 
-        # Add daily time to monthly work time
         if employee.monthly_work_time:
-            employee.monthly_work_time += work_time.total_seconds() / 3600  # Convert to hours
+            employee.monthly_work_time += work_time.total_seconds() / 3600  
         else:
             employee.monthly_work_time = work_time.total_seconds() / 3600
 
